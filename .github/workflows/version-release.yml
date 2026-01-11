@@ -1,0 +1,192 @@
+name: Release Version
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 0.2.0)'
+        required: true
+        type: string
+      summary:
+        description: 'Brief summary of this version (optional)'
+        required: false
+        type: string
+      key_changes:
+        description: 'Key changes (one per line, optional)'
+        required: false
+        type: string
+  pull_request:
+    types: [closed]
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release-version:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true) ||
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+    permissions:
+      contents: write
+      pull-requests: read
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Checkout TechnicalDocumentation (for action)
+        uses: actions/checkout@v4
+        with:
+          repository: Blackhowling-Dev/TechnicalDocumentation
+          path: technical-docs-action
+          ref: main
+          token: ${{ secrets.REPO_ACCESS_TOKEN || secrets.GITHUB_TOKEN }}
+      
+      - name: Set up inputs
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            COMMIT_SHA="${{ github.event.pull_request.merge_commit_sha }}"
+            PR_NUMBER="${{ github.event.pull_request.number }}"
+            PR_URL="${{ github.event.pull_request.html_url }}"
+            # Normalize line endings: convert CRLF to LF to prevent bash errors when writing to GITHUB_ENV
+            PR_BODY=$(printf '%s' "${{ github.event.pull_request.body }}" | sed 's/\r$//' | sed 's/\r/\n/g')
+            VERSION=""
+          elif [ "${{ github.event_name }}" == "push" ] && [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            COMMIT_SHA="${{ github.sha }}"
+            VERSION="${GITHUB_REF#refs/tags/v}"
+            PR_NUMBER=""
+            PR_URL=""
+            PR_BODY=""
+          else
+            COMMIT_SHA="${{ github.sha }}"
+            VERSION="${{ github.event.inputs.version }}"
+            PR_NUMBER=""
+            PR_URL=""
+            PR_BODY=""
+          fi
+          
+          echo "commit_sha=$COMMIT_SHA" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_ENV
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_ENV
+          echo "pr_url=$PR_URL" >> $GITHUB_ENV
+          echo "pr_body<<EOF" >> $GITHUB_ENV
+          printf '%s\n' "$PR_BODY" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+      
+      - name: Run changelog release action (from TechnicalDocumentation)
+        id: run_changelog
+        uses: ./technical-docs-action/.github/actions/changelog-release
+        with:
+          version: ${{ env.version }}
+          pr_body: ${{ env.pr_body }}
+          pr_number: ${{ env.pr_number }}
+          pr_url: ${{ env.pr_url }}
+          commit_sha: ${{ env.commit_sha }}
+          event_name: ${{ github.event_name }}
+          repository: ${{ github.repository }}
+      
+      - name: Configure Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+      
+      - name: Get target branch
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            TARGET_BRANCH="${{ github.event.pull_request.base.ref }}"
+          elif [ "${{ github.event_name }}" == "push" ] && [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "TARGET_BRANCH=" >> $GITHUB_ENV
+            exit 0
+          else
+            TARGET_BRANCH=${GITHUB_REF#refs/heads/}
+          fi
+          echo "TARGET_BRANCH=$TARGET_BRANCH" >> $GITHUB_ENV
+      
+      - name: Commit changes
+        if: steps.run_changelog.outputs.has_content == 'true' && steps.run_changelog.outputs.version != ''
+        run: |
+          VERSION="${{ steps.run_changelog.outputs.version }}"
+          CHANGELOG_SOURCE="${{ steps.run_changelog.outputs.changelog_source }}"
+          
+          if [ -z "$VERSION" ]; then
+            echo "Error: Version not available"
+            exit 1
+          fi
+          
+          # Check if version file exists
+          if [ ! -f "versions/$VERSION.md" ]; then
+            echo "Error: Version file not created: versions/$VERSION.md"
+            exit 1
+          fi
+          
+          git add versions/$VERSION.md
+          git add CHANGELOG.md
+          if [ "$CHANGELOG_SOURCE" == "unreleased" ]; then
+            git add versions/unreleased.md
+          fi
+          
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          
+          COMMIT_MSG="Release version $VERSION
+
+          - Created versions/$VERSION.md
+          - Updated CHANGELOG.md"
+          
+          if [ "$CHANGELOG_SOURCE" == "unreleased" ]; then
+            COMMIT_MSG="$COMMIT_MSG
+          - Cleared versions/unreleased.md"
+          else
+            COMMIT_MSG="$COMMIT_MSG
+          - Changelog from PR description"
+          fi
+          
+          COMMIT_MSG="$COMMIT_MSG
+          
+          Commit: ${{ env.commit_sha }}"
+          
+          echo "$COMMIT_MSG" | git commit -F -
+      
+      - name: Push changes
+        if: steps.run_changelog.outputs.has_content == 'true' && steps.run_changelog.outputs.version != '' && env.TARGET_BRANCH != ''
+        run: |
+          if [ "${{ github.event_name }}" == "push" ] && [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "Cannot push to tag, changes should be on a branch"
+            exit 1
+          else
+            git push origin HEAD:${{ env.TARGET_BRANCH }}
+          fi
+      
+      - name: Create summary
+        if: always()
+        run: |
+          if [ "${{ steps.run_changelog.outputs.has_content }}" == "true" ] && [ -n "${{ steps.run_changelog.outputs.version }}" ]; then
+            echo "✅ Successfully released version ${{ steps.run_changelog.outputs.version }}"
+            echo "📝 Created versions/${{ steps.run_changelog.outputs.version }}.md"
+            echo "📋 Updated CHANGELOG.md"
+            CHANGELOG_SOURCE="${{ steps.run_changelog.outputs.changelog_source }}"
+            if [ "$CHANGELOG_SOURCE" == "pr" ]; then
+              echo "📄 Changelog source: PR description"
+            elif [ "$CHANGELOG_SOURCE" == "unreleased" ]; then
+              echo "📄 Changelog source: versions/unreleased.md"
+              echo "🧹 Cleared versions/unreleased.md"
+            else
+              echo "📄 Changelog source: $CHANGELOG_SOURCE"
+            fi
+            echo "🔗 Commit: ${{ env.commit_sha }}"
+            echo "📌 Version bump: ${{ steps.run_changelog.outputs.version_bump }}"
+            echo "🔧 Action source: Referenced from TechnicalDocumentation"
+          else
+            echo "⚠️ No changelog content found or version not determined"
+            echo "Changelog source: ${{ steps.run_changelog.outputs.changelog_source }}"
+            echo "Has content: ${{ steps.run_changelog.outputs.has_content }}"
+            echo "Version: ${{ steps.run_changelog.outputs.version }}"
+            echo "Skipping version release"
+          fi

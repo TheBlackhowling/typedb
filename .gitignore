@@ -1,0 +1,42 @@
+# Git credentials (never commit these!)
+.git-credentials
+
+# Cursor commands (optional - uncomment if you don't want to track these)
+# .cursor/commands/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.log
+*.cache
+pr_summary.md
+pr_body*.txt
+pr_body*.md
+
+# Dependencies (uncomment if applicable)
+# node_modules/
+# venv/
+# __pycache__/
+# *.pyc
+
+# Build outputs (uncomment if applicable)
+# dist/
+# build/
+# *.egg-info/
+
+# Environment files (uncomment if applicable)
+# .env
+# .env.local
+# .env.*.local
+
