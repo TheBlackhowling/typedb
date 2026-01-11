@@ -131,11 +131,11 @@ func main() {
     ctx := context.Background()
     db, _ := typedb.Open("postgres", "postgres://...")
 
-    // Load by primary key (using Load method on model)
+    // Load by primary key
     user := &User{ID: 123}
-    err := user.Load(ctx, db)
+    err := typedb.Load(ctx, db, user)
 
-    // Load by unique field (using LoadByField helper)
+    // Load by unique field
     user2 := &User{Email: "test@example.com"}
     err = typedb.LoadByField(ctx, db, user2, "Email")
 }
@@ -210,7 +210,7 @@ err := db.WithTx(ctx, func(tx *typedb.Tx) error {
 
 ### Load Functions
 
-- `model.Load(ctx, exec)` - Loads model by primary key field (method on Model)
+- `Load(ctx, exec, model)` - Loads model by primary key field
 - `LoadByField(ctx, exec, model, fieldName)` - Loads model by unique field
 - `LoadByComposite(ctx, exec, model, compositeName)` - Loads model by composite key
 
