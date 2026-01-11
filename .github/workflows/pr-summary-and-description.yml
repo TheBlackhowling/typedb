@@ -28,6 +28,6 @@ jobs:
         id: generate_content
         uses: ./technical-docs-action/.github/actions/pr-summary-and-description
         with:
-          github_token: ${{ secrets.CHANGELOG_ACCESS_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           pr_number: ${{ github.event.pull_request.number }}
           repository: ${{ github.repository }}
