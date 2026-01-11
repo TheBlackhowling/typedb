@@ -19,15 +19,15 @@ jobs:
       - name: Checkout TechnicalDocumentation (for action)
         uses: actions/checkout@v4
         with:
-          repository: Blackhowling-Dev/TechnicalDocumentation
+          repository: TheBlackHowling/TechnicalDocumentation
           path: technical-docs-action
           ref: main
-          token: ${{ secrets.REPO_ACCESS_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.CHANGELOG_ACCESS_TOKEN }}
 
       - name: Generate PR Summary and Description
         id: generate_content
         uses: ./technical-docs-action/.github/actions/pr-summary-and-description
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.CHANGELOG_ACCESS_TOKEN }}
           pr_number: ${{ github.event.pull_request.number }}
           repository: ${{ github.repository }}
