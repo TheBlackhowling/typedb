@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.6] - 2026-01-11
+
+**Commit:** [`a7416d3`](https://github.com/TheBlackhowling/typedb/commit/a7416d3a8aed4d639e02b69133095feabfaa4d43)
+**Pull Request:** [#12](https://github.com/TheBlackhowling/typedb/pull/12)
+
+**Summary:** Implement model validation system to ensure registered models have required query methods for load tags
+
+**Key Changes:**
+- ✅ **Source Code**: Code changes included
+
+**Detailed Changes:** See [versions/0.1.6.md](versions/0.1.6.md)
+
+
 ## [0.1.5] - 2026-01-11
 
 **Commit:** [`12bef49`](https://github.com/TheBlackhowling/typedb/commit/12bef49dc9efd41aa20ad71fbca445ed650d720a)
