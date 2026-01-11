@@ -1,4 +1,4 @@
-# Contributing to [PROJECT_NAME]
+# Contributing to typedb
 
 Thank you for your interest in contributing! This document provides guidelines for contributing to this project.
 
@@ -6,19 +6,22 @@ Thank you for your interest in contributing! This document provides guidelines f
 
 1. **Fork and Clone:**
    ```bash
-   git clone https://github.com/YOUR_ORG/YOUR_REPO.git
-   cd YOUR_REPO
+   git clone https://github.com/TheBlackHowling/typedb.git
+   cd typedb
    ```
 
 2. **Read Documentation:**
-   - `README.md` - Project overview
+   - `README.md` - Project overview and API documentation
    - `CONTEXT.md` - Context guide for AI assistants and contributors
+   - `IMPLEMENTATION_DEPENDENCIES.md` - Implementation dependency chart
    - This file - Contribution guidelines
 
 3. **Set Up Development Environment:**
-   - [Add setup instructions here]
-   - Install dependencies: `[command]`
-   - Run tests: `[command]`
+   - **Go 1.18+** required (for generics support)
+   - Install Go: https://golang.org/doc/install
+   - No external dependencies required (only `database/sql` from standard library)
+   - Run tests: `go test ./...`
+   - Run tests with coverage: `go test -cover ./...`
 
 ## Development Workflow
 
@@ -135,27 +138,78 @@ Use the PR template provided (`.github/pull_request_template.md`). Include:
 
 ## Code Style
 
-[Add your project's code style guidelines here]
+### Go Conventions
+- Follow [Effective Go](https://go.dev/doc/effective_go) guidelines
+- Use `gofmt` for formatting (or `goimports` for imports)
+- Run `golangci-lint` if configured (optional)
 
-- Follow existing patterns
-- Use consistent formatting
-- Add comments for complex logic
-- Keep functions focused and small
+### Project-Specific Guidelines
+- **Keep types and implementations separate** - `types.go` should only have type definitions
+- **Document exported functions** - Add godoc comments for all public APIs
+- **Use generics appropriately** - Leverage Go 1.18+ generics for type safety
+- **Handle errors explicitly** - Don't ignore errors, return them appropriately
+- **Follow dependency order** - Implement files in order specified in `IMPLEMENTATION_DEPENDENCIES.md`
+- **Keep functions focused** - Single responsibility principle
+- **Use interfaces** - Define interfaces for testability and flexibility
+
+### Naming Conventions
+- Use descriptive names for exported types/functions
+- Prefix internal helpers with lowercase (unexported)
+- Use `T` for generic type parameters
+- Use `ctx` for context.Context parameters
+- Use `exec` for Executor parameters
 
 ## Testing
 
-[Add your project's testing guidelines here]
+### Testing Strategy
+- **Unit tests** - Test isolated components (reflection helpers, deserialization, validation)
+- **Integration tests** - Test database operations (use `sqlmock` or real test database)
+- **Test each layer** - Write tests as you implement each layer from `IMPLEMENTATION_DEPENDENCIES.md`
 
-- Write tests for new features
-- Ensure existing tests pass
-- Add integration tests for significant changes
+### Test Structure
+- Place tests in `*_test.go` files alongside source files
+- Use table-driven tests where appropriate
+- Mock dependencies using interfaces
+- Use `testify` if needed (but prefer standard library)
+
+### Running Tests
+```bash
+# Run all tests
+go test ./...
+
+# Run tests with coverage
+go test -cover ./...
+
+# Run tests for specific package
+go test ./typedb
+
+# Run tests with verbose output
+go test -v ./...
+```
+
+### Test Database Setup
+- Use `sqlmock` for unit testing database interactions
+- Use Docker/test containers for integration tests (optional)
+- Test against multiple database drivers when possible
 
 ## Documentation
 
-- Update relevant documentation with changes
-- Add examples for new features
-- Keep README.md up to date
-- Document breaking changes clearly
+### Code Documentation
+- Add godoc comments for all exported types, functions, and methods
+- Include usage examples in godoc where helpful
+- Document parameters and return values
+- Explain complex algorithms or design decisions
+
+### Project Documentation
+- Update `README.md` with new features and API changes
+- Update `IMPLEMENTATION_DEPENDENCIES.md` if dependency order changes
+- Add examples to `examples/` directory for new features
+- Document breaking changes clearly in changelog
+
+### Design Documentation
+- Design decisions are documented in `TechnicalDocumentation` repository
+- Update design docs if making significant architectural changes
+- Link to design docs from code comments when referencing design decisions
 
 ## Questions?
 
@@ -163,11 +217,35 @@ Use the PR template provided (`.github/pull_request_template.md`). Include:
 - Check existing documentation
 - Review `CONTEXT.md` for project structure
 
+## Implementation Workflow
+
+### Before Starting Implementation
+1. Review `IMPLEMENTATION_DEPENDENCIES.md` to understand dependency order
+2. Read relevant design documents in `TechnicalDocumentation` repository
+3. Check existing code patterns (if any)
+4. Create a feature branch: `git checkout -b feature/layer-name`
+
+### During Implementation
+1. Implement files in dependency order
+2. Write tests as you go
+3. Keep types and implementations separate
+4. Document exported functions
+5. Update `versions/unreleased.md` with changes
+
+### After Implementation
+1. Run all tests: `go test ./...`
+2. Check code formatting: `gofmt -l .`
+3. Update changelog
+4. Create PR following PR process below
+
 ## Code of Conduct
 
-[Add your code of conduct here or link to it]
-
 Be respectful, inclusive, and constructive in all interactions.
+
+- Be welcoming to newcomers
+- Provide constructive feedback
+- Focus on what's best for the project
+- Respect different viewpoints and experiences
 
 ---
 

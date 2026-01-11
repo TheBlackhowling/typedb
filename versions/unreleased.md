@@ -16,4 +16,10 @@ Add changelog entries here as you make changes. When ready to release:
 
 ## Current Unreleased Changes
 
-_No unreleased changes yet._
+## Added
+- GitHub Actions workflow for testing and coverage
+  - Runs tests on push and pull requests
+  - Tests against multiple Go versions (1.18-1.22)
+  - Generates coverage reports
+  - Uploads coverage artifacts
+  - Includes race detector for concurrent testing
