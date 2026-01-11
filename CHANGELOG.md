@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.2] - 2026-01-11
+
+**Commit:** [`42d3084`](https://github.com/TheBlackhowling/typedb/commit/42d3084eed78975a033718efcb0d16ab7fd05613)
+**Pull Request:** [#8](https://github.com/TheBlackhowling/typedb/pull/8)
+
+**Summary:** Add automated testing workflow to run tests and generate coverage reports
+
+**Key Changes:**
+- ✅ **Automated Workflow**: New GitHub Actions workflow added
+- ✅ **Source Code**: Code changes included
+- ✅ **Documentation**: Comprehensive documentation added
+
+**Detailed Changes:** See [versions/0.1.2.md](versions/0.1.2.md)
+
+
 ## [0.1.1] - 2026-01-11
 
 **Commit:** [`5dd4c61`](https://github.com/TheBlackhowling/typedb/commit/5dd4c61a8aaa8f04033f95d554ce6749e9c9f6a5)
