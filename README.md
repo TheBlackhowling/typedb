@@ -1,189 +1,241 @@
-# Repository Template
+# typedb
 
-This is a template repository with best practices for changelog management, automated versioning, and PR workflows.
+A type-safe, generic database query library for Go that prioritizes SQL-first development with minimal abstraction.
 
 ## Features
 
-- ✅ **Automated Changelog System** - Structured changelog with version files
-- ✅ **Semantic Versioning** - Automatic version determination (major/minor/patch)
-- ✅ **GitHub Actions Workflow** - Automated version releases on PR merge
-- ✅ **Cursor Commands** - AI-friendly commands for PR creation and workflow
-- ✅ **PR Templates** - Standardized pull request templates
-- ✅ **Context Documentation** - AI assistant priming documents
+- ✅ **Type-Safe Generic Queries** - Uses Go 1.18+ generics for compile-time type safety
+- ✅ **Database-Agnostic** - Works with any `database/sql` driver (PostgreSQL, MySQL, SQLite, MSSQL, Oracle)
+- ✅ **SQL-First Philosophy** - You write SQL, typedb handles type safety and deserialization
+- ✅ **Flexible Deserialization** - Custom deserialization via interfaces and struct tags
+- ✅ **Built-in Timeout Handling** - Automatic context timeout management
+- ✅ **Transaction Support** - Seamless transaction handling with the same API
+- ✅ **No Global State** - All operations require explicit database/client instances
+- ✅ **Minimal Dependencies** - Only `database/sql` and standard library
+
+## Design Principles
+
+1. **No SQL Generation** - typedb does NOT generate SQL. You write your own SQL queries for maximum flexibility and database-specific optimizations.
+2. **Database-Agnostic** - Core package works with any `database/sql` driver without requiring database-specific code.
+3. **SQL-First** - Developers write SQL, library handles type safety and deserialization.
+4. **No Global State** - All operations require explicit database/client instances for testability.
+5. **Minimal Abstraction** - Lightweight library focused on type safety, not a full ORM.
+
+## Installation
+
+```bash
+go get github.com/TheBlackHowling/typedb
+```
 
 ## Quick Start
 
-### 1. Use This Template
+### Basic Usage
 
-Click "Use this template" on GitHub to create a new repository from this template, or:
+```go
+package main
 
-```bash
-# Clone this template
-git clone https://github.com/YOUR_ORG/NewRepoTemplate.git your-new-repo
-cd your-new-repo
+import (
+    "context"
+    "database/sql"
+    "fmt"
+    "log"
 
-# Remove existing git history and initialize new repo
-rm -rf .git
-git init
-git add .
-git commit -m "Initial commit from template"
+    "github.com/TheBlackHowling/typedb"
+    _ "github.com/lib/pq" // PostgreSQL driver
+)
+
+type User struct {
+    typedb.Model
+    ID    int    `db:"id"`
+    Name  string `db:"name"`
+    Email string `db:"email"`
+}
+
+func main() {
+    ctx := context.Background()
+
+    // Open database connection
+    db, err := typedb.Open("postgres", "postgres://user:pass@localhost/dbname")
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer db.Close()
+
+    // Query all users
+    users, err := typedb.QueryAll[User](ctx, db, "SELECT id, name, email FROM users")
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    for _, user := range users {
+        fmt.Printf("User: %s (%s)\n", user.Name, user.Email)
+    }
+
+    // Query single user
+    user, err := typedb.QueryFirst[User](ctx, db, "SELECT id, name, email FROM users WHERE id = $1", 123)
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    fmt.Printf("Found user: %s\n", user.Name)
+}
 ```
 
-### 2. Customize for Your Project
+### Model Load Methods
 
-1. **Update README.md** - Replace this content with your project description
-2. **Update CONTEXT.md** - Replace placeholders (`[PROJECT_NAME]`, `[PROJECT_TYPE]`, etc.)
-3. **Update CONTRIBUTING.md** - Customize contribution guidelines
-4. **Update Cursor Commands** - Edit `.cursor/commands/create-pr.md` to use your repository name
-5. **Update Workflow** - Edit `.github/workflows/version-release.yml` if needed for your project type
+```go
+package main
 
-### 3. Configure Repository
+import (
+    "context"
 
-1. **Set Default Branch** - Ensure `main` is your default branch (or update workflow)
-2. **Enable GitHub Actions** - Workflows will run automatically
-3. **Configure Branch Protection** - Protect `main` branch, require PR reviews
-4. **Set Up Secrets** - Configure `REPO_ACCESS_TOKEN` secret if using cross-repository workflows:
-   - Go to Settings → Secrets and variables → Actions
-   - Add a new repository secret named `REPO_ACCESS_TOKEN`
-   - Use a Personal Access Token (PAT) with appropriate permissions
-   - See `.github/workflows/CHANGELOG_ACTION_SETUP.md` for details
+    "github.com/TheBlackHowling/typedb"
+)
 
-## How It Works
+type User struct {
+    typedb.Model
+    ID    int    `db:"id" load:"primary"`
+    Email string `db:"email" load:"unique"`
+    Name  string `db:"name"`
+}
 
-### Changelog System
+// Define query methods
+func (u *User) QueryByID() string {
+    return "SELECT id, name, email FROM users WHERE id = $1"
+}
 
-- **`CHANGELOG.md`** - Summary changelog with links to version files
-- **`versions/[VERSION].md`** - Detailed changes for each version (auto-generated from PR descriptions)
+func (u *User) QueryByEmail() string {
+    return "SELECT id, name, email FROM users WHERE email = $1"
+}
 
-### Automated Versioning
+// Register model for validation
+func init() {
+    typedb.RegisterModel[User]()
+}
 
-When a PR is merged:
-1. Workflow extracts changelog content from the PR description's "Changes Made" section
-2. Determines version bump (major/minor/patch) based on change types
-3. Creates version file with commit SHA and PR link
-4. Updates `CHANGELOG.md` with summary
+// Usage
+func main() {
+    ctx := context.Background()
+    db, _ := typedb.Open("postgres", "postgres://...")
 
-### Version Determination
+    // Load by primary key (using Load method on model)
+    user := &User{ID: 123}
+    err := user.Load(ctx, db)
 
-- **MAJOR** (X.0.0): Removed or Deprecated sections, breaking changes
-- **MINOR** (0.X.0): Added sections with new features/content
-- **PATCH** (0.0.X): Fixed sections, minor changes, workflow improvements
-
-## Usage
-
-### Before Making Changes
-
-1. Get latest changes:
-   ```bash
-   git checkout main && git pull
-   ```
-   Or use Cursor command: `/gml`
-
-2. Create a branch:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-### Making Changes
-
-1. Make your changes
-2. Commit and push:
-   ```bash
-   git add .
-   git commit -m "Add feature: feature-name"
-   git push -u origin feature/your-feature-name
-   ```
-
-### Creating PRs
-
-**Option 1: Using Cursor Command (Recommended)**
-- Type `/create-pr` in Cursor chat
-- AI assistant will analyze changes and generate PR summary
-- PR will be created automatically
-
-**Option 2: Manual**
-```bash
-gh pr create --web --base main --repo YOUR_ORG/YOUR_REPO
+    // Load by unique field (using LoadByField helper)
+    user2 := &User{Email: "test@example.com"}
+    err = typedb.LoadByField(ctx, db, user2, "Email")
+}
 ```
 
-**Important:** Include a "Changes Made" section in your PR description with changelog entries. The workflow will extract this content automatically. See `.github/pull_request_template.md` for the format.
+### Composite Keys
 
-### After PR Merge
+```go
+package main
 
-- Version is automatically released
-- Version file created in `versions/`
-- `CHANGELOG.md` updated
+import (
+    "context"
+    "log"
 
-## Cursor Commands
+    "github.com/TheBlackHowling/typedb"
+)
 
-- **`/gml`** - Get latest changes from main branch
-- **`/create-pr`** - Create PR with AI-generated summary (only when task complete)
-- **`/pre-commit-checklist`** - Show checklist to verify before committing
+type UserPost struct {
+    typedb.Model
+    UserID int `db:"user_id" load:"composite:userpost"`
+    PostID int `db:"post_id" load:"composite:userpost"`
+    // UserID + PostID together uniquely identify a UserPost
+}
 
-## File Structure
+// Query method: fields sorted alphabetically (PostID, UserID)
+// IMPORTANT: SQL parameters must match alphabetical field order
+func (up *UserPost) QueryByPostIDUserID() string {
+    // PostID comes before UserID alphabetically, so $1 = PostID, $2 = UserID
+    return "SELECT user_id, post_id FROM user_posts WHERE post_id = $1 AND user_id = $2"
+}
 
+// Register model for validation
+func init() {
+    typedb.RegisterModel[UserPost]()
+}
+
+// Usage - must populate all fields in composite key
+func main() {
+    ctx := context.Background()
+    db, _ := typedb.Open("postgres", "postgres://...")
+
+    userPost := &UserPost{UserID: 123, PostID: 456}
+    err := typedb.LoadByComposite(ctx, db, userPost, "userpost")
+    if err != nil {
+        log.Fatal(err)
+    }
+}
 ```
-.
-├── .github/
-│   ├── workflows/
-│   │   └── version-release.yml    # Automated versioning workflow
-│   └── pull_request_template.md   # PR template
-├── .cursor/
-│   └── commands/                  # Cursor slash commands
-│       ├── create-pr.md
-│       ├── gml.md
-│       └── pre-commit-checklist.md
-├── versions/
-│   └── [VERSION].md                # Version files (auto-generated)
-├── CHANGELOG.md                    # Summary changelog
-├── CONTEXT.md                      # AI assistant context guide
-├── CONTRIBUTING.md                 # Contribution guidelines
-├── README.md                       # This file
-└── .gitignore                      # Git ignore rules
+
+### Transactions
+
+```go
+err := db.WithTx(ctx, func(tx *typedb.Tx) error {
+    // All queries use the same transaction
+    users, err := typedb.QueryAll[User](ctx, tx, "SELECT * FROM users")
+    if err != nil {
+        return err
+    }
+
+    // More operations...
+    return nil
+})
 ```
+
+## API Overview
+
+### Query Functions
+
+- `QueryAll[T](ctx, exec, query, args...)` - Returns `[]*T`, empty slice if no results
+- `QueryFirst[T](ctx, exec, query, args...)` - Returns `*T`, `nil` if no results
+- `QueryOne[T](ctx, exec, query, args...)` - Returns `*T`, errors if not exactly one result
+
+### Load Functions
+
+- `model.Load(ctx, exec)` - Loads model by primary key field (method on Model)
+- `LoadByField(ctx, exec, model, fieldName)` - Loads model by unique field
+- `LoadByComposite(ctx, exec, model, compositeName)` - Loads model by composite key
+
+### Connection Management
+
+- `Open(driverName, dsn, opts...)` - Opens database connection with validation
+- `NewDB(db *sql.DB, timeout)` - Creates DB instance from existing connection
+
+## Requirements
+
+- Go 1.18 or later (for generics support)
+- Any `database/sql` driver
 
 ## Documentation
 
-- **`CONTEXT.md`** - Context guide for AI assistants and contributors
-- **`CONTRIBUTING.md`** - Detailed contribution guidelines
-- **`CHANGELOG.md`** - Project changelog
+- [Design Draft](docs/backlog/typedb-design-draft.md) - Complete design documentation
+- [Complex Models](docs/backlog/typedb-complex-models-design.md) - Multi-table models and JOINs
+- [Loader Pattern](docs/backlog/typedb-loader-pattern-discussion.md) - Model loading patterns
 
-## Best Practices
+## Contributing
 
-1. **Always document changes in PR** - Include "Changes Made" section in PR description
-2. **Create branches** - Never commit directly to `main`
-3. **Wait for PR approval** - Don't merge your own PRs
-4. **Follow conventions** - Match existing patterns
-5. **Test changes** - Verify before committing
-
-## Customization
-
-### For Different Project Types
-
-**Game Development:**
-- Update workflow version detection keywords for game-specific content
-- Add game-specific documentation structure
-
-**Documentation Projects:**
-- Adjust version detection for documentation changes
-- Add documentation-specific templates
-
-**Software Projects:**
-- Add code style guidelines
-- Include testing requirements
-- Add deployment documentation
-
-## Support
-
-For questions or issues:
-1. Check `CONTEXT.md` for project structure
-2. Review `CONTRIBUTING.md` for guidelines
-3. Check `CHANGELOG.md` for recent changes
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-[Add your license here]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
----
+## Status
 
-**Note:** This template includes placeholders that should be customized for your specific project. Search for `[PROJECT_NAME]`, `YOUR_ORG`, `YOUR_REPO`, etc. and replace with your actual values.
+🚧 **Early Development** - This project is in active development. API may change before v1.0.0.
+
+## Why typedb?
+
+The Go ecosystem has many database libraries, but typedb fills a specific gap:
+
+- **sqlx** - Great, but doesn't use generics
+- **pgx** - PostgreSQL-specific, not database-agnostic
+- **GORM/Bun** - Full ORMs with heavy abstractions
+- **typedb** - Type-safe generics, SQL-first, database-agnostic, minimal abstraction
+
+If you want type-safe queries without ORM overhead, typedb is for you.
