@@ -28,15 +28,17 @@ type Executor interface {
 // DB wraps *sql.DB and provides query execution with timeout handling.
 // DB implements the Executor interface.
 type DB struct {
-	db      *sql.DB
-	timeout time.Duration // default timeout for operations
+	db         *sql.DB
+	driverName string
+	timeout    time.Duration // default timeout for operations
 }
 
 // Tx wraps *sql.Tx and provides transaction-scoped query execution.
 // Tx implements the Executor interface.
 type Tx struct {
-	tx      *sql.Tx
-	timeout time.Duration
+	tx         *sql.Tx
+	driverName string
+	timeout    time.Duration
 }
 
 // Config holds database connection and pool configuration.
