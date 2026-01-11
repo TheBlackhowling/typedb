@@ -1,7 +1,9 @@
 package typedb
 
 import (
+	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -145,4 +147,35 @@ func TestGetRegisteredModels_ReturnsCopy(t *testing.T) {
 	if &models1[0] == &models2[0] {
 		t.Error("GetRegisteredModels should return a copy, not the original slice")
 	}
+}
+
+// ValueModel implements ModelInterface with value receiver (for testing panic path)
+type ValueModel struct {
+	Model
+	ID int `db:"id" load:"primary"`
+}
+
+func (v ValueModel) Deserialize(row map[string]any) error {
+	return nil
+}
+
+func TestRegisterModel_NonPointerTypePanics(t *testing.T) {
+	// Reset registry for isolated test
+	registeredModels = nil
+
+	// Test that RegisterModel panics when given a non-pointer type.
+	// ValueModel implements ModelInterface with value receiver, so we can test the panic path.
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("Expected panic for non-pointer type")
+		} else {
+			errMsg := fmt.Sprintf("%v", r)
+			if !strings.Contains(errMsg, "RegisterModel requires a pointer type") {
+				t.Errorf("Expected panic message about pointer type, got: %v", r)
+			}
+		}
+	}()
+
+	// This should panic - ValueModel is not a pointer type
+	RegisterModel[ValueModel]()
 }
