@@ -17,38 +17,25 @@ Add changelog entries here as you make changes. When ready to release:
 ## Current Unreleased Changes
 
 ## Added
-- Insert functionality with ID retrieval (`insert.go`)
-  - `InsertAndReturn[T]`: Executes INSERT with RETURNING/OUTPUT clause and deserializes returned row into model
-  - `InsertAndGetId`: Convenience helper that returns inserted ID as int64
-  - Supports PostgreSQL, SQLite, SQL Server (RETURNING/OUTPUT clauses)
-  - Supports MySQL and SQLite using `sql.Result.LastInsertId()` (safe with connection pooling)
-  - Includes internal `InsertedId` model for ID retrieval
-- Comprehensive unit tests for insert functionality (`insert_test.go`)
-  - Tests for `InsertAndReturn` with success and error cases
-  - Tests for `InsertAndGetId` across all database types
-  - Tests for MySQL/SQLite `LastInsertId()` path
-  - Tests for error handling (database errors, deserialization failures, missing RETURNING clauses)
-  - Tests for transaction integration
-  - 100% statement coverage for insert functions
-- Comprehensive unit tests for uint deserialization functions
-  - `DeserializeUint64`: 23 test cases covering all type conversions, error cases, and edge cases
-  - `DeserializeUint32`: 22 test cases including overflow validation
-  - `DeserializeUint`: 22 test cases covering all conversion paths
-  - Improved coverage from 8.7-9.5% to 100% for all three functions
-- Driver name tracking in DB and Tx structs
-  - Added `driverName` field to `DB` and `Tx` structs for database-specific logic
-  - Updated `NewDB` signature to accept `driverName` parameter
-  - Updated `Open` and `OpenWithoutValidation` to pass driver name
-  - Updated `DB.Begin` to propagate driver name to transactions
+- Comprehensive sqlmock tests for Layer 4 (executor.go)
+  - DB methods: Exec, QueryAll, QueryRowMap, GetInto, QueryDo (100% coverage)
+  - Tx methods: Exec, QueryAll, QueryRowMap, GetInto, QueryDo
+  - Tests cover success cases, error handling, empty results, and edge cases
+  - Improved helper function coverage (scanRowsToMaps, scanRowToMap, scanRowToMapWithCols)
+- sqlmock dependency for database mocking in tests
+  - Added `github.com/DATA-DOG/go-sqlmock v1.5.2` as test dependency
 
 ## Changed
-- Updated `DeserializeToField` to support uint types
-  - Added handling for `*uint64`, `*uint32`, and `*uint` pointer fields
-  - Uses new `DeserializeUint64`, `DeserializeUint32`, and `DeserializeUint` functions
-- Improved overall code coverage from 84.4% to 90.2% (+5.8%)
-  - `DeserializeUint64`: 8.7% → 100%
-  - `DeserializeUint32`: 9.5% → 100%
-  - `DeserializeUint`: 9.1% → 100%
-  - `InsertAndReturn`: 100% coverage
-  - `InsertAndGetId`: 100% coverage
-- Updated `go-sqlmock` dependency from indirect to direct dependency
+- Improved overall code coverage from 77.2% to 90.1% (+12.9%)
+  - DB.Exec: 0% → 100%
+  - DB.QueryAll: 0% → 100%
+  - DB.QueryRowMap: 0% → 87.5%
+  - DB.GetInto: 0% → 100%
+  - DB.QueryDo: 0% → 100%
+  - scanRowsToMaps: 0% → 75%
+  - scanRowToMapWithCols: 0% → 84.6%
+  - scanRowToMap: 0% → 75%
+- Removed `Model.Load()` method - use `typedb.Load(ctx, exec, model)` instead
+  - Due to Go's method promotion limitations with embedded structs, `Model.Load()` cannot reliably determine the outer struct type
+  - This aligns with TabulaRasa's approach of using helper functions rather than methods on Model
+  - Updated README.md examples to use `typedb.Load()` directly
