@@ -16,10 +16,23 @@ A type-safe, generic database query library for Go that prioritizes SQL-first de
 ## Design Principles
 
 1. **No SQL Generation** - typedb does NOT generate SQL. You write your own SQL queries for maximum flexibility and database-specific optimizations.
-2. **Database-Agnostic** - Core package works with any `database/sql` driver without requiring database-specific code.
+2. **Database-Agnostic** - Core package works with any `database/sql` driver without requiring database-specific code. The executor layer is fully database-agnostic.
 3. **SQL-First** - Developers write SQL, library handles type safety and deserialization.
 4. **No Global State** - All operations require explicit database/client instances for testability.
 5. **Minimal Abstraction** - Lightweight library focused on type safety, not a full ORM.
+
+## Database Compatibility
+
+typedb is designed to work with any database that has a `database/sql` driver. The core executor layer (`DB`, `Tx`, query methods) is fully database-agnostic and works with PostgreSQL, MySQL, SQLite, MSSQL, Oracle, and any other database with a compatible driver.
+
+### PostgreSQL-Specific Features
+
+Some serialization helpers are PostgreSQL-specific:
+
+- **Array Serialization** (`SerializeIntArray`, `SerializeStringArray`) - These functions serialize Go slices to PostgreSQL array format (`{1,2,3}`). For other databases, handle arrays in your SQL queries directly.
+- **JSONB** - While JSON serialization (`SerializeJSONB`) produces standard JSON strings that work across databases, the "JSONB" naming reflects PostgreSQL's JSONB type. The serialized output is standard JSON compatible with MySQL JSON, SQL Server JSON, etc.
+
+For maximum database portability, write database-specific SQL for arrays and use standard JSON for JSON columns.
 
 ## Installation
 
