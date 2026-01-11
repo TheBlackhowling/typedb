@@ -5,15 +5,19 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 )
 
 // NewDB creates a DB instance from an existing *sql.DB connection.
 // The timeout parameter sets the default timeout for operations.
-func NewDB(db *sql.DB, timeout time.Duration) *DB {
+// The driverName parameter specifies the database driver name (e.g., "postgres", "mysql").
+// If driverName is empty, it will be detected from the connection if possible.
+func NewDB(db *sql.DB, driverName string, timeout time.Duration) *DB {
 	return &DB{
-		db:      db,
-		timeout: timeout,
+		db:         db,
+		driverName: driverName,
+		timeout:    timeout,
 	}
 }
 
@@ -138,18 +142,22 @@ func (d *DB) Ping(ctx context.Context) error {
 }
 
 // Begin starts a new transaction.
+// Note: The context passed to BeginTx is used only for starting the transaction.
+// The transaction itself is not bound to this context's lifecycle - operations
+// within the transaction use their own contexts via withTimeout.
 func (d *DB) Begin(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
-	ctx, cancel := d.withTimeout(ctx)
-	defer cancel()
-
+	// Use the original context for BeginTx - don't add timeout here
+	// because BeginTx itself should complete quickly, and we don't want
+	// to bind the transaction to a context that might be canceled
 	tx, err := d.db.BeginTx(ctx, opts)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Tx{
-		tx:      tx,
-		timeout: d.timeout,
+		tx:         tx,
+		driverName: d.driverName,
+		timeout:    d.timeout,
 	}, nil
 }
 
@@ -317,11 +325,14 @@ func scanRowToMapWithCols(rows *sql.Rows, cols []string) (map[string]any, error)
 	result := make(map[string]any)
 	for i, col := range cols {
 		val := values[i]
+		// Normalize column names to lowercase for case-insensitive matching
+		// This handles databases like Oracle that return uppercase column names
+		colKey := strings.ToLower(col)
 		if b, ok := val.([]byte); ok {
 			// Convert []byte to string for easier handling
-			result[col] = string(b)
+			result[colKey] = string(b)
 		} else {
-			result[col] = val
+			result[colKey] = val
 		}
 	}
 
@@ -366,7 +377,7 @@ func Open(driverName, dsn string, opts ...Option) (*DB, error) {
 	// Validate all registered models before returning
 	MustValidateAllRegistered()
 
-	return NewDB(db, cfg.OpTimeout), nil
+	return NewDB(db, driverName, cfg.OpTimeout), nil
 }
 
 // OpenWithoutValidation opens a database connection without validation.
@@ -394,7 +405,7 @@ func OpenWithoutValidation(driverName, dsn string, opts ...Option) (*DB, error) 
 	db.SetConnMaxLifetime(cfg.ConnMaxLifetime)
 	db.SetConnMaxIdleTime(cfg.ConnMaxIdleTime)
 
-	return NewDB(db, cfg.OpTimeout), nil
+	return NewDB(db, driverName, cfg.OpTimeout), nil
 }
 
 // Option functions for configuring database connections
