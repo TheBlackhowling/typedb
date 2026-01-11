@@ -567,3 +567,195 @@ func parseTime(s string) (time.Time, error) {
 	// Return error if all formats fail
 	return time.Time{}, fmt.Errorf("unable to parse time: %q", s)
 }
+
+// SerializeJSONB serializes a Go value to JSONB format (JSON string or bytes).
+// Converts map[string]any, map[string]string, or any JSON-marshalable value to JSON.
+// Returns the value as-is if it's already a string or []byte.
+func SerializeJSONB(value any) (any, error) {
+	if value == nil {
+		return nil, nil
+	}
+
+	switch v := value.(type) {
+	case string:
+		// Already a JSON string
+		return v, nil
+	case []byte:
+		// Already JSON bytes
+		return v, nil
+	case map[string]any, map[string]string, []any, []string, []int:
+		// JSON-marshalable types
+		jsonBytes, err := json.Marshal(v)
+		if err != nil {
+			return nil, fmt.Errorf("typedb: failed to marshal JSONB: %w", err)
+		}
+		return string(jsonBytes), nil
+	default:
+		// Try to marshal any other type
+		jsonBytes, err := json.Marshal(v)
+		if err != nil {
+			return nil, fmt.Errorf("typedb: failed to marshal JSONB: %w", err)
+		}
+		return string(jsonBytes), nil
+	}
+}
+
+// SerializeIntArray serializes a Go slice to PostgreSQL array format.
+// Converts []int, []int64, []int32, etc. to PostgreSQL array string "{1,2,3}".
+func SerializeIntArray(value any) (string, error) {
+	if value == nil {
+		return "{}", nil
+	}
+
+	var ints []int
+	switch v := value.(type) {
+	case []int:
+		ints = v
+	case []int64:
+		ints = make([]int, len(v))
+		for i, val := range v {
+			ints[i] = int(val)
+		}
+	case []int32:
+		ints = make([]int, len(v))
+		for i, val := range v {
+			ints[i] = int(val)
+		}
+	case []int16:
+		ints = make([]int, len(v))
+		for i, val := range v {
+			ints[i] = int(val)
+		}
+	case []int8:
+		ints = make([]int, len(v))
+		for i, val := range v {
+			ints[i] = int(val)
+		}
+	case []uint:
+		ints = make([]int, len(v))
+		for i, val := range v {
+			ints[i] = int(val)
+		}
+	case []uint64:
+		ints = make([]int, len(v))
+		for i, val := range v {
+			ints[i] = int(val)
+		}
+	case []uint32:
+		ints = make([]int, len(v))
+		for i, val := range v {
+			ints[i] = int(val)
+		}
+	case []uint16:
+		ints = make([]int, len(v))
+		for i, val := range v {
+			ints[i] = int(val)
+		}
+	case []uint8:
+		ints = make([]int, len(v))
+		for i, val := range v {
+			ints[i] = int(val)
+		}
+	case []any:
+		ints = make([]int, len(v))
+		for i, item := range v {
+			val, err := DeserializeInt(item)
+			if err != nil {
+				return "", fmt.Errorf("element %d: %w", i, err)
+			}
+			ints[i] = val
+		}
+	default:
+		return "", fmt.Errorf("typedb: unsupported type for int array serialization: %T", value)
+	}
+
+	if len(ints) == 0 {
+		return "{}", nil
+	}
+
+	parts := make([]string, len(ints))
+	for i, val := range ints {
+		parts[i] = strconv.Itoa(val)
+	}
+
+	return "{" + strings.Join(parts, ",") + "}", nil
+}
+
+// SerializeStringArray serializes a Go slice to PostgreSQL array format.
+// Converts []string or []any to PostgreSQL array string "{a,b,c}".
+func SerializeStringArray(value any) (string, error) {
+	if value == nil {
+		return "{}", nil
+	}
+
+	var strs []string
+	switch v := value.(type) {
+	case []string:
+		strs = v
+	case []any:
+		strs = make([]string, len(v))
+		for i, item := range v {
+			strs[i] = DeserializeString(item)
+		}
+	default:
+		return "", fmt.Errorf("typedb: unsupported type for string array serialization: %T", value)
+	}
+
+	if len(strs) == 0 {
+		return "{}", nil
+	}
+
+	// Escape strings that contain commas, quotes, or backslashes
+	parts := make([]string, len(strs))
+	for i, s := range strs {
+		// PostgreSQL array format: escape quotes and backslashes, quote if contains special chars
+		escaped := strings.ReplaceAll(s, "\\", "\\\\")
+		escaped = strings.ReplaceAll(escaped, "\"", "\\\"")
+		if strings.ContainsAny(escaped, `,"{}\`) {
+			parts[i] = `"` + escaped + `"`
+		} else {
+			parts[i] = escaped
+		}
+	}
+
+	return "{" + strings.Join(parts, ",") + "}", nil
+}
+
+// Serialize converts a Go value to a database-compatible format.
+// Handles JSONB, arrays, and other types that need conversion for database operations.
+// Returns the value as-is for types that databases handle natively (int, string, bool, time.Time, etc.).
+func Serialize(value any) (any, error) {
+	if value == nil {
+		return nil, nil
+	}
+
+	// Check if it's already a database-compatible type
+	switch value.(type) {
+	case int, int64, int32, int16, int8,
+		uint, uint64, uint32, uint16, uint8,
+		float64, float32,
+		bool,
+		string,
+		time.Time,
+		[]byte:
+		return value, nil
+	}
+
+	// Handle JSONB types
+	switch value.(type) {
+	case map[string]any, map[string]string:
+		return SerializeJSONB(value)
+	}
+
+	// Handle array types
+	switch value.(type) {
+	case []int, []int64, []int32, []int16, []int8,
+		[]uint, []uint64, []uint32, []uint16, []uint8:
+		return SerializeIntArray(value)
+	case []string:
+		return SerializeStringArray(value)
+	}
+
+	// For other types, try JSONB serialization
+	return SerializeJSONB(value)
+}
