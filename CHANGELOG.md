@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.3] - 2026-01-11
+
+**Commit:** [`459b1fe`](https://github.com/TheBlackhowling/typedb/commit/459b1fe8186f803070b6ecc07a43ad545a095b99)
+**Pull Request:** [#9](https://github.com/TheBlackhowling/typedb/pull/9)
+
+**Summary:** Implement core model registration and reflection utilities with pointer type enforcement
+
+**Key Changes:**
+- ✅ **Source Code**: Code changes included
+- ✅ **Documentation**: Comprehensive documentation added
+
+**Detailed Changes:** See [versions/0.1.3.md](versions/0.1.3.md)
+
+
 ## [0.1.2] - 2026-01-11
 
 **Commit:** [`42d3084`](https://github.com/TheBlackhowling/typedb/commit/42d3084eed78975a033718efcb0d16ab7fd05613)
