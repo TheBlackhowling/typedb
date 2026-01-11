@@ -3,8 +3,11 @@ package typedb
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"testing"
 	"time"
+
+	"github.com/DATA-DOG/go-sqlmock"
 )
 
 func TestNewDB(t *testing.T) {
@@ -275,4 +278,689 @@ func TestTx_Rollback(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Rollback failed: %v", err)
 	}
+}
+
+// ========== SQLMock Tests for DB Methods ==========
+
+func TestDB_Exec_Sqlmock(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, 5*time.Second)
+	ctx := context.Background()
+
+	t.Run("success", func(t *testing.T) {
+		mock.ExpectExec("INSERT INTO users").
+			WithArgs("test").
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		result, err := typedbDB.Exec(ctx, "INSERT INTO users (name) VALUES ($1)", "test")
+		if err != nil {
+			t.Fatalf("Exec failed: %v", err)
+		}
+
+		lastID, err := result.LastInsertId()
+		if err != nil {
+			t.Fatalf("LastInsertId failed: %v", err)
+		}
+		if lastID != 1 {
+			t.Errorf("Expected LastInsertId 1, got %d", lastID)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		expectedErr := errors.New("database error")
+		mock.ExpectExec("INSERT INTO users").
+			WithArgs("test").
+			WillReturnError(expectedErr)
+
+		_, err := typedbDB.Exec(ctx, "INSERT INTO users (name) VALUES ($1)", "test")
+		if err != expectedErr {
+			t.Fatalf("Expected error %v, got %v", expectedErr, err)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+}
+
+func TestDB_QueryAll_Sqlmock(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, 5*time.Second)
+	ctx := context.Background()
+
+	t.Run("success with rows", func(t *testing.T) {
+		rows := sqlmock.NewRows([]string{"id", "name"}).
+			AddRow(1, "Alice").
+			AddRow(2, "Bob")
+
+		mock.ExpectQuery("SELECT id, name FROM users").
+			WillReturnRows(rows)
+
+		result, err := typedbDB.QueryAll(ctx, "SELECT id, name FROM users")
+		if err != nil {
+			t.Fatalf("QueryAll failed: %v", err)
+		}
+
+		if len(result) != 2 {
+			t.Fatalf("Expected 2 rows, got %d", len(result))
+		}
+
+		if result[0]["id"] != int64(1) || result[0]["name"] != "Alice" {
+			t.Errorf("First row incorrect: %+v", result[0])
+		}
+
+		if result[1]["id"] != int64(2) || result[1]["name"] != "Bob" {
+			t.Errorf("Second row incorrect: %+v", result[1])
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+
+	t.Run("success with empty result", func(t *testing.T) {
+		rows := sqlmock.NewRows([]string{"id", "name"})
+
+		mock.ExpectQuery("SELECT id, name FROM users").
+			WillReturnRows(rows)
+
+		result, err := typedbDB.QueryAll(ctx, "SELECT id, name FROM users")
+		if err != nil {
+			t.Fatalf("QueryAll failed: %v", err)
+		}
+
+		if len(result) != 0 {
+			t.Fatalf("Expected 0 rows, got %d", len(result))
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		expectedErr := errors.New("database error")
+		mock.ExpectQuery("SELECT id, name FROM users").
+			WillReturnError(expectedErr)
+
+		_, err := typedbDB.QueryAll(ctx, "SELECT id, name FROM users")
+		if err != expectedErr {
+			t.Fatalf("Expected error %v, got %v", expectedErr, err)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+}
+
+func TestDB_QueryRowMap_Sqlmock(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, 5*time.Second)
+	ctx := context.Background()
+
+	t.Run("success", func(t *testing.T) {
+		rows := sqlmock.NewRows([]string{"id", "name"}).
+			AddRow(1, "Alice")
+
+		mock.ExpectQuery("SELECT id, name FROM users WHERE id").
+			WithArgs(1).
+			WillReturnRows(rows)
+
+		result, err := typedbDB.QueryRowMap(ctx, "SELECT id, name FROM users WHERE id = $1", 1)
+		if err != nil {
+			t.Fatalf("QueryRowMap failed: %v", err)
+		}
+
+		if result["id"] != int64(1) || result["name"] != "Alice" {
+			t.Errorf("Row incorrect: %+v", result)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+
+	t.Run("no rows - returns ErrNotFound", func(t *testing.T) {
+		rows := sqlmock.NewRows([]string{"id", "name"})
+
+		mock.ExpectQuery("SELECT id, name FROM users WHERE id").
+			WithArgs(999).
+			WillReturnRows(rows)
+
+		_, err := typedbDB.QueryRowMap(ctx, "SELECT id, name FROM users WHERE id = $1", 999)
+		if err != ErrNotFound {
+			t.Fatalf("Expected ErrNotFound, got %v", err)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+
+	t.Run("multiple rows - returns error", func(t *testing.T) {
+		rows := sqlmock.NewRows([]string{"id", "name"}).
+			AddRow(1, "Alice").
+			AddRow(2, "Bob")
+
+		mock.ExpectQuery("SELECT id, name FROM users").
+			WillReturnRows(rows)
+
+		_, err := typedbDB.QueryRowMap(ctx, "SELECT id, name FROM users")
+		if err == nil {
+			t.Fatal("Expected error for multiple rows")
+		}
+
+		if err.Error() != "typedb: QueryRowMap returned multiple rows" {
+			t.Errorf("Expected multiple rows error, got %v", err)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+
+	t.Run("query error", func(t *testing.T) {
+		expectedErr := errors.New("database error")
+		mock.ExpectQuery("SELECT id, name FROM users").
+			WillReturnError(expectedErr)
+
+		_, err := typedbDB.QueryRowMap(ctx, "SELECT id, name FROM users")
+		if err != expectedErr {
+			t.Fatalf("Expected error %v, got %v", expectedErr, err)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+}
+
+func TestDB_GetInto_Sqlmock(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, 5*time.Second)
+	ctx := context.Background()
+
+	t.Run("success", func(t *testing.T) {
+		rows := sqlmock.NewRows([]string{"id", "name"}).
+			AddRow(1, "Alice")
+
+		mock.ExpectQuery("SELECT id, name FROM users WHERE id").
+			WithArgs(1).
+			WillReturnRows(rows)
+
+		var id int
+		var name string
+		err := typedbDB.GetInto(ctx, "SELECT id, name FROM users WHERE id = $1", []any{1}, &id, &name)
+		if err != nil {
+			t.Fatalf("GetInto failed: %v", err)
+		}
+
+		if id != 1 || name != "Alice" {
+			t.Errorf("Values incorrect: id=%d, name=%s", id, name)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+
+	t.Run("no rows - returns ErrNotFound", func(t *testing.T) {
+		rows := sqlmock.NewRows([]string{"id", "name"})
+
+		mock.ExpectQuery("SELECT id, name FROM users WHERE id").
+			WithArgs(999).
+			WillReturnRows(rows)
+
+		var id int
+		var name string
+		err := typedbDB.GetInto(ctx, "SELECT id, name FROM users WHERE id = $1", []any{999}, &id, &name)
+		if err != ErrNotFound {
+			t.Fatalf("Expected ErrNotFound, got %v", err)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		expectedErr := errors.New("database error")
+		mock.ExpectQuery("SELECT id, name FROM users").
+			WillReturnError(expectedErr)
+
+		var id int
+		var name string
+		err := typedbDB.GetInto(ctx, "SELECT id, name FROM users", []any{}, &id, &name)
+		if err != expectedErr {
+			t.Fatalf("Expected error %v, got %v", expectedErr, err)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+}
+
+func TestDB_QueryDo_Sqlmock(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, 5*time.Second)
+	ctx := context.Background()
+
+	t.Run("success", func(t *testing.T) {
+		rows := sqlmock.NewRows([]string{"id", "name"}).
+			AddRow(1, "Alice").
+			AddRow(2, "Bob")
+
+		mock.ExpectQuery("SELECT id, name FROM users").
+			WillReturnRows(rows)
+
+		count := 0
+		err := typedbDB.QueryDo(ctx, "SELECT id, name FROM users", []any{}, func(rows *sql.Rows) error {
+			count++
+			return nil
+		})
+		if err != nil {
+			t.Fatalf("QueryDo failed: %v", err)
+		}
+
+		if count != 2 {
+			t.Errorf("Expected scan to be called 2 times, got %d", count)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+
+	t.Run("scan error", func(t *testing.T) {
+		rows := sqlmock.NewRows([]string{"id", "name"}).
+			AddRow(1, "Alice")
+
+		mock.ExpectQuery("SELECT id, name FROM users").
+			WillReturnRows(rows)
+
+		scanErr := errors.New("scan error")
+		err := typedbDB.QueryDo(ctx, "SELECT id, name FROM users", []any{}, func(rows *sql.Rows) error {
+			return scanErr
+		})
+		if err != scanErr {
+			t.Fatalf("Expected scan error %v, got %v", scanErr, err)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+
+	t.Run("query error", func(t *testing.T) {
+		expectedErr := errors.New("database error")
+		mock.ExpectQuery("SELECT id, name FROM users").
+			WillReturnError(expectedErr)
+
+		err := typedbDB.QueryDo(ctx, "SELECT id, name FROM users", []any{}, func(rows *sql.Rows) error {
+			return nil
+		})
+		if err != expectedErr {
+			t.Fatalf("Expected error %v, got %v", expectedErr, err)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+}
+
+// ========== SQLMock Tests for Tx Methods ==========
+
+func TestTx_Exec_Sqlmock(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	mock.ExpectBegin()
+	mockTx, err := db.Begin()
+	if err != nil {
+		t.Fatalf("Failed to begin transaction: %v", err)
+	}
+
+	typedbTx := &Tx{
+		tx:      mockTx,
+		timeout: 5 * time.Second,
+	}
+	ctx := context.Background()
+
+	t.Run("success", func(t *testing.T) {
+		mock.ExpectExec("INSERT INTO users").
+			WithArgs("test").
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		result, err := typedbTx.Exec(ctx, "INSERT INTO users (name) VALUES ($1)", "test")
+		if err != nil {
+			t.Fatalf("Exec failed: %v", err)
+		}
+
+		lastID, err := result.LastInsertId()
+		if err != nil {
+			t.Fatalf("LastInsertId failed: %v", err)
+		}
+		if lastID != 1 {
+			t.Errorf("Expected LastInsertId 1, got %d", lastID)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		expectedErr := errors.New("database error")
+		mock.ExpectExec("INSERT INTO users").
+			WithArgs("test").
+			WillReturnError(expectedErr)
+
+		_, err := typedbTx.Exec(ctx, "INSERT INTO users (name) VALUES ($1)", "test")
+		if err != expectedErr {
+			t.Fatalf("Expected error %v, got %v", expectedErr, err)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+}
+
+func TestTx_QueryAll_Sqlmock(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	mock.ExpectBegin()
+	mockTx, err := db.Begin()
+	if err != nil {
+		t.Fatalf("Failed to begin transaction: %v", err)
+	}
+
+	typedbTx := &Tx{
+		tx:      mockTx,
+		timeout: 5 * time.Second,
+	}
+	ctx := context.Background()
+
+	t.Run("success with rows", func(t *testing.T) {
+		rows := sqlmock.NewRows([]string{"id", "name"}).
+			AddRow(1, "Alice").
+			AddRow(2, "Bob")
+
+		mock.ExpectQuery("SELECT id, name FROM users").
+			WillReturnRows(rows)
+
+		result, err := typedbTx.QueryAll(ctx, "SELECT id, name FROM users")
+		if err != nil {
+			t.Fatalf("QueryAll failed: %v", err)
+		}
+
+		if len(result) != 2 {
+			t.Fatalf("Expected 2 rows, got %d", len(result))
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		expectedErr := errors.New("database error")
+		mock.ExpectQuery("SELECT id, name FROM users").
+			WillReturnError(expectedErr)
+
+		_, err := typedbTx.QueryAll(ctx, "SELECT id, name FROM users")
+		if err != expectedErr {
+			t.Fatalf("Expected error %v, got %v", expectedErr, err)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+}
+
+func TestTx_QueryRowMap_Sqlmock(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	mock.ExpectBegin()
+	mockTx, err := db.Begin()
+	if err != nil {
+		t.Fatalf("Failed to begin transaction: %v", err)
+	}
+
+	typedbTx := &Tx{
+		tx:      mockTx,
+		timeout: 5 * time.Second,
+	}
+	ctx := context.Background()
+
+	t.Run("success", func(t *testing.T) {
+		rows := sqlmock.NewRows([]string{"id", "name"}).
+			AddRow(1, "Alice")
+
+		mock.ExpectQuery("SELECT id, name FROM users WHERE id").
+			WithArgs(1).
+			WillReturnRows(rows)
+
+		result, err := typedbTx.QueryRowMap(ctx, "SELECT id, name FROM users WHERE id = $1", 1)
+		if err != nil {
+			t.Fatalf("QueryRowMap failed: %v", err)
+		}
+
+		if result["id"] != int64(1) || result["name"] != "Alice" {
+			t.Errorf("Row incorrect: %+v", result)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+
+	t.Run("no rows - returns ErrNotFound", func(t *testing.T) {
+		rows := sqlmock.NewRows([]string{"id", "name"})
+
+		mock.ExpectQuery("SELECT id, name FROM users WHERE id").
+			WithArgs(999).
+			WillReturnRows(rows)
+
+		_, err := typedbTx.QueryRowMap(ctx, "SELECT id, name FROM users WHERE id = $1", 999)
+		if err != ErrNotFound {
+			t.Fatalf("Expected ErrNotFound, got %v", err)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+
+	t.Run("multiple rows - returns error", func(t *testing.T) {
+		rows := sqlmock.NewRows([]string{"id", "name"}).
+			AddRow(1, "Alice").
+			AddRow(2, "Bob")
+
+		mock.ExpectQuery("SELECT id, name FROM users").
+			WillReturnRows(rows)
+
+		_, err := typedbTx.QueryRowMap(ctx, "SELECT id, name FROM users")
+		if err == nil {
+			t.Fatal("Expected error for multiple rows")
+		}
+
+		if err.Error() != "typedb: QueryRowMap returned multiple rows" {
+			t.Errorf("Expected multiple rows error, got %v", err)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+}
+
+func TestTx_GetInto_Sqlmock(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	mock.ExpectBegin()
+	mockTx, err := db.Begin()
+	if err != nil {
+		t.Fatalf("Failed to begin transaction: %v", err)
+	}
+
+	typedbTx := &Tx{
+		tx:      mockTx,
+		timeout: 5 * time.Second,
+	}
+	ctx := context.Background()
+
+	t.Run("success", func(t *testing.T) {
+		rows := sqlmock.NewRows([]string{"id", "name"}).
+			AddRow(1, "Alice")
+
+		mock.ExpectQuery("SELECT id, name FROM users WHERE id").
+			WithArgs(1).
+			WillReturnRows(rows)
+
+		var id int
+		var name string
+		err := typedbTx.GetInto(ctx, "SELECT id, name FROM users WHERE id = $1", []any{1}, &id, &name)
+		if err != nil {
+			t.Fatalf("GetInto failed: %v", err)
+		}
+
+		if id != 1 || name != "Alice" {
+			t.Errorf("Values incorrect: id=%d, name=%s", id, name)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+
+	t.Run("no rows - returns ErrNotFound", func(t *testing.T) {
+		rows := sqlmock.NewRows([]string{"id", "name"})
+
+		mock.ExpectQuery("SELECT id, name FROM users WHERE id").
+			WithArgs(999).
+			WillReturnRows(rows)
+
+		var id int
+		var name string
+		err := typedbTx.GetInto(ctx, "SELECT id, name FROM users WHERE id = $1", []any{999}, &id, &name)
+		if err != ErrNotFound {
+			t.Fatalf("Expected ErrNotFound, got %v", err)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+}
+
+func TestTx_QueryDo_Sqlmock(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	mock.ExpectBegin()
+	mockTx, err := db.Begin()
+	if err != nil {
+		t.Fatalf("Failed to begin transaction: %v", err)
+	}
+
+	typedbTx := &Tx{
+		tx:      mockTx,
+		timeout: 5 * time.Second,
+	}
+	ctx := context.Background()
+
+	t.Run("success", func(t *testing.T) {
+		rows := sqlmock.NewRows([]string{"id", "name"}).
+			AddRow(1, "Alice").
+			AddRow(2, "Bob")
+
+		mock.ExpectQuery("SELECT id, name FROM users").
+			WillReturnRows(rows)
+
+		count := 0
+		err := typedbTx.QueryDo(ctx, "SELECT id, name FROM users", []any{}, func(rows *sql.Rows) error {
+			count++
+			return nil
+		})
+		if err != nil {
+			t.Fatalf("QueryDo failed: %v", err)
+		}
+
+		if count != 2 {
+			t.Errorf("Expected scan to be called 2 times, got %d", count)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		expectedErr := errors.New("database error")
+		mock.ExpectQuery("SELECT id, name FROM users").
+			WillReturnError(expectedErr)
+
+		err := typedbTx.QueryDo(ctx, "SELECT id, name FROM users", []any{}, func(rows *sql.Rows) error {
+			return nil
+		})
+		if err != expectedErr {
+			t.Fatalf("Expected error %v, got %v", expectedErr, err)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
 }
