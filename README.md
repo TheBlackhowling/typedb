@@ -110,7 +110,7 @@ func (u *User) QueryByEmail() string {
 
 // Register model for validation
 func init() {
-    typedb.RegisterModel[User]()
+    typedb.RegisterModel[*User]()
 }
 
 // Usage
@@ -156,7 +156,7 @@ func (up *UserPost) QueryByPostIDUserID() string {
 
 // Register model for validation
 func init() {
-    typedb.RegisterModel[UserPost]()
+    typedb.RegisterModel[*UserPost]()
 }
 
 // Usage - must populate all fields in composite key
