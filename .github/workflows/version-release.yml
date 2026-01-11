@@ -189,6 +189,16 @@ jobs:
           
           echo "$COMMIT_MSG" | git commit -F -
       
+      - name: Generate GitHub App token
+        id: generate-app-token
+        if: steps.run_changelog.outputs.has_content == 'true' && steps.run_changelog.outputs.version != '' && env.TARGET_BRANCH != ''
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: TheBlackHowling
+        continue-on-error: true
+      
       - name: Push changes
         if: steps.run_changelog.outputs.has_content == 'true' && steps.run_changelog.outputs.version != '' && env.TARGET_BRANCH != ''
         run: |
@@ -196,20 +206,44 @@ jobs:
             echo "Cannot push to tag, changes should be on a branch"
             exit 1
           else
-            # Debug: Check if bypass token secret exists
-            echo "=== Bypass Token Debug ==="
-            if [ -n "${{ secrets.CHANGELOG_BYPASS_TOKEN }}" ]; then
-              echo "✅ CHANGELOG_BYPASS_TOKEN secret is set (length: ${#CHANGELOG_BYPASS_TOKEN})"
-              echo "Using bypass token for push"
-              git remote set-url origin https://${{ secrets.CHANGELOG_BYPASS_TOKEN }}@github.com/${{ github.repository }}.git
-              # Verify remote URL was set (without exposing token)
+            echo "=== Push Authentication Debug ==="
+            
+            # Try GitHub App token first
+            if [ "${{ steps.generate-app-token.outcome }}" == "success" ] && [ -n "${{ steps.generate-app-token.outputs.token }}" ]; then
+              echo "✅ GitHub App token generated successfully"
+              echo "Using GitHub App token for push"
+              git remote set-url origin https://x-access-token:${{ steps.generate-app-token.outputs.token }}@github.com/${{ github.repository }}.git
               REMOTE_URL=$(git remote get-url origin)
               echo "Remote URL configured: ${REMOTE_URL%%@*}"
             else
-              echo "❌ CHANGELOG_BYPASS_TOKEN secret is NOT set or is empty"
-              echo "Using default GITHUB_TOKEN for push"
-              echo "Note: GITHUB_TOKEN may not have bypass permissions"
+              # Fallback to bypass token if available
+              BYPASS_TOKEN="${{ secrets.CHANGELOG_BYPASS_TOKEN }}"
+              TOKEN_LENGTH=${#BYPASS_TOKEN}
+              
+              if [ -n "$BYPASS_TOKEN" ] && [ "$TOKEN_LENGTH" -gt 0 ]; then
+                echo "⚠️ GitHub App token not available, using bypass token"
+                echo "✅ CHANGELOG_BYPASS_TOKEN secret is set (length: $TOKEN_LENGTH)"
+                git remote set-url origin https://${BYPASS_TOKEN}@github.com/${{ github.repository }}.git
+                REMOTE_URL=$(git remote get-url origin)
+                echo "Remote URL configured: ${REMOTE_URL%%@*}"
+              else
+                echo "❌ Neither GitHub App nor bypass token available"
+                echo ""
+                echo "GitHub App troubleshooting:"
+                echo "  1. Check that APP_ID and APP_PRIVATE_KEY secrets are set"
+                echo "  2. Verify APP_ID is a number (your App ID)"
+                echo "  3. Verify APP_PRIVATE_KEY contains the full PEM file contents"
+                echo "  4. Ensure the GitHub App is installed on this repository"
+                echo ""
+                echo "Bypass token troubleshooting:"
+                echo "  1. Check that CHANGELOG_BYPASS_TOKEN is set (if using fallback)"
+                echo "  2. Verify the secret has a value (not just whitespace)"
+                echo ""
+                echo "Using default GITHUB_TOKEN for push"
+                echo "Note: GITHUB_TOKEN may not have bypass permissions"
+              fi
             fi
+            
             echo "Target branch: ${{ env.TARGET_BRANCH }}"
             echo "Repository: ${{ github.repository }}"
             git push origin HEAD:${{ env.TARGET_BRANCH }}
