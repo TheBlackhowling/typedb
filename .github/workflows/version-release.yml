@@ -90,6 +90,41 @@ jobs:
           event_name: ${{ github.event_name }}
           repository: ${{ github.repository }}
       
+      - name: Debug changelog outputs
+        if: always()
+        run: |
+          echo "=== Changelog Action Debug Output ==="
+          echo "Event: ${{ github.event_name }}"
+          echo "PR Number: ${{ env.pr_number }}"
+          echo "Initial Version: '${{ env.version }}'"
+          echo ""
+          echo "Changelog action outputs:"
+          echo "  has_content: '${{ steps.run_changelog.outputs.has_content }}'"
+          echo "  version: '${{ steps.run_changelog.outputs.version }}'"
+          echo "  changelog_source: '${{ steps.run_changelog.outputs.changelog_source }}'"
+          echo "  version_bump: '${{ steps.run_changelog.outputs.version_bump }}'"
+          echo ""
+          echo "Commit step conditions:"
+          if [ "${{ steps.run_changelog.outputs.has_content }}" == "true" ]; then
+            echo "  ✅ has_content == 'true'"
+          else
+            echo "  ❌ has_content != 'true' (actual: '${{ steps.run_changelog.outputs.has_content }}')"
+          fi
+          if [ -n "${{ steps.run_changelog.outputs.version }}" ]; then
+            echo "  ✅ version is not empty (actual: '${{ steps.run_changelog.outputs.version }}')"
+          else
+            echo "  ❌ version is empty"
+          fi
+          echo ""
+          if [ "${{ steps.run_changelog.outputs.has_content }}" == "true" ] && [ -n "${{ steps.run_changelog.outputs.version }}" ]; then
+            echo "✅ Commit step WILL run"
+          else
+            echo "❌ Commit step will be SKIPPED"
+            echo ""
+            echo "Reason: The workflow only commits when there's changelog content AND a version."
+            echo "This is expected behavior for PRs without changelog entries."
+          fi
+      
       - name: Configure Git
         run: |
           git config --local user.email "action@github.com"
@@ -161,10 +196,22 @@ jobs:
             echo "Cannot push to tag, changes should be on a branch"
             exit 1
           else
-            # Use bypass token if available, otherwise use default token
+            # Debug: Check if bypass token secret exists
+            echo "=== Bypass Token Debug ==="
             if [ -n "${{ secrets.CHANGELOG_BYPASS_TOKEN }}" ]; then
+              echo "✅ CHANGELOG_BYPASS_TOKEN secret is set (length: ${#CHANGELOG_BYPASS_TOKEN})"
+              echo "Using bypass token for push"
               git remote set-url origin https://${{ secrets.CHANGELOG_BYPASS_TOKEN }}@github.com/${{ github.repository }}.git
+              # Verify remote URL was set (without exposing token)
+              REMOTE_URL=$(git remote get-url origin)
+              echo "Remote URL configured: ${REMOTE_URL%%@*}"
+            else
+              echo "❌ CHANGELOG_BYPASS_TOKEN secret is NOT set or is empty"
+              echo "Using default GITHUB_TOKEN for push"
+              echo "Note: GITHUB_TOKEN may not have bypass permissions"
             fi
+            echo "Target branch: ${{ env.TARGET_BRANCH }}"
+            echo "Repository: ${{ github.repository }}"
             git push origin HEAD:${{ env.TARGET_BRANCH }}
           fi
       
