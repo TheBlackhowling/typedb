@@ -198,7 +198,13 @@ jobs:
           else
             # Use bypass token if available, otherwise use default token
             if [ -n "${{ secrets.CHANGELOG_BYPASS_TOKEN }}" ]; then
+              echo "Using bypass token for push"
               git remote set-url origin https://${{ secrets.CHANGELOG_BYPASS_TOKEN }}@github.com/${{ github.repository }}.git
+              # Verify remote URL was set (without exposing token)
+              REMOTE_URL=$(git remote get-url origin)
+              echo "Remote URL configured: ${REMOTE_URL%%@*}"
+            else
+              echo "Using default GITHUB_TOKEN for push"
             fi
             git push origin HEAD:${{ env.TARGET_BRANCH }}
           fi
