@@ -568,9 +568,13 @@ func parseTime(s string) (time.Time, error) {
 	return time.Time{}, fmt.Errorf("unable to parse time: %q", s)
 }
 
-// SerializeJSONB serializes a Go value to JSONB format (JSON string or bytes).
+// SerializeJSONB serializes a Go value to JSON format (JSON string or bytes).
 // Converts map[string]any, map[string]string, or any JSON-marshalable value to JSON.
 // Returns the value as-is if it's already a string or []byte.
+//
+// Note: While named "JSONB" (reflecting PostgreSQL's JSONB type), this function
+// produces standard JSON strings that are compatible with JSON columns in MySQL,
+// SQL Server, and other databases that support JSON types.
 func SerializeJSONB(value any) (any, error) {
 	if value == nil {
 		return nil, nil
@@ -602,6 +606,10 @@ func SerializeJSONB(value any) (any, error) {
 
 // SerializeIntArray serializes a Go slice to PostgreSQL array format.
 // Converts []int, []int64, []int32, etc. to PostgreSQL array string "{1,2,3}".
+//
+// Note: This function is PostgreSQL-specific. For other databases, handle arrays
+// directly in your SQL queries (e.g., using JSON, comma-separated values, or
+// database-specific array syntax).
 func SerializeIntArray(value any) (string, error) {
 	if value == nil {
 		return "{}", nil
@@ -683,6 +691,10 @@ func SerializeIntArray(value any) (string, error) {
 
 // SerializeStringArray serializes a Go slice to PostgreSQL array format.
 // Converts []string or []any to PostgreSQL array string "{a,b,c}".
+//
+// Note: This function is PostgreSQL-specific. For other databases, handle arrays
+// directly in your SQL queries (e.g., using JSON, comma-separated values, or
+// database-specific array syntax).
 func SerializeStringArray(value any) (string, error) {
 	if value == nil {
 		return "{}", nil
@@ -722,8 +734,11 @@ func SerializeStringArray(value any) (string, error) {
 }
 
 // Serialize converts a Go value to a database-compatible format.
-// Handles JSONB, arrays, and other types that need conversion for database operations.
+// Handles JSON, arrays, and other types that need conversion for database operations.
 // Returns the value as-is for types that databases handle natively (int, string, bool, time.Time, etc.).
+//
+// Note: Array serialization uses PostgreSQL array format. For other databases,
+// handle arrays directly in your SQL queries or use database-specific serialization.
 func Serialize(value any) (any, error) {
 	if value == nil {
 		return nil, nil
