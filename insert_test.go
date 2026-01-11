@@ -542,7 +542,8 @@ func TestInsertedId_Deserialize(t *testing.T) {
 	}
 }
 
-// TestDeserialize_AddressableValue tests the addressable path (standard field access)
+// TestDeserialize_AddressableValue tests deserialization with addressable values.
+// Note: We now always use the unsafe path (buildFieldMapFromPtr) regardless of addressability.
 // This path is used when structValue.CanAddr() returns true, which is the common
 // case for normal pointer values in Go 1.18-1.19 and some cases in Go 1.20+.
 func TestDeserialize_AddressableValue(t *testing.T) {
@@ -572,7 +573,9 @@ func TestDeserialize_AddressableValue(t *testing.T) {
 	}
 }
 
-// TestDeserialize_NonAddressableValue tests the non-addressable path (unsafe operations)
+// TestDeserialize_NonAddressableValue tests deserialization with non-addressable values
+// (e.g., from Model.Deserialize which uses reflect.NewAt).
+// Note: We now always use the unsafe path (buildFieldMapFromPtr) regardless of addressability.
 // This path is used when structValue.CanAddr() returns false, which happens with
 // values from reflect.NewAt in Go 1.20+. Model.Deserialize uses reflect.NewAt,
 // so calling model.Deserialize() exercises this path.
