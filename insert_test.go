@@ -541,3 +541,68 @@ func TestInsertedId_Deserialize(t *testing.T) {
 		t.Errorf("Expected ID 123, got %d", insertedId.ID)
 	}
 }
+
+// TestDeserialize_AddressableValue tests the addressable path (standard field access)
+// This path is used when structValue.CanAddr() returns true, which is the common
+// case for normal pointer values in Go 1.18-1.19 and some cases in Go 1.20+.
+func TestDeserialize_AddressableValue(t *testing.T) {
+	type TestModel struct {
+		Model
+		ID   int64  `db:"id"`
+		Name string `db:"name"`
+	}
+
+	model := &TestModel{}
+	row := map[string]any{
+		"id":   int64(456),
+		"name": "Test Name",
+	}
+
+	// Direct call to Deserialize - should use addressable path
+	err := Deserialize(row, model)
+	if err != nil {
+		t.Fatalf("Deserialize failed: %v", err)
+	}
+
+	if model.ID != 456 {
+		t.Errorf("Expected ID 456, got %d", model.ID)
+	}
+	if model.Name != "Test Name" {
+		t.Errorf("Expected Name 'Test Name', got '%s'", model.Name)
+	}
+}
+
+// TestDeserialize_NonAddressableValue tests the non-addressable path (unsafe operations)
+// This path is used when structValue.CanAddr() returns false, which happens with
+// values from reflect.NewAt in Go 1.20+. Model.Deserialize uses reflect.NewAt,
+// so calling model.Deserialize() exercises this path.
+func TestDeserialize_NonAddressableValue(t *testing.T) {
+	type TestModelNonAddr struct {
+		Model
+		ID   int64  `db:"id"`
+		Name string `db:"name"`
+	}
+
+	// Register the model for Model.Deserialize to work
+	RegisterModel[*TestModelNonAddr]()
+
+	model := &TestModelNonAddr{}
+	row := map[string]any{
+		"id":   int64(789),
+		"name": "Non-Addressable Test",
+	}
+
+	// Call Model.Deserialize - uses reflect.NewAt, may not be addressable in Go 1.20+
+	// This exercises the buildFieldMapFromPtr path
+	err := model.Deserialize(row)
+	if err != nil {
+		t.Fatalf("Model.Deserialize failed: %v", err)
+	}
+
+	if model.ID != 789 {
+		t.Errorf("Expected ID 789, got %d", model.ID)
+	}
+	if model.Name != "Non-Addressable Test" {
+		t.Errorf("Expected Name 'Non-Addressable Test', got '%s'", model.Name)
+	}
+}
