@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.10] - 2026-01-11
+
+**Commit:** [`5fdf501`](https://github.com/TheBlackhowling/typedb/commit/5fdf5010901f99cbea05717bea1340ebd154e6b8)
+**Pull Request:** [#16](https://github.com/TheBlackhowling/typedb/pull/16)
+
+**Summary:** Add insert functionality with ID retrieval and comprehensive unit tests for insert and uint deserialization functions
+
+**Key Changes:**
+- ✅ **Source Code**: Code changes included
+- ✅ **Documentation**: Comprehensive documentation added
+
+**Detailed Changes:** See [versions/0.1.10.md](versions/0.1.10.md)
+
+
 ## [0.1.9] - 2026-01-11
 
 **Commit:** [`030933c`](https://github.com/TheBlackhowling/typedb/commit/030933c4810e1520084bce44067cc766ef5820e7)
