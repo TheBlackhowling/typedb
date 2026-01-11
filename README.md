@@ -39,7 +39,7 @@ import (
     "database/sql"
     "fmt"
     "log"
-    
+
     "github.com/TheBlackHowling/typedb"
     _ "github.com/lib/pq" // PostgreSQL driver
 )
@@ -53,14 +53,14 @@ type User struct {
 
 func main() {
     ctx := context.Background()
-    
+
     // Open database connection
     db, err := typedb.Open("postgres", "postgres://user:pass@localhost/dbname")
     if err != nil {
         log.Fatal(err)
     }
     defer db.Close()
-    
+
     // Query all users
     users, err := typedb.QueryAll[User](ctx, db, "SELECT id, name, email FROM users")
     if err != nil {
@@ -70,7 +70,7 @@ func main() {
     for _, user := range users {
         fmt.Printf("User: %s (%s)\n", user.Name, user.Email)
     }
-    
+
     // Query single user
     user, err := typedb.QueryFirst[User](ctx, db, "SELECT id, name, email FROM users WHERE id = $1", 123)
     if err != nil {
@@ -84,6 +84,14 @@ func main() {
 ### Model Load Methods
 
 ```go
+package main
+
+import (
+    "context"
+
+    "github.com/TheBlackHowling/typedb"
+)
+
 type User struct {
     typedb.Model
     ID    int    `db:"id" load:"primary"`
@@ -107,15 +115,60 @@ func init() {
 
 // Usage
 func main() {
+    ctx := context.Background()
     db, _ := typedb.Open("postgres", "postgres://...")
-    
-    // Load by primary key
+
+    // Load by primary key (using Load method on model)
     user := &User{ID: 123}
-    err := typedb.Load(user, ctx, db)
-    
-    // Load by unique field
+    err := user.Load(ctx, db)
+
+    // Load by unique field (using LoadByField helper)
     user2 := &User{Email: "test@example.com"}
-    err = typedb.LoadByEmail(user2, ctx, db)
+    err = typedb.LoadByField(ctx, db, user2, "Email")
+}
+```
+
+### Composite Keys
+
+```go
+package main
+
+import (
+    "context"
+    "log"
+
+    "github.com/TheBlackHowling/typedb"
+)
+
+type UserPost struct {
+    typedb.Model
+    UserID int `db:"user_id" load:"composite:userpost"`
+    PostID int `db:"post_id" load:"composite:userpost"`
+    // UserID + PostID together uniquely identify a UserPost
+}
+
+// Query method: fields sorted alphabetically (PostID, UserID)
+// IMPORTANT: SQL parameters must match alphabetical field order
+func (up *UserPost) QueryByPostIDUserID() string {
+    // PostID comes before UserID alphabetically, so $1 = PostID, $2 = UserID
+    return "SELECT user_id, post_id FROM user_posts WHERE post_id = $1 AND user_id = $2"
+}
+
+// Register model for validation
+func init() {
+    typedb.RegisterModel[UserPost]()
+}
+
+// Usage - must populate all fields in composite key
+func main() {
+    ctx := context.Background()
+    db, _ := typedb.Open("postgres", "postgres://...")
+
+    userPost := &UserPost{UserID: 123, PostID: 456}
+    err := typedb.LoadByComposite(ctx, db, userPost, "userpost")
+    if err != nil {
+        log.Fatal(err)
+    }
 }
 ```
 
@@ -128,7 +181,7 @@ err := db.WithTx(ctx, func(tx *typedb.Tx) error {
     if err != nil {
         return err
     }
-    
+
     // More operations...
     return nil
 })
@@ -144,8 +197,9 @@ err := db.WithTx(ctx, func(tx *typedb.Tx) error {
 
 ### Load Functions
 
-- `Load(model, ctx, exec)` - Loads model by primary key field
-- `LoadBy{Field}(model, ctx, exec)` - Loads model by unique field
+- `model.Load(ctx, exec)` - Loads model by primary key field (method on Model)
+- `LoadByField(ctx, exec, model, fieldName)` - Loads model by unique field
+- `LoadByComposite(ctx, exec, model, compositeName)` - Loads model by composite key
 
 ### Connection Management
 
