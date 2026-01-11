@@ -1141,7 +1141,7 @@ func TestBuildFieldMap_PointerEmbeddedStruct(t *testing.T) {
 
 	model := &ModelWithPointerEmbedded{}
 	modelValue := reflect.ValueOf(model).Elem()
-	fieldMap := buildFieldMap(modelValue)
+	fieldMap := buildFieldMapFromPtr(reflect.ValueOf(model), modelValue)
 
 	if _, ok := fieldMap["id"]; !ok {
 		t.Error("Expected 'id' field in map")
@@ -1161,7 +1161,7 @@ func TestBuildFieldMap_SkipDashTag(t *testing.T) {
 
 	model := &ModelWithDashTag{}
 	modelValue := reflect.ValueOf(model).Elem()
-	fieldMap := buildFieldMap(modelValue)
+	fieldMap := buildFieldMapFromPtr(reflect.ValueOf(model), modelValue)
 
 	if _, ok := fieldMap["-"]; ok {
 		t.Error("Should not include field with db:\"-\" tag")
@@ -1577,7 +1577,7 @@ func TestBuildFieldMap_NonStructEmbedded(t *testing.T) {
 
 	model := &ModelWithIntEmbedded{}
 	modelValue := reflect.ValueOf(model).Elem()
-	fieldMap := buildFieldMap(modelValue)
+	fieldMap := buildFieldMapFromPtr(reflect.ValueOf(model), modelValue)
 
 	if _, ok := fieldMap["name"]; !ok {
 		t.Error("Expected 'name' field in map")

@@ -72,52 +72,6 @@ func Deserialize(row map[string]any, dest ModelInterface) error {
 	return nil
 }
 
-// fieldByIndexUnsafe safely accesses a struct field by index.
-// This is needed when the struct value came from reflect.NewAt, as checkptr
-// may flag the field access as unsafe even though it's valid.
-//
-// The solution: Instead of accessing fields on a potentially non-addressable
-// struct value, we access fields through the pointer. This works because
-// pointers from reflect.NewAt are always addressable.
-//
-//go:nocheckptr
-func fieldByIndexUnsafe(v reflect.Value, i int) reflect.Value {
-	if !v.IsValid() {
-		return reflect.Value{}
-	}
-	
-	// If the value is addressable, use standard field access
-	// This works in Go 1.18-1.19 and some cases in Go 1.20+
-	if v.CanAddr() {
-		return v.Field(i)
-	}
-	
-	// For non-addressable values (common with reflect.NewAt in Go 1.20+),
-	// we need to access the field through the pointer.
-	// We get the pointer by using the value's underlying pointer.
-	return fieldByIndexThroughPtr(v, i)
-}
-
-// fieldByIndexThroughPtr accesses a struct field when the value is not addressable.
-// This is a fallback for Go 1.20+ where values from reflect.NewAt may not be
-// addressable. We try standard field access, which may work in some cases or
-// may trigger checkptr errors that we'll need to handle differently.
-//
-// Note: In Go 1.20+, //go:nocheckptr doesn't disable checkptr for calls into
-// the standard library, so this may still fail. The real solution requires
-// ensuring values are addressable from the start.
-//
-//go:nocheckptr
-func fieldByIndexThroughPtr(v reflect.Value, i int) reflect.Value {
-	if !v.IsValid() || v.Kind() != reflect.Struct {
-		return reflect.Value{}
-	}
-	
-	// Try standard field access - this may work in some Go versions
-	// even if CanAddr() returns false, or it may trigger checkptr
-	return v.Field(i)
-}
-
 // buildFieldMapFromPtr creates a field map by accessing fields through the pointer
 // using unsafe operations. This bypasses reflect.Value.Field() entirely, avoiding
 // checkptr validation issues that occur when values come from reflect.NewAt.
@@ -195,66 +149,6 @@ func buildFieldMapFromPtr(ptrValue reflect.Value, structValue reflect.Value) map
 	}
 	
 	processFields(structType, structAddr, nil)
-	return fieldMap
-}
-
-// buildFieldMap creates a map of database column names to field pointers.
-// Handles embedded structs and supports dot notation in db tags (e.g., "users.id").
-// NOTE: This function is no longer used in the main Deserialize path - we always use
-// buildFieldMapFromPtr to avoid checkptr errors. This function is kept for test compatibility.
-func buildFieldMap(structValue reflect.Value) map[string]reflect.Value {
-	structType := structValue.Type()
-	fieldMap := make(map[string]reflect.Value)
-
-	var processFields func(reflect.Type, reflect.Value, []int)
-	processFields = func(t reflect.Type, v reflect.Value, indexPath []int) {
-		if t.Kind() != reflect.Struct {
-			return
-		}
-
-		for i := 0; i < t.NumField(); i++ {
-			field := t.Field(i)
-			if !field.IsExported() {
-				continue
-			}
-
-			// Always use fieldByIndexUnsafe for field access to handle values created
-			// via reflect.NewAt. In Go 1.20+, checkptr validation is stricter and may
-			// trigger even for addressable values when they come from reflect.NewAt.
-			// The fieldByIndexUnsafe function has //go:nocheckptr to disable validation.
-			fieldValue := fieldByIndexUnsafe(v, i)
-			currentIndex := append(append([]int(nil), indexPath...), i)
-
-			// Handle embedded structs
-			if field.Anonymous {
-				embeddedType := field.Type
-				if embeddedType.Kind() == reflect.Ptr {
-					if fieldValue.IsNil() {
-						// Initialize pointer embedded struct
-						fieldValue.Set(reflect.New(embeddedType.Elem()))
-					}
-					embeddedType = embeddedType.Elem()
-					fieldValue = fieldValue.Elem()
-				}
-				if embeddedType.Kind() == reflect.Struct {
-					processFields(embeddedType, fieldValue, currentIndex)
-					continue
-				}
-			}
-
-			// Get db tag
-			dbTag := field.Tag.Get("db")
-			if dbTag == "" || dbTag == "-" {
-				continue
-			}
-
-			// Support dot notation (e.g., "users.id")
-			// Use the full tag as the key
-			fieldMap[dbTag] = fieldValue.Addr()
-		}
-	}
-
-	processFields(structType, structValue, nil)
 	return fieldMap
 }
 
