@@ -126,6 +126,9 @@ func init() {
     typedb.RegisterModel[*User]()
 }
 
+// Note: Models that embed typedb.Model automatically get Deserialize() functionality
+// You only need to override Deserialize() if you have custom deserialization logic
+
 // Usage
 func main() {
     ctx := context.Background()
@@ -220,6 +223,10 @@ err := db.WithTx(ctx, func(tx *typedb.Tx) error {
 - `InsertAndGetId(ctx, exec, query, args...)` - Inserts and returns inserted ID as int64
 - `Insert(ctx, exec, model)` - Inserts model by object, automatically builds INSERT query from struct fields
 
+### Update Functions
+
+- `Update(ctx, exec, model)` - Updates model by object, automatically builds UPDATE query from struct fields
+
 #### Insert with RETURNING Clause
 
 For databases that support `RETURNING` (PostgreSQL, SQLite) or `OUTPUT` (SQL Server), use `InsertAndReturn` to get the full model back:
@@ -271,9 +278,8 @@ func (u *User) TableName() string {
     return "users"
 }
 
-func (u *User) Deserialize(row map[string]any) error {
-    return typedb.Deserialize(row, u)
-}
+// Note: Models that embed typedb.Model automatically get Deserialize() functionality
+// You only need to override Deserialize() if you have custom deserialization logic
 
 // Usage - automatically builds INSERT query
 user := &User{Name: "John", Email: "john@example.com"}
@@ -291,6 +297,48 @@ err = typedb.Insert(ctx, db, user2)
 - **Oracle**: Uses `RETURNING` clause (handled via InsertAndReturn)
 - **MySQL**: Uses `LastInsertId()` (no RETURNING support)
 - **Unknown drivers**: Defaults to PostgreSQL-style `RETURNING`
+
+#### Update by Object
+
+Automatically build UPDATE queries from your model struct. Requires:
+- `TableName()` method on the model
+- A field with `load:"primary"` tag (must be set/non-zero)
+- Model must not have dot notation in db tags (single-table models only)
+- At least one non-zero field to update (besides primary key)
+
+```go
+type User struct {
+    typedb.Model
+    ID        int64  `db:"id" load:"primary"`
+    Name      string `db:"name"`
+    Email     string `db:"email"`
+    CreatedAt string `db:"created_at" dbUpdate:"false"` // Excluded from UPDATE
+}
+
+func (u *User) TableName() string {
+    return "users"
+}
+
+// Usage - automatically builds UPDATE query
+user := &User{ID: 123, Name: "John Updated", Email: "john.updated@example.com"}
+err := typedb.Update(ctx, db, user)
+// Generates: UPDATE users SET name = $1, email = $2 WHERE id = $3
+
+// Zero/nil fields are automatically excluded
+user2 := &User{ID: 123, Name: "Jane Updated"} // Email is empty, will be skipped
+err = typedb.Update(ctx, db, user2)
+// Generates: UPDATE users SET name = $1 WHERE id = $2
+```
+
+**Field Exclusion Tags:**
+- `db:"-"` - Excludes field from all database operations (INSERT, UPDATE, SELECT)
+- `dbInsert:"false"` - Excludes field from INSERT operations only
+- `dbUpdate:"false"` - Excludes field from UPDATE operations only
+- Fields with `dbUpdate:"false"` can still be read via SELECT queries
+
+**Database Support:**
+- All supported databases (PostgreSQL, MySQL, SQLite, SQL Server, Oracle)
+- Uses database-specific identifier quoting and parameter placeholders
 
 ### Connection Management
 
