@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.4] - 2026-01-11
+
+**Commit:** [`201092c`](https://github.com/TheBlackhowling/typedb/commit/201092c23ea569f0092b7a532048d3590547ed54)
+**Pull Request:** [#10](https://github.com/TheBlackhowling/typedb/pull/10)
+
+**Summary:** Implement comprehensive deserialization and serialization layer with 96.7% test coverage
+
+**Key Changes:**
+- ✅ **Automated Workflow**: New GitHub Actions workflow added
+- ✅ **Source Code**: Code changes included
+
+**Detailed Changes:** See [versions/0.1.4.md](versions/0.1.4.md)
+
+
 ## [0.1.3] - 2026-01-11
 
 **Commit:** [`459b1fe`](https://github.com/TheBlackhowling/typedb/commit/459b1fe8186f803070b6ecc07a43ad545a095b99)
