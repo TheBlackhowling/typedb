@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.11] - 2026-01-11
+
+**Commit:** [`c51b08c`](https://github.com/TheBlackhowling/typedb/commit/c51b08c2f669c186068fc534de42ccd189341032)
+**Pull Request:** [#17](https://github.com/TheBlackhowling/typedb/pull/17)
+
+**Summary:** Add Insert by Object feature with comprehensive test coverage and documentation
+
+**Key Changes:**
+- ✅ **Source Code**: Code changes included
+- ✅ **Documentation**: Comprehensive documentation added
+
+**Detailed Changes:** See [versions/0.1.11.md](versions/0.1.11.md)
+
+
 ## [0.1.10] - 2026-01-11
 
 **Commit:** [`5fdf501`](https://github.com/TheBlackhowling/typedb/commit/5fdf5010901f99cbea05717bea1340ebd154e6b8)
