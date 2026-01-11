@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.9] - 2026-01-11
+
+**Commit:** [`030933c`](https://github.com/TheBlackhowling/typedb/commit/030933c4810e1520084bce44067cc766ef5820e7)
+**Pull Request:** [#15](https://github.com/TheBlackhowling/typedb/pull/15)
+
+**Summary:** Implement Load methods for loading models by primary key, unique fields, and composite keys
+
+**Key Changes:**
+- ✅ **Source Code**: Code changes included
+- ✅ **Documentation**: Comprehensive documentation added
+
+**Detailed Changes:** See [versions/0.1.9.md](versions/0.1.9.md)
+
+
 ## [0.1.8] - 2026-01-11
 
 **Commit:** [`684771d`](https://github.com/TheBlackhowling/typedb/commit/684771d3a04f412a1a612e9270089e925125a302)
