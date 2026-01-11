@@ -157,6 +157,24 @@ func DeserializeToField(target any, value any) error {
 			return err
 		}
 		*ptr = val
+	case *uint64:
+		val, err := DeserializeUint64(value)
+		if err != nil {
+			return err
+		}
+		*ptr = val
+	case *uint32:
+		val, err := DeserializeUint32(value)
+		if err != nil {
+			return err
+		}
+		*ptr = val
+	case *uint:
+		val, err := DeserializeUint(value)
+		if err != nil {
+			return err
+		}
+		*ptr = val
 	case *int32:
 		val, err := DeserializeInt32(value)
 		if err != nil {
@@ -331,6 +349,134 @@ func DeserializeInt64(value any) (int64, error) {
 		return strconv.ParseInt(v, 10, 64)
 	default:
 		return strconv.ParseInt(fmt.Sprintf("%v", value), 10, 64)
+	}
+}
+
+// DeserializeUint64 converts a value to uint64
+// Handles MySQL unsigned BIGINT which is returned as string to avoid overflow
+func DeserializeUint64(value any) (uint64, error) {
+	switch v := value.(type) {
+	case uint64:
+		return v, nil
+	case uint:
+		return uint64(v), nil
+	case uint32:
+		return uint64(v), nil
+	case uint16:
+		return uint64(v), nil
+	case uint8:
+		return uint64(v), nil
+	case int64:
+		if v < 0 {
+			return 0, fmt.Errorf("typedb: cannot convert negative int64 to uint64")
+		}
+		return uint64(v), nil
+	case int:
+		if v < 0 {
+			return 0, fmt.Errorf("typedb: cannot convert negative int to uint64")
+		}
+		return uint64(v), nil
+	case int32:
+		if v < 0 {
+			return 0, fmt.Errorf("typedb: cannot convert negative int32 to uint64")
+		}
+		return uint64(v), nil
+	case string:
+		return strconv.ParseUint(v, 10, 64)
+	case float64:
+		if v < 0 {
+			return 0, fmt.Errorf("typedb: cannot convert negative float64 to uint64")
+		}
+		return uint64(v), nil
+	case float32:
+		if v < 0 {
+			return 0, fmt.Errorf("typedb: cannot convert negative float32 to uint64")
+		}
+		return uint64(v), nil
+	default:
+		return strconv.ParseUint(fmt.Sprintf("%v", value), 10, 64)
+	}
+}
+
+// DeserializeUint32 converts a value to uint32
+func DeserializeUint32(value any) (uint32, error) {
+	switch v := value.(type) {
+	case uint32:
+		return v, nil
+	case uint:
+		return uint32(v), nil
+	case uint16:
+		return uint32(v), nil
+	case uint8:
+		return uint32(v), nil
+	case int32:
+		if v < 0 {
+			return 0, fmt.Errorf("typedb: cannot convert negative int32 to uint32")
+		}
+		return uint32(v), nil
+	case int:
+		if v < 0 {
+			return 0, fmt.Errorf("typedb: cannot convert negative int to uint32")
+		}
+		return uint32(v), nil
+	case string:
+		val, err := strconv.ParseUint(v, 10, 32)
+		return uint32(val), err
+	case float64:
+		if v < 0 {
+			return 0, fmt.Errorf("typedb: cannot convert negative float64 to uint32")
+		}
+		return uint32(v), nil
+	case float32:
+		if v < 0 {
+			return 0, fmt.Errorf("typedb: cannot convert negative float32 to uint32")
+		}
+		return uint32(v), nil
+	default:
+		val, err := strconv.ParseUint(fmt.Sprintf("%v", value), 10, 32)
+		return uint32(val), err
+	}
+}
+
+// DeserializeUint converts a value to uint
+func DeserializeUint(value any) (uint, error) {
+	switch v := value.(type) {
+	case uint:
+		return v, nil
+	case uint64:
+		return uint(v), nil
+	case uint32:
+		return uint(v), nil
+	case uint16:
+		return uint(v), nil
+	case uint8:
+		return uint(v), nil
+	case int:
+		if v < 0 {
+			return 0, fmt.Errorf("typedb: cannot convert negative int to uint")
+		}
+		return uint(v), nil
+	case int64:
+		if v < 0 {
+			return 0, fmt.Errorf("typedb: cannot convert negative int64 to uint")
+		}
+		return uint(v), nil
+	case string:
+		val, err := strconv.ParseUint(v, 10, 64)
+		return uint(val), err
+	case float64:
+		if v < 0 {
+			return 0, fmt.Errorf("typedb: cannot convert negative float64 to uint")
+		}
+		return uint(v), nil
+	case float32:
+		if v < 0 {
+			return 0, fmt.Errorf("typedb: cannot convert negative float32 to uint")
+		}
+		return uint(v), nil
+	default:
+		val, err := strconv.ParseUint(fmt.Sprintf("%v", value), 10, 64)
+		return uint(val), err
 	}
 }
 

@@ -14,7 +14,7 @@ func TestNewDB(t *testing.T) {
 	sqlDB := &sql.DB{}
 	timeout := 10 * time.Second
 
-	db := NewDB(sqlDB, timeout)
+	db := NewDB(sqlDB, "test", timeout)
 
 	if db.db != sqlDB {
 		t.Error("Expected db to be set")
@@ -25,7 +25,7 @@ func TestNewDB(t *testing.T) {
 }
 
 func TestDB_WithTimeout(t *testing.T) {
-	db := NewDB(&sql.DB{}, 5*time.Second)
+	db := NewDB(&sql.DB{}, "test", 5*time.Second)
 
 	// Test with context that has no deadline
 	ctx := context.Background()
@@ -51,7 +51,7 @@ func TestDB_WithTimeout(t *testing.T) {
 	cancel2()
 
 	// Test with zero timeout (should default to 5s)
-	dbZero := NewDB(&sql.DB{}, 0)
+	dbZero := NewDB(&sql.DB{}, "test", 0)
 	ctx3 := context.Background()
 	newCtx3, cancel3 := dbZero.withTimeout(ctx3)
 	deadline3, ok := newCtx3.Deadline()
@@ -74,7 +74,7 @@ func TestDB_Close(t *testing.T) {
 		t.Skip("sqlite3 driver not available")
 	}
 
-	db := NewDB(sqlDB, 5*time.Second)
+	db := NewDB(sqlDB, "sqlite3", 5*time.Second)
 	err = db.Close()
 	if err != nil {
 		t.Fatalf("Close failed: %v", err)
@@ -92,7 +92,7 @@ func TestDB_Ping(t *testing.T) {
 	}
 	defer sqlDB.Close()
 
-	db := NewDB(sqlDB, 5*time.Second)
+	db := NewDB(sqlDB, "test", 5*time.Second)
 	ctx := context.Background()
 	err = db.Ping(ctx)
 	if err != nil {
@@ -289,7 +289,7 @@ func TestDB_Exec_Sqlmock(t *testing.T) {
 	}
 	defer db.Close()
 
-	typedbDB := NewDB(db, 5*time.Second)
+	typedbDB := NewDB(db, "test", 5*time.Second)
 	ctx := context.Background()
 
 	t.Run("success", func(t *testing.T) {
@@ -339,7 +339,7 @@ func TestDB_QueryAll_Sqlmock(t *testing.T) {
 	}
 	defer db.Close()
 
-	typedbDB := NewDB(db, 5*time.Second)
+	typedbDB := NewDB(db, "test", 5*time.Second)
 	ctx := context.Background()
 
 	t.Run("success with rows", func(t *testing.T) {
@@ -415,7 +415,7 @@ func TestDB_QueryRowMap_Sqlmock(t *testing.T) {
 	}
 	defer db.Close()
 
-	typedbDB := NewDB(db, 5*time.Second)
+	typedbDB := NewDB(db, "test", 5*time.Second)
 	ctx := context.Background()
 
 	t.Run("success", func(t *testing.T) {
@@ -502,7 +502,7 @@ func TestDB_GetInto_Sqlmock(t *testing.T) {
 	}
 	defer db.Close()
 
-	typedbDB := NewDB(db, 5*time.Second)
+	typedbDB := NewDB(db, "test", 5*time.Second)
 	ctx := context.Background()
 
 	t.Run("success", func(t *testing.T) {
@@ -573,7 +573,7 @@ func TestDB_QueryDo_Sqlmock(t *testing.T) {
 	}
 	defer db.Close()
 
-	typedbDB := NewDB(db, 5*time.Second)
+	typedbDB := NewDB(db, "test", 5*time.Second)
 	ctx := context.Background()
 
 	t.Run("success", func(t *testing.T) {
