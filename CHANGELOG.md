@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.7] - 2026-01-11
+
+**Commit:** [`f892cc1`](https://github.com/TheBlackhowling/typedb/commit/f892cc1fbc521298978a8f3e0f27e6975f91e49d)
+**Pull Request:** [#13](https://github.com/TheBlackhowling/typedb/pull/13)
+
+**Summary:** Implement Layer 6 query helper functions with comprehensive test coverage
+
+**Key Changes:**
+- ✅ **Source Code**: Code changes included
+- ✅ **Documentation**: Comprehensive documentation added
+
+**Detailed Changes:** See [versions/0.1.7.md](versions/0.1.7.md)
+
+
 ## [0.1.6] - 2026-01-11
 
 **Commit:** [`a7416d3`](https://github.com/TheBlackhowling/typedb/commit/a7416d3a8aed4d639e02b69133095feabfaa4d43)
