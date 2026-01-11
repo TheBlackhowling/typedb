@@ -161,6 +161,10 @@ jobs:
             echo "Cannot push to tag, changes should be on a branch"
             exit 1
           else
+            # Use bypass token if available, otherwise use default token
+            if [ -n "${{ secrets.CHANGELOG_BYPASS_TOKEN }}" ]; then
+              git remote set-url origin https://${{ secrets.CHANGELOG_BYPASS_TOKEN }}@github.com/${{ github.repository }}.git
+            fi
             git push origin HEAD:${{ env.TARGET_BRANCH }}
           fi
       
