@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.8] - 2026-01-11
+
+**Commit:** [`684771d`](https://github.com/TheBlackhowling/typedb/commit/684771d3a04f412a1a612e9270089e925125a302)
+**Pull Request:** [#14](https://github.com/TheBlackhowling/typedb/pull/14)
+
+**Summary:** Add comprehensive sqlmock tests for Layer 4 executor methods to improve code coverage
+
+**Key Changes:**
+- ✅ **Source Code**: Code changes included
+- ✅ **Documentation**: Comprehensive documentation added
+
+**Detailed Changes:** See [versions/0.1.8.md](versions/0.1.8.md)
+
+
 ## [0.1.7] - 2026-01-11
 
 **Commit:** [`f892cc1`](https://github.com/TheBlackhowling/typedb/commit/f892cc1fbc521298978a8f3e0f27e6975f91e49d)
