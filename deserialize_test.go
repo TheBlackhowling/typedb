@@ -18,10 +18,6 @@ type DeserializeUser struct {
 	CreatedAt time.Time `db:"created_at"`
 }
 
-func (u *DeserializeUser) Deserialize(row map[string]any) error {
-	return Deserialize(row, u)
-}
-
 type DeserializePost struct {
 	Model
 	ID        int    `db:"id"`
@@ -29,10 +25,6 @@ type DeserializePost struct {
 	Title     string `db:"title"`
 	Content   string `db:"content"`
 	Published bool   `db:"published"`
-}
-
-func (p *DeserializePost) Deserialize(row map[string]any) error {
-	return Deserialize(row, p)
 }
 
 type DeserializeModelWithPointers struct {
@@ -43,19 +35,11 @@ type DeserializeModelWithPointers struct {
 	Deleted *bool   `db:"deleted"`
 }
 
-func (m *DeserializeModelWithPointers) Deserialize(row map[string]any) error {
-	return Deserialize(row, m)
-}
-
 type DeserializeModelWithArrays struct {
 	Model
 	ID      int      `db:"id"`
 	Tags    []string `db:"tags"`
 	Numbers []int    `db:"numbers"`
-}
-
-func (m *DeserializeModelWithArrays) Deserialize(row map[string]any) error {
-	return Deserialize(row, m)
 }
 
 type DeserializeModelWithJSON struct {
@@ -65,18 +49,10 @@ type DeserializeModelWithJSON struct {
 	Config   map[string]string `db:"config"`
 }
 
-func (m *DeserializeModelWithJSON) Deserialize(row map[string]any) error {
-	return Deserialize(row, m)
-}
-
 type DeserializeModelWithDotNotation struct {
 	Model
 	ID   int    `db:"users.id"`
 	Name string `db:"users.name"`
-}
-
-func (m *DeserializeModelWithDotNotation) Deserialize(row map[string]any) error {
-	return Deserialize(row, m)
 }
 
 type BaseModel struct {
@@ -87,10 +63,6 @@ type BaseModel struct {
 type DerivedModel struct {
 	BaseModel
 	Name string `db:"name"`
-}
-
-func (m *DerivedModel) Deserialize(row map[string]any) error {
-	return Deserialize(row, m)
 }
 
 func TestDeserialize_BasicTypes(t *testing.T) {
@@ -1310,10 +1282,6 @@ func TestParseTime_AllFormats(t *testing.T) {
 type BadTypeModel struct {
 	Model
 	ID int `db:"id"`
-}
-
-func (b *BadTypeModel) Deserialize(row map[string]any) error {
-	return Deserialize(row, b)
 }
 
 func TestDeserialize_ErrorFromDeserializeToField(t *testing.T) {

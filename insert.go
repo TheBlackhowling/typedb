@@ -66,11 +66,8 @@ func InsertAndReturn[T ModelInterface](ctx context.Context, exec Executor, inser
 // The deserialization layer automatically converts smaller integer types to int64.
 // For type-safe ID retrieval with specific types, use InsertAndReturn with your own model.
 type InsertedId struct {
+	Model
 	ID int64 `db:"id"`
-}
-
-func (i *InsertedId) Deserialize(row map[string]any) error {
-	return Deserialize(row, i)
 }
 
 // InsertAndGetId executes an INSERT statement and returns the inserted ID as int64.
@@ -272,7 +269,9 @@ func buildReturningClause(driverName, primaryKeyColumn string) string {
 }
 
 // serializeModelFields collects non-nil/non-zero fields from a model and returns columns and values.
-// Excludes primary key field and fields with db:"-" tag.
+// Excludes primary key field, fields with db:"-" tag, and fields with dbInsert:"false" tag.
+// Fields with db:"-" are excluded from all database operations (INSERT, UPDATE, SELECT).
+// Fields with dbInsert:"false" are excluded from INSERT but can still be used in UPDATE and SELECT.
 // Returns: column names and field values for serialization.
 func serializeModelFields(model ModelInterface, primaryKeyFieldName string) ([]string, []any, error) {
 	modelValue := reflect.ValueOf(model)
@@ -327,6 +326,11 @@ func serializeModelFields(model ModelInterface, primaryKeyFieldName string) ([]s
 
 			// Skip if this is the primary key field (we'll get it from RETURNING)
 			if field.Name == primaryKeyFieldName {
+				continue
+			}
+
+			// Skip fields with dbInsert:"false" tag
+			if field.Tag.Get("dbInsert") == "false" {
 				continue
 			}
 
