@@ -1,4 +1,4 @@
-# Context Guide - [PROJECT_NAME]
+# Context Guide - typedb
 
 ## Purpose
 This document provides essential context for new AI assistants or contributors joining this project. It focuses on **where to find information** and **how to contribute**. Use this as a navigation guide to understand the project structure and contribution workflow.
@@ -7,10 +7,10 @@ This document provides essential context for new AI assistants or contributors j
 
 ## Project Overview
 
-**[PROJECT_NAME]** is a [PROJECT_TYPE] project. [Brief description of what this project does and its current state.]
+**typedb** is a Go library project. A type-safe, generic database query library for Go that prioritizes SQL-first development with minimal abstraction.
 
-**Current Phase:** [Development Phase]  
-**Focus:** [Current focus areas]
+**Current Phase:** Early Development (Pre-v1.0.0)  
+**Focus:** Core implementation following dependency chart in `IMPLEMENTATION_DEPENDENCIES.md`
 
 ---
 
@@ -28,21 +28,50 @@ This document provides essential context for new AI assistants or contributors j
 - See Changelog section below for detailed process
 
 ### Project Documentation
-- **[Add your documentation structure here]**
-- Example: `/docs/` - Project documentation
-- Example: `/src/` - Source code
-- Example: `/tests/` - Test files
+- **`IMPLEMENTATION_DEPENDENCIES.md`** - **CRITICAL:** Implementation dependency chart and order
+- **`README.md`** - Project overview, quick start, API documentation
+- **`CONTRIBUTING.md`** - Contribution guidelines and workflow
+
+### Design Documentation (External)
+Design documents are maintained in the `TechnicalDocumentation` repository:
+- `docs/backlog/typedb-design-draft.md` - Complete design documentation
+- `docs/backlog/typedb-loader-pattern-discussion.md` - Model loading patterns
+- `docs/backlog/typedb-complex-models-design.md` - Multi-table models and JOINs
+- `docs/backlog/typedb-model-method-awareness.md` - Model method discovery
+
+### Source Code Structure
+- **`*.go`** - Go source files (to be implemented)
+  - `errors.go` - Error type definitions
+  - `types.go` - Core types and interfaces
+  - `registry.go` - Model registration system
+  - `reflect.go` - Reflection utilities
+  - `deserialize.go` - Row → Model conversion
+  - `executor.go` - Database connection and query execution
+  - `validate.go` - Model validation
+  - `query.go` - Type-safe query helpers
+  - `load.go` - Load methods
+  - `model.go` - Model struct methods
+- **`*_test.go`** - Test files
+- **`examples/`** - Example applications (outside main package)
 
 ---
 
 ## How to Find Information
 
-### For [Topic] Questions
-1. Start with **[Location]** for overview
-2. Check **[Specific Location]** for detailed information
-3. Review **[Additional Location]** for related content
+### For Implementation Questions
+1. Start with **`IMPLEMENTATION_DEPENDENCIES.md`** for dependency order and structure
+2. Check **`README.md`** for API overview and usage examples
+3. Review design docs in **`TechnicalDocumentation`** repository for detailed design decisions
 
-**[Customize this section based on your project structure]**
+### For Design Decisions
+1. Check **`TechnicalDocumentation/docs/backlog/typedb-design-draft.md`** for core design
+2. Review **`TechnicalDocumentation/docs/backlog/typedb-loader-pattern-discussion.md`** for Load method patterns
+3. See **`TechnicalDocumentation/docs/backlog/typedb-complex-models-design.md`** for complex model handling
+
+### For Contribution Workflow
+1. Read **`CONTRIBUTING.md`** for detailed guidelines
+2. Review **`CONTEXT.md`** (this file) for workflow overview
+3. Check **`CHANGELOG.md`** for recent changes and patterns
 
 ---
 
@@ -233,5 +262,29 @@ git diff versions/unreleased.md
 
 ---
 
-*This document should be customized for your specific project. Update placeholders like [PROJECT_NAME], [PROJECT_TYPE], etc. with your actual project information.*
+## Implementation Guidelines
+
+### Follow Dependency Order
+Always implement files in the order specified in `IMPLEMENTATION_DEPENDENCIES.md`:
+1. Layer 0: `errors.go`, `types.go` (foundation)
+2. Layer 1: `registry.go` (registration)
+3. Layer 2: `reflect.go` (reflection utilities)
+4. Layer 3: `deserialize.go` (deserialization)
+5. Layer 4: `executor.go` (executor implementation)
+6. Layer 5: `validate.go` (validation)
+7. Layer 6: `query.go` (query helpers)
+8. Layer 7: `load.go`, `model.go` (load methods)
+
+### Key Design Principles
+- **SQL-First**: Users write SQL, library handles type safety
+- **No SQL Generation**: Library does NOT generate SQL queries
+- **Database-Agnostic**: Works with any `database/sql` driver
+- **No Global State**: All operations require explicit instances
+- **Type-Safe Generics**: Use Go 1.18+ generics for type safety
+
+### Testing Strategy
+- Test each layer as you build it
+- Use unit tests for isolated components
+- Use integration tests for database operations
+- Mock dependencies where appropriate
 
