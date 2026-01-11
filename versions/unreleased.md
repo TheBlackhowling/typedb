@@ -17,16 +17,21 @@ Add changelog entries here as you make changes. When ready to release:
 ## Current Unreleased Changes
 
 ## Added
-- Layer 6: Query Helpers (`query.go`)
-  - `QueryAll[T]` - Execute query and return all rows as slice of model pointers
-  - `QueryFirst[T]` - Execute query and return first row (returns nil if no rows, no error)
-  - `QueryOne[T]` - Execute query and return exactly one row (returns ErrNotFound if none)
-  - Comprehensive test coverage for all query functions (100% coverage)
-  - Tests cover success cases, error handling, and edge cases
-- Cursor command for code coverage (`/coverage`)
-  - Generates coverage profile and displays summary
-  - Documents PowerShell-specific quoting requirements
-- Testing and coverage documentation in `CONTEXT.md`
-  - Commands for running tests with race detection
-  - Coverage report generation instructions
-  - Note about coverage files being ignored by `.gitignore`
+- Comprehensive sqlmock tests for Layer 4 (executor.go)
+  - DB methods: Exec, QueryAll, QueryRowMap, GetInto, QueryDo (100% coverage)
+  - Tx methods: Exec, QueryAll, QueryRowMap, GetInto, QueryDo
+  - Tests cover success cases, error handling, empty results, and edge cases
+  - Improved helper function coverage (scanRowsToMaps, scanRowToMap, scanRowToMapWithCols)
+- sqlmock dependency for database mocking in tests
+  - Added `github.com/DATA-DOG/go-sqlmock v1.5.2` as test dependency
+
+## Changed
+- Improved overall code coverage from 77.2% to 90.1% (+12.9%)
+  - DB.Exec: 0% → 100%
+  - DB.QueryAll: 0% → 100%
+  - DB.QueryRowMap: 0% → 87.5%
+  - DB.GetInto: 0% → 100%
+  - DB.QueryDo: 0% → 100%
+  - scanRowsToMaps: 0% → 75%
+  - scanRowToMapWithCols: 0% → 84.6%
+  - scanRowToMap: 0% → 75%
