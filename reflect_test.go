@@ -4,6 +4,7 @@ import (
 	"errors"
 	"reflect"
 	"testing"
+	"time"
 )
 
 // Test models for reflection tests
@@ -32,30 +33,28 @@ func (p *TestReflectPost) Deserialize(row map[string]any) error {
 }
 
 func TestGetModelType(t *testing.T) {
-	user := TestReflectUser{}
 	userPtr := &TestReflectUser{}
 
-	// Test value type
-	t1 := GetModelType(user)
-	if t1.Kind() != reflect.Struct {
-		t.Errorf("GetModelType(value) should return struct type, got %v", t1.Kind())
+	// Test pointer type (required)
+	modelType := GetModelType(userPtr)
+	if modelType.Kind() != reflect.Struct {
+		t.Errorf("GetModelType(pointer) should return struct type, got %v", modelType.Kind())
 	}
-	if t1 != reflect.TypeOf(TestReflectUser{}) {
-		t.Errorf("GetModelType(value) = %v, want %v", t1, reflect.TypeOf(TestReflectUser{}))
+	if modelType != reflect.TypeOf(TestReflectUser{}) {
+		t.Errorf("GetModelType(pointer) = %v, want %v", modelType, reflect.TypeOf(TestReflectUser{}))
 	}
 
-	// Test pointer type
-	t2 := GetModelType(userPtr)
-	if t2.Kind() != reflect.Struct {
-		t.Errorf("GetModelType(pointer) should return struct type, got %v", t2.Kind())
-	}
-	if t2 != reflect.TypeOf(TestReflectUser{}) {
-		t.Errorf("GetModelType(pointer) = %v, want %v", t2, reflect.TypeOf(TestReflectUser{}))
-	}
+	// Test that value type panics
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("Expected panic for value type")
+		}
+	}()
+	GetModelType(TestReflectUser{})
 }
 
 func TestFindFieldByTag(t *testing.T) {
-	user := TestReflectUser{}
+	user := &TestReflectUser{}
 
 	// Test finding primary field
 	field, found := FindFieldByTag(user, "load", "primary")
@@ -82,7 +81,7 @@ func TestFindFieldByTag(t *testing.T) {
 	}
 
 	// Test finding composite tag
-	post := TestReflectPost{}
+	post := &TestReflectPost{}
 	field, found = FindFieldByTag(post, "load", "composite:userpost")
 	if !found {
 		t.Fatal("Expected to find field with load:\"composite:userpost\" tag")
@@ -96,7 +95,7 @@ func TestFindFieldByTag(t *testing.T) {
 func TestFindFieldByTag_EmbeddedStruct(t *testing.T) {
 	// Test that we can find fields through embedded Model struct
 	// (though Model doesn't have any tags, this tests the recursive traversal)
-	user := TestReflectUser{}
+	user := &TestReflectUser{}
 
 	// Should still find ID field even though Model is embedded
 	field, found := FindFieldByTag(user, "load", "primary")
@@ -109,13 +108,13 @@ func TestFindFieldByTag_EmbeddedStruct(t *testing.T) {
 }
 
 func TestGetFieldValue(t *testing.T) {
-	user := TestReflectUser{
+	user := &TestReflectUser{
 		ID:    42,
 		Email: "test@example.com",
 		Name:  "Test User",
 	}
 
-	// Test getting value from struct
+	// Test getting value from pointer (required)
 	value, err := GetFieldValue(user, "ID")
 	if err != nil {
 		t.Fatalf("GetFieldValue failed: %v", err)
@@ -125,7 +124,7 @@ func TestGetFieldValue(t *testing.T) {
 	}
 
 	// Test getting value from pointer
-	value, err = GetFieldValue(&user, "Email")
+	value, err = GetFieldValue(user, "Email")
 	if err != nil {
 		t.Fatalf("GetFieldValue failed: %v", err)
 	}
@@ -147,6 +146,13 @@ func TestGetFieldValue(t *testing.T) {
 	_, err = GetFieldValue(nilUser, "ID")
 	if err == nil {
 		t.Error("Expected error for nil pointer")
+	}
+
+	// Test value type (should fail)
+	userValue := TestReflectUser{ID: 42}
+	_, err = GetFieldValue(userValue, "ID")
+	if err == nil {
+		t.Error("Expected error for value type")
 	}
 }
 
@@ -262,7 +268,7 @@ func TestCallMethod(t *testing.T) {
 }
 
 func TestFindFieldByTag_CompositeTag(t *testing.T) {
-	post := TestReflectPost{}
+	post := &TestReflectPost{}
 
 	// Test finding composite tag with colon
 	field, found := FindFieldByTag(post, "load", "composite:userpost")
@@ -327,15 +333,48 @@ func TestSplitTag(t *testing.T) {
 }
 
 func TestFindFieldByTagRecursive_NonStructType(t *testing.T) {
-	// Test that non-struct types return false
+	// Test that non-pointer types panic (GetModelType requires pointer)
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("Expected panic for non-pointer type")
+		}
+	}()
 	var notStruct int
-	field, found := FindFieldByTag(notStruct, "load", "primary")
+	FindFieldByTag(notStruct, "load", "primary")
+}
+
+func TestFindFieldByTagRecursive_NonStructTypeDefensive(t *testing.T) {
+	// Test the defensive check for non-struct types in findFieldByTagRecursive
+	// This shouldn't happen in practice since GetModelType ensures struct type,
+	// but we test it for completeness by calling the internal function directly
+
+	// Create a reflect.Type that's not a struct (int type)
+	intType := reflect.TypeOf(0)
+
+	// Call the internal function directly to test the defensive check
+	field, found := findFieldByTagRecursive(intType, "load", "primary")
 	if found {
 		t.Error("Expected not to find field in non-struct type")
 	}
 	if field != nil {
 		t.Error("Expected nil field for non-struct type")
 	}
+}
+
+func TestFindFieldByNameRecursive_NonStructTypeDefensive(t *testing.T) {
+	// Test the defensive check for non-struct types in findFieldByNameRecursive
+	// This shouldn't happen in practice since GetFieldValue ensures struct type,
+	// but we test it via GetFieldValue with a pointer to non-struct type
+	var intPtr *int
+	val := 42
+	intPtr = &val
+
+	_, err := GetFieldValue(intPtr, "Field")
+	if err == nil {
+		t.Error("Expected error for pointer to non-struct type")
+	}
+	// The error should be about pointer to struct, not about non-struct type in recursive function
+	// But this exercises the path where we check v.Kind() != reflect.Struct after Elem()
 }
 
 func TestFindFieldByTagRecursive_EmbeddedPointer(t *testing.T) {
@@ -348,7 +387,7 @@ func TestFindFieldByTagRecursive_EmbeddedPointer(t *testing.T) {
 		ID              int `load:"primary"`
 	}
 
-	model := TestModel{
+	model := &TestModel{
 		EmbeddedStruct: &EmbeddedStruct{Value: 42},
 		ID:             100,
 	}
@@ -372,12 +411,12 @@ func TestFindFieldByTagRecursive_EmbeddedPointer(t *testing.T) {
 	}
 }
 
-func TestGetFieldValue_NonStructType(t *testing.T) {
-	// Test that non-struct types return error
+func TestGetFieldValue_NonPointerType(t *testing.T) {
+	// Test that non-pointer types return error
 	var notStruct int
 	_, err := GetFieldValue(notStruct, "Field")
 	if err == nil {
-		t.Error("Expected error for non-struct type")
+		t.Error("Expected error for non-pointer type")
 	}
 
 	// Test pointer to non-struct
@@ -390,12 +429,12 @@ func TestGetFieldValue_NonStructType(t *testing.T) {
 	}
 }
 
-func TestSetFieldValue_NonStructType(t *testing.T) {
-	// Test that non-struct types return error
+func TestSetFieldValue_NonPointerType(t *testing.T) {
+	// Test that non-pointer types return error
 	var notStruct int
 	err := SetFieldValue(notStruct, "Field", 42)
 	if err == nil {
-		t.Error("Expected error for non-struct type")
+		t.Error("Expected error for non-pointer type")
 	}
 
 	// Test pointer to non-struct
@@ -439,15 +478,12 @@ func TestSetFieldValue_UnsettableField(t *testing.T) {
 	}
 }
 
-func TestFindFieldByNameRecursive_NonStructType(t *testing.T) {
-	// Test that non-struct types return false
+func TestFindFieldByNameRecursive_NonPointerType(t *testing.T) {
+	// Test that non-pointer types return error
 	var notStruct int
 	_, err := GetFieldValue(notStruct, "Field")
 	if err == nil {
-		t.Error("Expected error for non-struct type")
-	}
-	if !errors.Is(err, ErrFieldNotFound) {
-		// Should fail before checking field, but let's verify the error path
+		t.Error("Expected error for non-pointer type")
 	}
 }
 
@@ -494,69 +530,56 @@ func TestFindFieldByNameRecursive_EmbeddedPointer(t *testing.T) {
 	}
 }
 
-func TestFindFieldByNameRecursive_NestedEmbedding(t *testing.T) {
-	// Test deeply nested embedded structs
-	type Level3 struct {
-		Level3Field string
+func TestFindFieldByNameRecursive_BaseModelPattern(t *testing.T) {
+	// Test realistic base model pattern: AdminUser -> BaseUser -> typedb.Model
+	// This represents a common inheritance pattern where multiple user types share a base
+	type BaseUser struct {
+		Model
+		ID        int       `db:"id" load:"primary"`
+		CreatedAt time.Time `db:"created_at"`
+		UpdatedAt time.Time `db:"updated_at"`
 	}
-	type Level2 struct {
-		Level3      // Embedded
-		Level2Field int
-	}
-	type Level1 struct {
-		Level2      // Embedded
-		Level1Field bool
-	}
-	type TestModel struct {
-		Level1 // Embedded
-		ID     int
+	type AdminUser struct {
+		BaseUser
+		AdminLevel int    `db:"admin_level"`
+		Department string `db:"department"`
 	}
 
-	model := &TestModel{
-		Level1: Level1{
-			Level2: Level2{
-				Level3:      Level3{Level3Field: "deep"},
-				Level2Field: 42,
-			},
-			Level1Field: true,
+	model := &AdminUser{
+		BaseUser: BaseUser{
+			ID:        123,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		},
-		ID: 100,
+		AdminLevel: 5,
+		Department: "IT",
 	}
 
-	// Should find field in deeply nested embedded struct
-	value, err := GetFieldValue(model, "Level3Field")
+	// Should find field in BaseUser (one level deep)
+	value, err := GetFieldValue(model, "ID")
 	if err != nil {
 		t.Fatalf("GetFieldValue failed: %v", err)
 	}
-	if value.String() != "deep" {
-		t.Errorf("GetFieldValue(Level3Field) = %q, want %q", value.String(), "deep")
+	if value.Int() != 123 {
+		t.Errorf("GetFieldValue(ID) = %v, want 123", value.Int())
 	}
 
-	// Should find field in intermediate level
-	value, err = GetFieldValue(model, "Level2Field")
+	// Should find field in AdminUser (direct)
+	value, err = GetFieldValue(model, "AdminLevel")
 	if err != nil {
 		t.Fatalf("GetFieldValue failed: %v", err)
 	}
-	if value.Int() != 42 {
-		t.Errorf("GetFieldValue(Level2Field) = %v, want 42", value.Int())
+	if value.Int() != 5 {
+		t.Errorf("GetFieldValue(AdminLevel) = %v, want 5", value.Int())
 	}
 
-	// Should find field in first level
-	value, err = GetFieldValue(model, "Level1Field")
-	if err != nil {
-		t.Fatalf("GetFieldValue failed: %v", err)
+	// Should find field in BaseUser via tag
+	field, found := FindFieldByTag(model, "load", "primary")
+	if !found {
+		t.Fatal("Expected to find primary field in BaseUser")
 	}
-	if value.Bool() != true {
-		t.Errorf("GetFieldValue(Level1Field) = %v, want true", value.Bool())
-	}
-
-	// Should find direct field
-	value, err = GetFieldValue(model, "ID")
-	if err != nil {
-		t.Fatalf("GetFieldValue failed: %v", err)
-	}
-	if value.Int() != 100 {
-		t.Errorf("GetFieldValue(ID) = %v, want 100", value.Int())
+	if field.Name != "ID" {
+		t.Errorf("Expected field name 'ID', got %q", field.Name)
 	}
 }
 
@@ -622,5 +645,66 @@ func TestFindFieldByNameRecursive_MultipleEmbeddedStructs(t *testing.T) {
 	}
 	if model.EmbeddedB.FieldB != 100 {
 		t.Errorf("SetFieldValue(FieldB) = %v, want 100", model.EmbeddedB.FieldB)
+	}
+}
+
+func TestFindFieldByNameRecursive_FieldNotFound(t *testing.T) {
+	// Test realistic scenario: field doesn't exist in BaseUser or AdminUser
+	type BaseUser struct {
+		Model
+		ID        int `db:"id" load:"primary"`
+		CreatedAt time.Time
+	}
+	type AdminUser struct {
+		BaseUser
+		AdminLevel int
+	}
+
+	model := &AdminUser{
+		BaseUser: BaseUser{
+			ID:        123,
+			CreatedAt: time.Now(),
+		},
+		AdminLevel: 5,
+	}
+
+	// Search for field that doesn't exist anywhere
+	_, err := GetFieldValue(model, "NonExistentField")
+	if err == nil {
+		t.Error("Expected error for non-existent field")
+	}
+	if !errors.Is(err, ErrFieldNotFound) {
+		t.Errorf("Expected ErrFieldNotFound, got %v", err)
+	}
+}
+
+func TestFindFieldByTagRecursive_EmbeddedStructNotFound(t *testing.T) {
+	// Test case where embedded struct exists but doesn't contain the field
+	// This exercises the recursive return-false path
+	type EmbeddedA struct {
+		FieldA string
+	}
+	type EmbeddedB struct {
+		FieldB int
+	}
+	type TestModel struct {
+		EmbeddedA // Embedded
+		EmbeddedB // Embedded
+		Direct    bool
+	}
+
+	model := &TestModel{
+		EmbeddedA: EmbeddedA{FieldA: "a"},
+		EmbeddedB: EmbeddedB{FieldB: 42},
+		Direct:    true,
+	}
+
+	// Search for field that doesn't exist in any embedded struct
+	field, found := FindFieldByTag(model, "load", "nonexistent")
+	if found {
+		t.Error("Expected not to find field")
+	}
+	if field != nil {
+		t.Error("Expected nil field")
 	}
 }
