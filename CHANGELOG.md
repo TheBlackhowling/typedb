@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.5] - 2026-01-11
+
+**Commit:** [`12bef49`](https://github.com/TheBlackhowling/typedb/commit/12bef49dc9efd41aa20ad71fbca445ed650d720a)
+**Pull Request:** [#11](https://github.com/TheBlackhowling/typedb/pull/11)
+
+**Summary:** Implement Layer 4 executor interface with database connection management and query execution methods
+
+**Key Changes:**
+- ✅ **Source Code**: Code changes included
+- ✅ **Documentation**: Comprehensive documentation added
+
+**Detailed Changes:** See [versions/0.1.5.md](versions/0.1.5.md)
+
+
 ## [0.1.4] - 2026-01-11
 
 **Commit:** [`201092c`](https://github.com/TheBlackhowling/typedb/commit/201092c23ea569f0092b7a532048d3590547ed54)
