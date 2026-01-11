@@ -196,16 +196,22 @@ jobs:
             echo "Cannot push to tag, changes should be on a branch"
             exit 1
           else
-            # Use bypass token if available, otherwise use default token
+            # Debug: Check if bypass token secret exists
+            echo "=== Bypass Token Debug ==="
             if [ -n "${{ secrets.CHANGELOG_BYPASS_TOKEN }}" ]; then
+              echo "✅ CHANGELOG_BYPASS_TOKEN secret is set (length: ${#CHANGELOG_BYPASS_TOKEN})"
               echo "Using bypass token for push"
               git remote set-url origin https://${{ secrets.CHANGELOG_BYPASS_TOKEN }}@github.com/${{ github.repository }}.git
               # Verify remote URL was set (without exposing token)
               REMOTE_URL=$(git remote get-url origin)
               echo "Remote URL configured: ${REMOTE_URL%%@*}"
             else
+              echo "❌ CHANGELOG_BYPASS_TOKEN secret is NOT set or is empty"
               echo "Using default GITHUB_TOKEN for push"
+              echo "Note: GITHUB_TOKEN may not have bypass permissions"
             fi
+            echo "Target branch: ${{ env.TARGET_BRANCH }}"
+            echo "Repository: ${{ github.repository }}"
             git push origin HEAD:${{ env.TARGET_BRANCH }}
           fi
       
