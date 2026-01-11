@@ -51,5 +51,4 @@ Add changelog entries here as you make changes. When ready to release:
   - `DeserializeUint`: 9.1% → 100%
   - `InsertAndReturn`: 100% coverage
   - `InsertAndGetId`: 100% coverage
-- Updated Go version requirement from 1.18 to 1.23
 - Updated `go-sqlmock` dependency from indirect to direct dependency
