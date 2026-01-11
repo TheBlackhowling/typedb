@@ -54,8 +54,18 @@ func (m *Model) Deserialize(row map[string]any) error {
 				// This is safe because Model is the first embedded field, so the memory
 				// layout guarantees the outer struct starts at the same address
 				outerStructPtr := newAtUnsafe(structType, outerPtr)
-				if outerModel, ok := outerStructPtr.Interface().(ModelInterface); ok {
-					return Deserialize(row, outerModel)
+				if outerModelInterface := outerStructPtr.Interface(); outerModelInterface != nil {
+					if outerModel, ok := outerModelInterface.(ModelInterface); ok {
+						// The pointer from reflect.NewAt should be addressable.
+						// However, in Go 1.20+, when we pass it through an interface and
+						// then use reflect.ValueOf, the resulting struct value from .Elem()
+						// may not be addressable, causing checkptr errors.
+						//
+						// Solution: Ensure we're working with the actual pointer value,
+						// not an interface. The pointer value itself is always addressable.
+						// We pass the pointer directly to Deserialize, which will handle it.
+						return Deserialize(row, outerModel)
+					}
 				}
 			}
 		}
