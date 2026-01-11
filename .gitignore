@@ -35,6 +35,12 @@ pr_body*.md
 # build/
 # *.egg-info/
 
+# Go test coverage files
+coverage.out
+coverage.html
+coverage/
+*.coverprofile
+
 # Environment files (uncomment if applicable)
 # .env
 # .env.local
