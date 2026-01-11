@@ -35,3 +35,7 @@ Add changelog entries here as you make changes. When ready to release:
   - scanRowsToMaps: 0% → 75%
   - scanRowToMapWithCols: 0% → 84.6%
   - scanRowToMap: 0% → 75%
+- Removed `Model.Load()` method - use `typedb.Load(ctx, exec, model)` instead
+  - Due to Go's method promotion limitations with embedded structs, `Model.Load()` cannot reliably determine the outer struct type
+  - This aligns with TabulaRasa's approach of using helper functions rather than methods on Model
+  - Updated README.md examples to use `typedb.Load()` directly
