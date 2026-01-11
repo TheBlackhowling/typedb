@@ -50,24 +50,12 @@ func Deserialize(row map[string]any, dest ModelInterface) error {
 		return fmt.Errorf("typedb: dest must be a pointer to struct")
 	}
 
-	// In Go 1.20+, checkptr validation is stricter. Values from reflect.NewAt
-	// may not be properly addressable for field access.
-	//
-	// Solution: If the struct value is not addressable, we need to ensure it is
-	// before accessing fields. We can do this by working with the pointer value
-	// directly, which is always addressable.
-	//
-	// However, if the value is addressable, we use it directly. If not, we
-	// need to use unsafe operations to access fields through the pointer.
-	var fieldMap map[string]reflect.Value
-	if structValue.CanAddr() {
-		// Value is addressable - use standard field access
-		fieldMap = buildFieldMap(structValue)
-	} else {
-		// Value is not addressable (common with reflect.NewAt in Go 1.20+)
-		// Access fields through the pointer using unsafe operations
-		fieldMap = buildFieldMapFromPtr(destValue, structValue)
-	}
+	// Always use buildFieldMapFromPtr to bypass checkptr validation.
+	// Even when CanAddr() returns true, values from reflect.NewAt can trigger
+	// checkptr errors when accessing fields via reflect.Value.Field().
+	// This happens across all Go versions 1.18-1.25, so we always use the unsafe
+	// path which bypasses reflect.Value.Field() entirely.
+	fieldMap := buildFieldMapFromPtr(destValue, structValue)
 
 	for key, value := range row {
 		if value == nil {
@@ -131,8 +119,10 @@ func fieldByIndexThroughPtr(v reflect.Value, i int) reflect.Value {
 }
 
 // buildFieldMapFromPtr creates a field map by accessing fields through the pointer
-// when the struct value is not addressable. This uses unsafe operations to bypass
-// checkptr validation in Go 1.20+.
+// using unsafe operations. This bypasses reflect.Value.Field() entirely, avoiding
+// checkptr validation issues that occur when values come from reflect.NewAt.
+// This is used for all deserialization to ensure consistent behavior across
+// all Go versions (1.18-1.25).
 //
 //go:nocheckptr
 func buildFieldMapFromPtr(ptrValue reflect.Value, structValue reflect.Value) map[string]reflect.Value {
@@ -162,15 +152,17 @@ func buildFieldMapFromPtr(ptrValue reflect.Value, structValue reflect.Value) map
 			fieldPtr := unsafe.Pointer(uintptr(basePtr) + uintptr(fieldOffset))
 			
 			// Create reflect.Value for the field using reflect.NewAt
+			// This gives us a pointer to the field (*fieldType)
 			fieldType := field.Type
 			fieldValuePtr := reflect.NewAt(fieldType, fieldPtr)
-			fieldValue := fieldValuePtr.Elem()
 			
 			currentIndex := append(append([]int(nil), indexPath...), i)
 			
 			// Handle embedded structs
 			if field.Anonymous {
 				embeddedType := field.Type
+				// For embedded structs, we need the value (not pointer) to check IsNil/Set/Elem
+				fieldValue := fieldValuePtr.Elem()
 				if embeddedType.Kind() == reflect.Ptr {
 					if fieldValue.IsNil() {
 						// Initialize pointer embedded struct
@@ -182,7 +174,6 @@ func buildFieldMapFromPtr(ptrValue reflect.Value, structValue reflect.Value) map
 						fieldPtr = unsafe.Pointer(fieldValue.Pointer())
 					}
 					embeddedType = embeddedType.Elem()
-					fieldValue = fieldValue.Elem()
 				}
 				if embeddedType.Kind() == reflect.Struct {
 					// fieldPtr already points to the embedded struct (or its pointer value)
@@ -197,8 +188,9 @@ func buildFieldMapFromPtr(ptrValue reflect.Value, structValue reflect.Value) map
 				continue
 			}
 			
-			// Store field address
-			fieldMap[dbTag] = fieldValue.Addr()
+			// Store the pointer directly (fieldValuePtr is already *fieldType)
+			// This matches what buildFieldMap does: fieldValue.Addr() → *fieldType
+			fieldMap[dbTag] = fieldValuePtr
 		}
 	}
 	
