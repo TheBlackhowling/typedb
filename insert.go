@@ -70,6 +70,12 @@ type InsertedId struct {
 	ID int64 `db:"id"`
 }
 
+func init() {
+	// Register InsertedId so Model.Deserialize can find the outer struct type
+	// when called directly on an InsertedId instance.
+	RegisterModel[*InsertedId]()
+}
+
 // InsertAndGetId executes an INSERT statement and returns the inserted ID as int64.
 // This is a convenience helper that works with all supported databases.
 //

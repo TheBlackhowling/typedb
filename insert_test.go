@@ -542,10 +542,9 @@ func TestInsertedId_Deserialize(t *testing.T) {
 	}
 }
 
-// TestDeserialize_AddressableValue tests deserialization with addressable values.
-// Note: We now always use the unsafe path (buildFieldMapFromPtr) regardless of addressability.
-// This path is used when structValue.CanAddr() returns true, which is the common
-// case for normal pointer values in Go 1.18-1.19 and some cases in Go 1.20+.
+// TestDeserialize_AddressableValue tests deserialization via direct Deserialize() call.
+// We always use buildFieldMapFromPtr (unsafe path) regardless of addressability to
+// avoid checkptr errors across all Go versions 1.18-1.25.
 func TestDeserialize_AddressableValue(t *testing.T) {
 	type TestModel struct {
 		Model
@@ -559,7 +558,7 @@ func TestDeserialize_AddressableValue(t *testing.T) {
 		"name": "Test Name",
 	}
 
-	// Direct call to Deserialize - should use addressable path
+	// Direct call to Deserialize - uses buildFieldMapFromPtr (unsafe path)
 	err := Deserialize(row, model)
 	if err != nil {
 		t.Fatalf("Deserialize failed: %v", err)
@@ -573,12 +572,10 @@ func TestDeserialize_AddressableValue(t *testing.T) {
 	}
 }
 
-// TestDeserialize_NonAddressableValue tests deserialization with non-addressable values
-// (e.g., from Model.Deserialize which uses reflect.NewAt).
-// Note: We now always use the unsafe path (buildFieldMapFromPtr) regardless of addressability.
-// This path is used when structValue.CanAddr() returns false, which happens with
-// values from reflect.NewAt in Go 1.20+. Model.Deserialize uses reflect.NewAt,
-// so calling model.Deserialize() exercises this path.
+// TestDeserialize_NonAddressableValue tests deserialization via Model.Deserialize(),
+// which uses reflect.NewAt to convert the embedded Model receiver to the outer struct pointer.
+// This is the problematic case that triggers checkptr errors, which we fix by always using
+// buildFieldMapFromPtr (unsafe path) regardless of addressability.
 func TestDeserialize_NonAddressableValue(t *testing.T) {
 	type TestModelNonAddr struct {
 		Model
@@ -595,8 +592,8 @@ func TestDeserialize_NonAddressableValue(t *testing.T) {
 		"name": "Non-Addressable Test",
 	}
 
-	// Call Model.Deserialize - uses reflect.NewAt, may not be addressable in Go 1.20+
-	// This exercises the buildFieldMapFromPtr path
+	// Call Model.Deserialize - uses reflect.NewAt, which was causing checkptr errors
+	// We fix this by always using buildFieldMapFromPtr (unsafe path)
 	err := model.Deserialize(row)
 	if err != nil {
 		t.Fatalf("Model.Deserialize failed: %v", err)
