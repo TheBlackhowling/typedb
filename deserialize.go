@@ -200,9 +200,8 @@ func buildFieldMapFromPtr(ptrValue reflect.Value, structValue reflect.Value) map
 
 // buildFieldMap creates a map of database column names to field pointers.
 // Handles embedded structs and supports dot notation in db tags (e.g., "users.id").
-// Note: When structValue comes from reflect.NewAt (via Model.Deserialize),
-// field access uses fieldByIndexUnsafe which has //go:nocheckptr to handle
-// Go 1.20+ stricter checkptr validation.
+// NOTE: This function is no longer used in the main Deserialize path - we always use
+// buildFieldMapFromPtr to avoid checkptr errors. This function is kept for test compatibility.
 func buildFieldMap(structValue reflect.Value) map[string]reflect.Value {
 	structType := structValue.Type()
 	fieldMap := make(map[string]reflect.Value)
