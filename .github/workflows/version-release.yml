@@ -196,17 +196,27 @@ jobs:
             echo "Cannot push to tag, changes should be on a branch"
             exit 1
           else
-            # Debug: Check if bypass token secret exists
+            # Debug: Check if bypass token secret exists and has content
             echo "=== Bypass Token Debug ==="
-            if [ -n "${{ secrets.CHANGELOG_BYPASS_TOKEN }}" ]; then
-              echo "✅ CHANGELOG_BYPASS_TOKEN secret is set (length: ${#CHANGELOG_BYPASS_TOKEN})"
+            BYPASS_TOKEN="${{ secrets.CHANGELOG_BYPASS_TOKEN }}"
+            TOKEN_LENGTH=${#BYPASS_TOKEN}
+            
+            if [ -n "$BYPASS_TOKEN" ] && [ "$TOKEN_LENGTH" -gt 0 ]; then
+              echo "✅ CHANGELOG_BYPASS_TOKEN secret is set (length: $TOKEN_LENGTH)"
               echo "Using bypass token for push"
-              git remote set-url origin https://${{ secrets.CHANGELOG_BYPASS_TOKEN }}@github.com/${{ github.repository }}.git
+              git remote set-url origin https://${BYPASS_TOKEN}@github.com/${{ github.repository }}.git
               # Verify remote URL was set (without exposing token)
               REMOTE_URL=$(git remote get-url origin)
               echo "Remote URL configured: ${REMOTE_URL%%@*}"
             else
-              echo "❌ CHANGELOG_BYPASS_TOKEN secret is NOT set or is empty"
+              echo "❌ CHANGELOG_BYPASS_TOKEN secret is NOT set or is EMPTY (length: $TOKEN_LENGTH)"
+              echo ""
+              echo "Troubleshooting:"
+              echo "  1. Check that CHANGELOG_BYPASS_TOKEN is set as an organization secret"
+              echo "  2. Verify the secret has a value (not just whitespace)"
+              echo "  3. Ensure the secret name matches exactly: CHANGELOG_BYPASS_TOKEN"
+              echo "  4. For org secrets, verify the repository has access to org secrets"
+              echo ""
               echo "Using default GITHUB_TOKEN for push"
               echo "Note: GITHUB_TOKEN may not have bypass permissions"
             fi
