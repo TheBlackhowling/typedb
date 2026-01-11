@@ -241,6 +241,20 @@ git diff versions/unreleased.md
 - `/create-pr` - Create PR with AI-generated summary (only when task complete)
 - `/pre-commit-checklist` - Show pre-commit checklist
 
+### Testing Commands
+```bash
+# Run all tests
+go test -v ./...
+
+# Run tests with race detection
+CGO_ENABLED=1 go test -v -race ./...
+
+# Generate coverage report
+go test -coverprofile=coverage.out -covermode=atomic ./...
+go tool cover -func=coverage.out
+go tool cover -html=coverage.out -o coverage.html
+```
+
 ---
 
 ## Important Notes
@@ -287,4 +301,32 @@ Always implement files in the order specified in `IMPLEMENTATION_DEPENDENCIES.md
 - Use unit tests for isolated components
 - Use integration tests for database operations
 - Mock dependencies where appropriate
+
+### Running Tests and Coverage
+
+**Run all tests:**
+```bash
+go test -v ./...
+```
+
+**Run tests with race detection (requires CGO):**
+```bash
+CGO_ENABLED=1 go test -v -race ./...
+```
+
+**Generate coverage report:**
+```bash
+# Generate coverage profile
+go test -coverprofile=coverage.out -covermode=atomic ./...
+
+# View coverage summary
+go tool cover -func=coverage.out
+
+# Generate HTML coverage report
+go tool cover -html=coverage.out -o coverage.html
+```
+
+**Note:** Coverage files (`coverage.out`, `coverage.html`) are ignored by `.gitignore` and should not be committed.
+
+The CI workflow (`.github/workflows/test.yml`) automatically runs tests with race detection and generates coverage reports for Go 1.22.
 
