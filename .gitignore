@@ -38,6 +38,7 @@ pr_body*.md
 # Go test coverage files
 coverage.out
 coverage.html
+coverage
 coverage/
 *.coverprofile
 
