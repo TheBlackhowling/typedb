@@ -14,10 +14,6 @@ type LoadTestUser struct {
 	Email string `db:"email" load:"unique"`
 }
 
-func (u *LoadTestUser) Deserialize(row map[string]any) error {
-	return Deserialize(row, u)
-}
-
 func (u *LoadTestUser) QueryByID() string {
 	return "SELECT id, name, email FROM users WHERE id = $1"
 }
@@ -35,10 +31,6 @@ type LoadTestUserPost struct {
 	Model
 	UserID int `db:"user_id" load:"composite:userpost"`
 	PostID int `db:"post_id" load:"composite:userpost"`
-}
-
-func (up *LoadTestUserPost) Deserialize(row map[string]any) error {
-	return Deserialize(row, up)
 }
 
 func (up *LoadTestUserPost) QueryByPostIDUserID() string {

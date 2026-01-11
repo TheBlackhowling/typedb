@@ -12,13 +12,10 @@ import (
 
 // InsertTestModel is a simple model for testing InsertAndReturn
 type InsertTestModel struct {
+	Model
 	ID        int64  `db:"id"`
 	Name      string `db:"name"`
 	CreatedAt string `db:"created_at"`
-}
-
-func (t *InsertTestModel) Deserialize(row map[string]any) error {
-	return Deserialize(row, t)
 }
 
 func init() {
