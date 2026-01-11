@@ -47,5 +47,5 @@ coverage/
 # .env.*.local
 
 # Planning/design documents (internal use only)
-IMPLEMENTATION_DEPENDENCIES.md
+planning/
 
