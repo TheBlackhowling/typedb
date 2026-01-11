@@ -6,6 +6,15 @@ import (
 	"unsafe"
 )
 
+// newAtUnsafe creates a pointer to a struct type at the given address.
+// This is safe when Model is the first embedded field, as the memory layout
+// guarantees the outer struct starts at the same address.
+//
+//go:nocheckptr
+func newAtUnsafe(typ reflect.Type, ptr unsafe.Pointer) reflect.Value {
+	return reflect.NewAt(typ, ptr)
+}
+
 // Deserialize deserializes a row into the model.
 // Delegates to the standard Deserialize function.
 // When called on an embedded Model, it converts the *Model receiver to the outer struct pointer.
@@ -42,7 +51,9 @@ func (m *Model) Deserialize(row map[string]any) error {
 			if firstField.Anonymous && firstField.Type == reflect.TypeOf(Model{}) {
 				// This model embeds Model as first field
 				// Create a pointer to this type at the same address
-				outerStructPtr := reflect.NewAt(structType, outerPtr)
+				// This is safe because Model is the first embedded field, so the memory
+				// layout guarantees the outer struct starts at the same address
+				outerStructPtr := newAtUnsafe(structType, outerPtr)
 				if outerModel, ok := outerStructPtr.Interface().(ModelInterface); ok {
 					return Deserialize(row, outerModel)
 				}
