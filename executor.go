@@ -363,8 +363,8 @@ func Open(driverName, dsn string, opts ...Option) (*DB, error) {
 	db.SetConnMaxLifetime(cfg.ConnMaxLifetime)
 	db.SetConnMaxIdleTime(cfg.ConnMaxIdleTime)
 
-	// TODO: Call MustValidateAllRegistered() once validation layer is implemented
-	// MustValidateAllRegistered()
+	// Validate all registered models before returning
+	MustValidateAllRegistered()
 
 	return NewDB(db, cfg.OpTimeout), nil
 }
