@@ -4,11 +4,6 @@ on:
   # Only run on merge to main (not on PR sync/push)
   push:
     branches: [main]
-    paths:
-      - 'examples/mssql/**'
-      - '*.go'
-      - 'go.mod'
-      - 'go.sum'
 
 jobs:
   test:
