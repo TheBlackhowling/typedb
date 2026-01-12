@@ -23,10 +23,6 @@ func (m *InsertModel) TableName() string {
 	return "users"
 }
 
-func (m *InsertModel) Deserialize(row map[string]any) error {
-	return Deserialize(row, m)
-}
-
 func init() {
 	RegisterModel[*InsertModel]()
 }
@@ -42,18 +38,10 @@ func (m *JoinedModel) TableName() string {
 	return "users"
 }
 
-func (m *JoinedModel) Deserialize(row map[string]any) error {
-	return Deserialize(row, m)
-}
-
 // NoTableNameModel is a model without TableName() method
 type NoTableNameModel struct {
 	Model
 	ID int `db:"id" load:"primary"`
-}
-
-func (m *NoTableNameModel) Deserialize(row map[string]any) error {
-	return Deserialize(row, m)
 }
 
 func init() {
@@ -68,10 +56,6 @@ type NoPrimaryKeyModel struct {
 
 func (m *NoPrimaryKeyModel) TableName() string {
 	return "users"
-}
-
-func (m *NoPrimaryKeyModel) Deserialize(row map[string]any) error {
-	return Deserialize(row, m)
 }
 
 func init() {
@@ -259,7 +243,7 @@ func TestIsZeroOrNil(t *testing.T) {
 		{"non_nil_func", func() {}, false},
 
 		// Empty but non-nil
-		{"empty_slice", []int{}, false}, // Empty slice is not nil
+		{"empty_slice", []int{}, false},        // Empty slice is not nil
 		{"empty_map", map[string]int{}, false}, // Empty map is not nil
 
 		// String types
@@ -356,10 +340,6 @@ func (m *BadTableNameModel1) TableName() (string, error) {
 	return "users", nil // Returns 2 values instead of 1
 }
 
-func (m *BadTableNameModel1) Deserialize(row map[string]any) error {
-	return Deserialize(row, m)
-}
-
 // BadTableNameModel2 has TableName() returning empty string
 type BadTableNameModel2 struct {
 	Model
@@ -370,10 +350,6 @@ func (m *BadTableNameModel2) TableName() string {
 	return "" // Returns empty string
 }
 
-func (m *BadTableNameModel2) Deserialize(row map[string]any) error {
-	return Deserialize(row, m)
-}
-
 // BadTableNameModel3 has TableName() returning no values
 type BadTableNameModel3 struct {
 	Model
@@ -382,10 +358,6 @@ type BadTableNameModel3 struct {
 
 func (m *BadTableNameModel3) TableName() {
 	// Returns nothing
-}
-
-func (m *BadTableNameModel3) Deserialize(row map[string]any) error {
-	return Deserialize(row, m)
 }
 
 func TestGetTableName_Success(t *testing.T) {
@@ -445,10 +417,10 @@ func TestGetTableName_NoReturnValue(t *testing.T) {
 
 func TestBuildReturningClause(t *testing.T) {
 	tests := []struct {
-		name            string
-		driverName      string
+		name             string
+		driverName       string
 		primaryKeyColumn string
-		expected        string
+		expected         string
 	}{
 		// PostgreSQL
 		{"postgres_lowercase", "postgres", "id", ` RETURNING "id"`},
@@ -791,10 +763,6 @@ type SerializeTestModel struct {
 	Age   int    `db:"age"`
 }
 
-func (m *SerializeTestModel) Deserialize(row map[string]any) error {
-	return Deserialize(row, m)
-}
-
 // SerializeModelWithDashTag has db:"-" tag
 type SerializeModelWithDashTag struct {
 	Model
@@ -802,10 +770,6 @@ type SerializeModelWithDashTag struct {
 	Name string `db:"name"`
 	Skip string `db:"-"`
 	Age  int    `db:"age"`
-}
-
-func (m *SerializeModelWithDashTag) Deserialize(row map[string]any) error {
-	return Deserialize(row, m)
 }
 
 // SerializeModelWithEmptyTag has empty db tag
@@ -817,20 +781,12 @@ type SerializeModelWithEmptyTag struct {
 	Age  int    `db:"age"`
 }
 
-func (m *SerializeModelWithEmptyTag) Deserialize(row map[string]any) error {
-	return Deserialize(row, m)
-}
-
 // SerializeModelWithDotNotation has dot notation in db tag
 type SerializeModelWithDotNotation struct {
 	Model
 	ID     int    `db:"id" load:"primary"`
 	UserID int    `db:"users.id"`
 	Bio    string `db:"profiles.bio"`
-}
-
-func (m *SerializeModelWithDotNotation) Deserialize(row map[string]any) error {
-	return Deserialize(row, m)
 }
 
 // SerializeEmbeddedStruct is embedded in other models
@@ -846,10 +802,6 @@ type SerializeModelWithEmbedded struct {
 	Name string `db:"name"`
 }
 
-func (m *SerializeModelWithEmbedded) Deserialize(row map[string]any) error {
-	return Deserialize(row, m)
-}
-
 // SerializeModelWithPointerEmbedded has pointer embedded struct
 type SerializeModelWithPointerEmbedded struct {
 	Model
@@ -858,20 +810,12 @@ type SerializeModelWithPointerEmbedded struct {
 	Name string `db:"name"`
 }
 
-func (m *SerializeModelWithPointerEmbedded) Deserialize(row map[string]any) error {
-	return Deserialize(row, m)
-}
-
 // SerializeModelWithUnexported has unexported field
 type SerializeModelWithUnexported struct {
 	Model
 	ID   int    `db:"id" load:"primary"`
 	Name string `db:"name"`
 	age  int    `db:"age"` // unexported
-}
-
-func (m *SerializeModelWithUnexported) Deserialize(row map[string]any) error {
-	return Deserialize(row, m)
 }
 
 func TestSerializeModelFields(t *testing.T) {
@@ -1042,10 +986,6 @@ func (m *PrimaryKeyNoDbTagModel) TableName() string {
 	return "users"
 }
 
-func (m *PrimaryKeyNoDbTagModel) Deserialize(row map[string]any) error {
-	return Deserialize(row, m)
-}
-
 // PrimaryKeyDashTagModel has primary key with db:"-" tag
 type PrimaryKeyDashTagModel struct {
 	Model
@@ -1055,10 +995,6 @@ type PrimaryKeyDashTagModel struct {
 
 func (m *PrimaryKeyDashTagModel) TableName() string {
 	return "users"
-}
-
-func (m *PrimaryKeyDashTagModel) Deserialize(row map[string]any) error {
-	return Deserialize(row, m)
 }
 
 // PrimaryKeyDotNotationModel has primary key with dot notation
@@ -1072,10 +1008,6 @@ func (m *PrimaryKeyDotNotationModel) TableName() string {
 	return "users"
 }
 
-func (m *PrimaryKeyDotNotationModel) Deserialize(row map[string]any) error {
-	return Deserialize(row, m)
-}
-
 // AllZeroFieldsModel has all fields zero/nil
 type AllZeroFieldsModel struct {
 	Model
@@ -1086,10 +1018,6 @@ type AllZeroFieldsModel struct {
 
 func (m *AllZeroFieldsModel) TableName() string {
 	return "users"
-}
-
-func (m *AllZeroFieldsModel) Deserialize(row map[string]any) error {
-	return Deserialize(row, m)
 }
 
 func TestInsert_PrimaryKeyNoDbTag_Error(t *testing.T) {
@@ -1466,6 +1394,164 @@ func TestInsert_Oracle_InsertAndReturnError(t *testing.T) {
 
 	if !strings.Contains(err.Error(), "Insert failed") {
 		t.Errorf("Expected error about Insert failed, got: %v", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+// InsertModelWithDbInsertFalse is a model with a field that should be skipped during Insert
+type InsertModelWithDbInsertFalse struct {
+	Model
+	ID        int64  `db:"id" load:"primary"`
+	Name      string `db:"name"`
+	Email     string `db:"email"`
+	CreatedAt string `db:"created_at" dbInsert:"false"` // Should be skipped in Insert but can be read/updated
+}
+
+func (m *InsertModelWithDbInsertFalse) TableName() string {
+	return "users"
+}
+
+func init() {
+	RegisterModel[*InsertModelWithDbInsertFalse]()
+}
+
+// InsertModelWithDbUpdateFalse is a model with a field that should be skipped during Update
+type InsertModelWithDbUpdateFalse struct {
+	Model
+	ID        int64  `db:"id" load:"primary"`
+	Name      string `db:"name"`
+	Email     string `db:"email"`
+	UpdatedAt string `db:"updated_at" dbUpdate:"false"` // Should be skipped in Update but can be read/inserted
+}
+
+func (m *InsertModelWithDbUpdateFalse) TableName() string {
+	return "users"
+}
+
+func init() {
+	RegisterModel[*InsertModelWithDbUpdateFalse]()
+}
+
+// InsertModelWithBothTags is a model with a field that should be skipped in both Insert and Update
+type InsertModelWithBothTags struct {
+	Model
+	ID        int64  `db:"id" load:"primary"`
+	Name      string `db:"name"`
+	Email     string `db:"email"`
+	CreatedAt string `db:"created_at" dbInsert:"false" dbUpdate:"false"` // Should be skipped in Insert and Update but can be read
+}
+
+func (m *InsertModelWithBothTags) TableName() string {
+	return "users"
+}
+
+func init() {
+	RegisterModel[*InsertModelWithBothTags]()
+}
+
+func TestInsert_DbInsertFalse_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	user := &InsertModelWithDbInsertFalse{
+		ID:        0, // Will be set by Insert
+		Name:      "John",
+		Email:     "john@example.com",
+		CreatedAt: "2024-01-01", // Should be skipped due to dbInsert:"false" tag
+	}
+
+	mock.ExpectQuery(`INSERT INTO "users" \("name", "email"\) VALUES \(\$1, \$2\) RETURNING "id"`).
+		WithArgs("John", "john@example.com").
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(123))
+
+	err = Insert(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Insert() error = %v, want nil", err)
+	}
+
+	if user.ID != 123 {
+		t.Errorf("Insert() ID = %v, want 123", user.ID)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestInsert_DbUpdateFalse_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// UpdatedAt should be included in INSERT even though it has dbUpdate:"false"
+	user := &InsertModelWithDbUpdateFalse{
+		ID:        0, // Will be set by Insert
+		Name:      "John",
+		Email:     "john@example.com",
+		UpdatedAt: "2024-01-01", // Should be included in Insert (dbUpdate:"false" doesn't affect Insert)
+	}
+
+	mock.ExpectQuery(`INSERT INTO "users" \("name", "email", "updated_at"\) VALUES \(\$1, \$2, \$3\) RETURNING "id"`).
+		WithArgs("John", "john@example.com", "2024-01-01").
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(123))
+
+	err = Insert(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Insert() error = %v, want nil", err)
+	}
+
+	if user.ID != 123 {
+		t.Errorf("Insert() ID = %v, want 123", user.ID)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestInsert_BothTagsFalse_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// CreatedAt should be excluded from INSERT due to dbInsert:"false" (dbUpdate:"false" doesn't affect Insert)
+	user := &InsertModelWithBothTags{
+		ID:        0, // Will be set by Insert
+		Name:      "John",
+		Email:     "john@example.com",
+		CreatedAt: "2024-01-01", // Should be skipped due to dbInsert:"false" tag
+	}
+
+	mock.ExpectQuery(`INSERT INTO "users" \("name", "email"\) VALUES \(\$1, \$2\) RETURNING "id"`).
+		WithArgs("John", "john@example.com").
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(123))
+
+	err = Insert(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Insert() error = %v, want nil", err)
+	}
+
+	if user.ID != 123 {
+		t.Errorf("Insert() ID = %v, want 123", user.ID)
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {

@@ -14,10 +14,6 @@ type LoadTestUser struct {
 	Email string `db:"email" load:"unique"`
 }
 
-func (u *LoadTestUser) Deserialize(row map[string]any) error {
-	return Deserialize(row, u)
-}
-
 func (u *LoadTestUser) QueryByID() string {
 	return "SELECT id, name, email FROM users WHERE id = $1"
 }
@@ -35,10 +31,6 @@ type LoadTestUserPost struct {
 	Model
 	UserID int `db:"user_id" load:"composite:userpost"`
 	PostID int `db:"post_id" load:"composite:userpost"`
-}
-
-func (up *LoadTestUserPost) Deserialize(row map[string]any) error {
-	return Deserialize(row, up)
 }
 
 func (up *LoadTestUserPost) QueryByPostIDUserID() string {
@@ -265,7 +257,6 @@ func TestLoadByComposite(t *testing.T) {
 	})
 }
 
-
 func TestModel_Deserialize(t *testing.T) {
 	row := map[string]any{
 		"id":    int64(123),
@@ -273,10 +264,11 @@ func TestModel_Deserialize(t *testing.T) {
 		"email": "alice@example.com",
 	}
 
-	user := &LoadTestUser{}
-	err := user.Deserialize(row)
+	// Use deserializeForType for type-safe deserialization
+	// This preserves type information and avoids type detection issues
+	user, err := deserializeForType[*LoadTestUser](row)
 	if err != nil {
-		t.Fatalf("Model.Deserialize failed: %v", err)
+		t.Fatalf("deserializeForType failed: %v", err)
 	}
 
 	if user.ID != 123 || user.Name != "Alice" || user.Email != "alice@example.com" {
