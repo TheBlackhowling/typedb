@@ -56,7 +56,7 @@ jobs:
           SQLITE_URL: "sqlite3://typedb_examples_test.db"
         run: |
           cd examples/sqlite
-          go mod tidy
+          CGO_ENABLED=1 go mod tidy
           migrate -path migrations -database "$SQLITE_URL" up
       
       - name: Run SQLite examples
@@ -65,8 +65,8 @@ jobs:
           SQLITE_DSN: "typedb_examples_test.db"
         run: |
           cd examples/sqlite
-          go mod tidy
-          go run example.go examples_query.go examples_load.go examples_insert.go examples_update.go examples_transaction.go examples_raw.go models.go
+          CGO_ENABLED=1 go mod tidy
+          CGO_ENABLED=1 go run example.go examples_query.go examples_load.go examples_insert.go examples_update.go examples_transaction.go examples_raw.go models.go
       
       - name: Cleanup test database
         if: always()
