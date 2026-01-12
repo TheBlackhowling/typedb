@@ -371,14 +371,6 @@ func TestDeserializeForType(t *testing.T) {
 	}
 }
 
-func TestDeserialize_NonPointerDest(t *testing.T) {
-	// This test can't actually be written because Deserialize requires ModelInterface,
-	// and all models implement it with pointer receivers. The check for pointer type
-	// happens at the start of Deserialize, but we can't pass a non-pointer that satisfies
-	// ModelInterface. The type system enforces this at compile time.
-	t.Skip("Cannot test non-pointer dest due to ModelInterface requiring pointer receivers")
-}
-
 func TestDeserialize_NilDest(t *testing.T) {
 	var user *DeserializeUser = nil
 	row := map[string]any{"id": 123}
