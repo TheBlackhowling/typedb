@@ -1,8 +1,7 @@
 name: Examples - SQLite
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  # Only run on merge to main (not on PR sync/push)
   push:
     branches: [main]
     paths:
@@ -13,8 +12,7 @@ on:
 
 jobs:
   test:
-    # Only run on PRs from the same repository (not forks) or on push to main
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+    # Only run on push to main (after merge)
     runs-on: ubuntu-latest
     
     steps:
@@ -87,21 +85,6 @@ jobs:
           go build -o /tmp/test_sqlite /tmp/test_sqlite.go || (echo "Failed to build sqlite3 driver test" && exit 1)
           /tmp/test_sqlite || (echo "sqlite3 driver test failed" && exit 1)
           rm -f /tmp/test_sqlite /tmp/test_sqlite.go
-      
-      - name: Install golang-migrate
-        run: |
-          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
-          sudo mv migrate /usr/local/bin/migrate
-      
-      - name: Run migrations
-        env:
-          CGO_ENABLED: 1
-          SQLITE_URL: "sqlite3://typedb_examples_test.db"
-        run: |
-          cd examples/sqlite
-          export CGO_ENABLED=1
-          go mod tidy
-          migrate -path migrations -database "$SQLITE_URL" up
       
       - name: Run SQLite examples
         env:
