@@ -352,8 +352,9 @@ func TestMustValidateAllRegistered_NoError(t *testing.T) {
 }
 
 func TestMustValidateAllRegistered_Panic(t *testing.T) {
-	// Reset registry
+	// Reset registry and validation cache
 	registeredModels = nil
+	ResetValidation()
 
 	RegisterModel[*MissingPrimaryMethod]()
 

@@ -584,50 +584,16 @@ func Insert[T ModelInterface](ctx context.Context, exec Executor, model T) error
 		return setFieldValue(model, primaryField.Name, id)
 	}
 
-	// Handle Oracle (go-ora driver has issues with RETURNING via QueryContext)
-	// Use Exec + separate SELECT to get the inserted ID
-	if driverNameLower == "oracle" {
-		// Oracle's go-ora driver has issues with RETURNING via QueryContext
-		// So we insert first, then query back using the inserted values
-		insertQueryNoReturning := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
-			quotedTableName,
-			strings.Join(quotedColumns, ", "),
-			strings.Join(placeholders, ", "))
-		
-		_, err := exec.Exec(ctx, insertQueryNoReturning, values...)
-		if err != nil {
-			return fmt.Errorf("typedb: Insert failed: %w", err)
-		}
 
-		// For Oracle, use MAX(id) since CLOB fields can't be used in WHERE clauses
-		// and we can't easily detect which fields are CLOB without schema inspection
-		// This works for single-threaded scenarios like seeding
-		maxIDQuery := fmt.Sprintf("SELECT MAX(%s) as id FROM %s", 
-			quoteIdentifier(driverName, primaryKeyColumn),
-			quotedTableName)
-		row, err := exec.QueryRowMap(ctx, maxIDQuery)
-		if err != nil {
-			return fmt.Errorf("typedb: Insert failed to get ID: %w", err)
-		}
-		idValue, ok := row["id"]
-		if !ok {
-			idValue, ok = row["ID"]
-		}
-		if !ok || idValue == nil {
-			return fmt.Errorf("typedb: Insert failed to get ID from query")
-		}
-		return setFieldValue(model, primaryField.Name, idValue)
-	}
-
-	// For databases with RETURNING support (PostgreSQL, SQLite)
-	// SQL Server OUTPUT clause must come before VALUES
+	// For databases with RETURNING support (PostgreSQL, SQLite, SQL Server, Oracle)
+	// SQL Server OUTPUT clause comes after VALUES
 	var insertQuery string
 	if driverNameLower == "sqlserver" || driverNameLower == "mssql" {
-		insertQuery = fmt.Sprintf("INSERT INTO %s (%s)%s VALUES (%s)",
+		insertQuery = fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)%s",
 			quotedTableName,
 			strings.Join(quotedColumns, ", "),
-			returningClause,
-			strings.Join(placeholders, ", "))
+			strings.Join(placeholders, ", "),
+			returningClause)
 	} else {
 		insertQuery = fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)%s",
 			quotedTableName,
