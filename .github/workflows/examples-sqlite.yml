@@ -39,13 +39,19 @@ jobs:
         env:
           CGO_ENABLED: 1
         run: |
+          # Set CGO_ENABLED globally for this step
+          export CGO_ENABLED=1
           cd examples/sqlite
-          CGO_ENABLED=1 go get github.com/mattn/go-sqlite3
-          CGO_ENABLED=1 go get github.com/golang-migrate/migrate/v4
-          CGO_ENABLED=1 go get github.com/golang-migrate/migrate/v4/database/sqlite3
-          CGO_ENABLED=1 go get github.com/golang-migrate/migrate/v4/source/file
-          # Build the driver package to ensure it's compiled with CGO
-          CGO_ENABLED=1 go build -buildmode=archive github.com/mattn/go-sqlite3
+          # Download and build dependencies with CGO enabled
+          go mod download
+          go get github.com/mattn/go-sqlite3
+          go get github.com/golang-migrate/migrate/v4
+          go get github.com/golang-migrate/migrate/v4/database/sqlite3
+          go get github.com/golang-migrate/migrate/v4/source/file
+          # Build a test program to verify the driver compiles with CGO
+          echo 'package main; import _ "github.com/mattn/go-sqlite3"; func main() {}' > /tmp/test_sqlite.go
+          go build -o /tmp/test_sqlite /tmp/test_sqlite.go || (echo "Failed to build sqlite3 driver test" && exit 1)
+          rm -f /tmp/test_sqlite /tmp/test_sqlite.go
       
       - name: Install golang-migrate
         run: |
@@ -58,7 +64,8 @@ jobs:
           SQLITE_URL: "sqlite3://typedb_examples_test.db"
         run: |
           cd examples/sqlite
-          CGO_ENABLED=1 go mod tidy
+          export CGO_ENABLED=1
+          go mod tidy
           migrate -path migrations -database "$SQLITE_URL" up
       
       - name: Run SQLite examples
@@ -67,9 +74,16 @@ jobs:
           SQLITE_DSN: "typedb_examples_test.db"
         run: |
           cd examples/sqlite
-          CGO_ENABLED=1 go mod tidy
+          export CGO_ENABLED=1
+          # Verify CGO is enabled
+          if [ "$(go env CGO_ENABLED)" != "1" ]; then
+            echo "ERROR: CGO_ENABLED is not set to 1"
+            go env CGO_ENABLED
+            exit 1
+          fi
+          go mod tidy
           # Build the package with CGO enabled to ensure sqlite3 driver is compiled correctly
-          CGO_ENABLED=1 go build -o sqlite_examples .
+          go build -o sqlite_examples .
           ./sqlite_examples
       
       - name: Cleanup test database
