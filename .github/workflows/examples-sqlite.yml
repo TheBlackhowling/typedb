@@ -41,6 +41,11 @@ jobs:
         run: |
           # Set CGO_ENABLED globally for this step
           export CGO_ENABLED=1
+          # Install the driver at the root level first to ensure it's in module cache with CGO
+          go get github.com/mattn/go-sqlite3@latest
+          # Build the driver package to ensure it's compiled with CGO
+          go build -buildmode=archive github.com/mattn/go-sqlite3 || true
+          
           cd examples/sqlite
           # Download and build dependencies with CGO enabled
           go mod download
@@ -48,9 +53,39 @@ jobs:
           go get github.com/golang-migrate/migrate/v4
           go get github.com/golang-migrate/migrate/v4/database/sqlite3
           go get github.com/golang-migrate/migrate/v4/source/file
-          # Build a test program to verify the driver compiles with CGO
-          echo 'package main; import _ "github.com/mattn/go-sqlite3"; func main() {}' > /tmp/test_sqlite.go
+          go mod tidy
+          
+          # Build a test program to verify the driver compiles and registers with CGO
+          # This ensures the driver's init() function runs and registers "sqlite3"
+          cat > /tmp/test_sqlite.go << 'EOF'
+          package main
+          import (
+              "database/sql"
+              _ "github.com/mattn/go-sqlite3"
+          )
+          func main() {
+              // Verify driver is registered
+              drivers := sql.Drivers()
+              found := false
+              for _, d := range drivers {
+                  if d == "sqlite3" {
+                      found = true
+                      break
+                  }
+              }
+              if !found {
+                  panic("sqlite3 driver not registered")
+              }
+              // Try to open a connection to verify it works
+              db, err := sql.Open("sqlite3", ":memory:")
+              if err != nil {
+                  panic(err)
+              }
+              db.Close()
+          }
+          EOF
           go build -o /tmp/test_sqlite /tmp/test_sqlite.go || (echo "Failed to build sqlite3 driver test" && exit 1)
+          /tmp/test_sqlite || (echo "sqlite3 driver test failed" && exit 1)
           rm -f /tmp/test_sqlite /tmp/test_sqlite.go
       
       - name: Install golang-migrate
