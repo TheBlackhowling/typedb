@@ -88,20 +88,18 @@ jobs:
           /tmp/test_sqlite || (echo "sqlite3 driver test failed" && exit 1)
           rm -f /tmp/test_sqlite /tmp/test_sqlite.go
       
-      - name: Install golang-migrate
-        run: |
-          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
-          sudo mv migrate /usr/local/bin/migrate
-      
       - name: Run migrations
         env:
           CGO_ENABLED: 1
-          SQLITE_URL: "sqlite3://typedb_examples_test.db"
+          SQLITE_DSN: "typedb_examples_test.db"
         run: |
           cd examples/sqlite
           export CGO_ENABLED=1
           go mod tidy
-          migrate -path migrations -database "$SQLITE_URL" up
+          # Build and run migration runner with CGO enabled
+          go build -o run_migrations run_migrations.go
+          ./run_migrations
+          rm -f run_migrations
       
       - name: Run SQLite examples
         env:
@@ -124,4 +122,4 @@ jobs:
       - name: Cleanup test database
         if: always()
         run: |
-          rm -f examples/sqlite/*.db examples/sqlite/sqlite_examples
+          rm -f examples/sqlite/*.db examples/sqlite/sqlite_examples examples/sqlite/run_migrations
