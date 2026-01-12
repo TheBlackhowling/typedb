@@ -584,34 +584,31 @@ func Insert[T ModelInterface](ctx context.Context, exec Executor, model T) error
 		return setFieldValue(model, primaryField.Name, id)
 	}
 
-	// Handle Oracle (go-ora driver has issues with RETURNING via QueryRowMap)
-	// Use Exec + separate SELECT to get the inserted ID
+	// Handle Oracle (go-ora driver requires special RETURNING INTO syntax)
+	// Use RETURNING ... INTO :id /*LastInsertId*/ with Exec() and LastInsertId()
 	if driverNameLower == "oracle" {
-		insertQueryNoReturning := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
+		quotedPK := quoteIdentifier(driverName, primaryKeyColumn)
+		// Oracle requires RETURNING ... INTO :bindvar with /*LastInsertId*/ comment
+		insertQuery := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s) RETURNING %s INTO :%s /*LastInsertId*/",
 			quotedTableName,
 			strings.Join(quotedColumns, ", "),
-			strings.Join(placeholders, ", "))
+			strings.Join(placeholders, ", "),
+			quotedPK,
+			strings.ToLower(primaryKeyColumn))
 		
-		_, err := exec.Exec(ctx, insertQueryNoReturning, values...)
+		result, err := exec.Exec(ctx, insertQuery, values...)
 		if err != nil {
 			return fmt.Errorf("typedb: Insert failed: %w", err)
 		}
 
-		// For Oracle, use MAX(id) to get the last inserted row
-		quotedPK := quoteIdentifier(driverName, primaryKeyColumn)
-		maxIDQuery := fmt.Sprintf("SELECT MAX(%s) as id FROM %s", quotedPK, quotedTableName)
-		row, err := exec.QueryRowMap(ctx, maxIDQuery)
+		// Use LastInsertId() which is thread-safe (uses connection-specific state)
+		id, err := result.LastInsertId()
 		if err != nil {
-			return fmt.Errorf("typedb: Insert failed to get ID: %w", err)
+			return fmt.Errorf("typedb: Insert failed to get last insert ID: %w", err)
 		}
-		idValue, ok := row["id"]
-		if !ok {
-			idValue, ok = row["ID"]
-		}
-		if !ok || idValue == nil {
-			return fmt.Errorf("typedb: Insert failed to get ID from query")
-		}
-		return setFieldValue(model, primaryField.Name, idValue)
+
+		// Set primary key on model
+		return setFieldValue(model, primaryField.Name, id)
 	}
 
 	// For databases with RETURNING support (PostgreSQL, SQLite, SQL Server)
