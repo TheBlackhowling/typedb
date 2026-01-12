@@ -51,6 +51,12 @@ coverage/
 sqlite_examples
 *_examples
 
+# SQLite database files
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
 # Environment files (uncomment if applicable)
 # .env
 # .env.local
