@@ -97,9 +97,8 @@ jobs:
           export CGO_ENABLED=1
           go mod tidy
           # Build and run migration runner with CGO enabled
-          go build -o run_migrations run_migrations.go
-          ./run_migrations
-          rm -f run_migrations
+          # Use go run to avoid package conflicts (run_migrations.go and example.go both have main())
+          go run run_migrations.go
       
       - name: Run SQLite examples
         env:
@@ -122,4 +121,4 @@ jobs:
       - name: Cleanup test database
         if: always()
         run: |
-          rm -f examples/sqlite/*.db examples/sqlite/sqlite_examples examples/sqlite/run_migrations
+          rm -f examples/sqlite/*.db examples/sqlite/sqlite_examples
