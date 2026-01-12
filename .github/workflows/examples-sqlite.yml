@@ -43,6 +43,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libsqlite3-dev gcc
       
+      - name: Run migrations
+        env:
+          CGO_ENABLED: 1
+          SQLITE_URL: "sqlite3://typedb_examples_test.db"
+        run: |
+          cd examples/sqlite
+          go mod tidy
+          migrate -path migrations -database "$SQLITE_URL" up
+      
       - name: Run SQLite examples
         env:
           CGO_ENABLED: 1
