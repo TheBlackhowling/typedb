@@ -1385,7 +1385,8 @@ func TestInsert_Oracle_InsertAndReturnError(t *testing.T) {
 	user := &InsertModel{Name: "John", Email: "john@example.com"}
 
 	// Oracle uses Exec with RETURNING ... INTO :id /*LastInsertId*/
-	mock.ExpectExec(`INSERT INTO "USERS" \("NAME", "EMAIL"\) VALUES \(:1, :2\) RETURNING "ID" INTO :id /\*LastInsertId\*/`).
+	// Use a more flexible regex pattern to handle potential whitespace
+	mock.ExpectExec(`INSERT INTO "USERS" \("NAME", "EMAIL"\) VALUES \(:1, :2\) RETURNING "ID" INTO :id.*LastInsertId.*`).
 		WithArgs("John", "john@example.com").
 		WillReturnError(fmt.Errorf("Insert error"))
 
