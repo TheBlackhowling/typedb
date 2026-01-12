@@ -1,8 +1,7 @@
 name: Examples - SQL Server
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  # Only run on merge to main (not on PR sync/push)
   push:
     branches: [main]
     paths:
@@ -13,8 +12,7 @@ on:
 
 jobs:
   test:
-    # Only run on PRs from the same repository (not forks) or on push to main
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+    # Only run on push to main (after merge)
     runs-on: ubuntu-latest
     
     services:
