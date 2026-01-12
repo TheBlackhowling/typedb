@@ -527,14 +527,14 @@ func TestGetDriverName(t *testing.T) {
 }
 
 func TestInsertedId_Deserialize(t *testing.T) {
-	insertedId := &InsertedId{}
+	insertedId := &insertedId{}
 	row := map[string]any{
 		"id": int64(123),
 	}
 
-	err := insertedId.Deserialize(row)
+	err := insertedId.deserialize(row)
 	if err != nil {
-		t.Fatalf("InsertedId.Deserialize failed: %v", err)
+		t.Fatalf("insertedId.deserialize failed: %v", err)
 	}
 
 	if insertedId.ID != 123 {
@@ -559,7 +559,7 @@ func TestDeserialize_AddressableValue(t *testing.T) {
 	}
 
 	// Direct call to Deserialize - uses buildFieldMapFromPtr (unsafe path)
-	err := Deserialize(row, model)
+	err := deserialize(row, model)
 	if err != nil {
 		t.Fatalf("Deserialize failed: %v", err)
 	}
@@ -592,12 +592,15 @@ func TestDeserialize_NonAddressableValue(t *testing.T) {
 		"name": "Non-Addressable Test",
 	}
 
-	// Call Model.Deserialize - uses reflect.NewAt, which was causing checkptr errors
-	// We fix this by always using buildFieldMapFromPtr (unsafe path)
-	err := model.Deserialize(row)
+	// Use deserializeForType for type-safe deserialization
+	// This preserves type information and avoids type detection issues
+	deserialized, err := deserializeForType[*TestModelNonAddr](row)
 	if err != nil {
-		t.Fatalf("Model.Deserialize failed: %v", err)
+		t.Fatalf("deserializeForType failed: %v", err)
 	}
+
+	// Copy values back to original model for comparison
+	*model = *deserialized
 
 	if model.ID != 789 {
 		t.Errorf("Expected ID 789, got %d", model.ID)

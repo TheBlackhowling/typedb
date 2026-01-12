@@ -46,7 +46,7 @@ func Update[T ModelInterface](ctx context.Context, exec Executor, model T) error
 	}
 
 	// Find primary key field
-	primaryField, found := FindFieldByTag(model, "load", "primary")
+	primaryField, found := findFieldByTag(model, "load", "primary")
 	if !found {
 		return fmt.Errorf("typedb: Update requires a field with load:\"primary\" tag")
 	}
@@ -64,7 +64,7 @@ func Update[T ModelInterface](ctx context.Context, exec Executor, model T) error
 	}
 
 	// Get primary key value from model (for WHERE clause)
-	primaryKeyValue, err := GetFieldValue(model, primaryField.Name)
+	primaryKeyValue, err := getFieldValue(model, primaryField.Name)
 	if err != nil {
 		return fmt.Errorf("typedb: Update failed to get primary key value: %w", err)
 	}

@@ -15,15 +15,16 @@ func newAtUnsafe(typ reflect.Type, ptr unsafe.Pointer) reflect.Value {
 	return reflect.NewAt(typ, ptr)
 }
 
-// Deserialize deserializes a row into the model.
-// Delegates to the standard Deserialize function.
+// deserialize deserializes a row into the model.
+// Delegates to the internal deserialize function.
 // When called on an embedded Model, it converts the *Model receiver to the outer struct pointer.
+// This method is unexported - users should use QueryAll, QueryFirst, QueryOne, InsertAndReturn, Load, etc. instead.
 //
-// Example:
+// Example (internal usage - users should use QueryAll instead):
 //
 //	row := map[string]any{"id": 1, "name": "Alice"}
-//	err := user.Deserialize(row)
-func (m *Model) Deserialize(row map[string]any) error {
+//	err := user.deserialize(row)
+func (m *Model) deserialize(row map[string]any) error {
 	// When Model.Deserialize() is called on an embedded Model (e.g., user.Deserialize() where user is *User),
 	// the receiver m is *Model (pointing to the embedded Model field).
 	// Since Model is typically the first embedded field, the outer struct pointer is at the same memory address.
@@ -64,7 +65,7 @@ func (m *Model) Deserialize(row map[string]any) error {
 						// Solution: Ensure we're working with the actual pointer value,
 						// not an interface. The pointer value itself is always addressable.
 						// We pass the pointer directly to Deserialize, which will handle it.
-						return Deserialize(row, outerModel)
+						return deserialize(row, outerModel)
 					}
 				}
 			}

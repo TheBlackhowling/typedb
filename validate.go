@@ -169,7 +169,7 @@ func collectLoadFields(t reflect.Type, primaryFields *[]*reflect.StructField, un
 // validateQueryMethod validates that a query method exists and has the correct signature.
 // Expected signature: func() string
 func validateQueryMethod(model any, methodName string) error {
-	method, found := FindMethod(model, methodName)
+	method, found := findMethod(model, methodName)
 	if !found {
 		return fmt.Errorf("QueryBy%s() method not found", strings.TrimPrefix(methodName, "QueryBy"))
 	}
@@ -215,7 +215,7 @@ func ValidateAllRegistered() error {
 		if !ok {
 			validationErrors = append(validationErrors, &ValidationError{
 				ModelName: modelType.Name(),
-				Errors:    []string{fmt.Sprintf("model does not implement ModelInterface")},
+				Errors:    []string{fmt.Sprintf("model does not implement modelInterface")},
 			})
 			continue
 		}

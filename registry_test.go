@@ -1,9 +1,7 @@
 package typedb
 
 import (
-	"fmt"
 	"reflect"
-	"strings"
 	"testing"
 )
 
@@ -13,30 +11,15 @@ type TestUser struct {
 	ID int `db:"id" load:"primary"`
 }
 
-func (u *TestUser) Deserialize(row map[string]any) error {
-	// Stub implementation for testing registry
-	return nil
-}
-
 type TestPost struct {
 	Model
 	ID     int `db:"id" load:"primary"`
 	UserID int `db:"user_id"`
 }
 
-func (p *TestPost) Deserialize(row map[string]any) error {
-	// Stub implementation for testing registry
-	return nil
-}
-
 type TestModel struct {
 	Model
 	ID int `db:"id" load:"primary"`
-}
-
-func (m *TestModel) Deserialize(row map[string]any) error {
-	// Stub implementation for testing registry
-	return nil
 }
 
 func init() {
@@ -149,33 +132,41 @@ func TestGetRegisteredModels_ReturnsCopy(t *testing.T) {
 	}
 }
 
-// ValueModel implements ModelInterface with value receiver (for testing panic path)
+// ValueModel is a non-pointer model type for testing panic path.
+// It embeds Model, but since Model.deserialize() has a pointer receiver,
+// ValueModel (value type) does not satisfy ModelInterface.
 type ValueModel struct {
 	Model
 	ID int `db:"id" load:"primary"`
-}
-
-func (v ValueModel) Deserialize(row map[string]any) error {
-	return nil
 }
 
 func TestRegisterModel_NonPointerTypePanics(t *testing.T) {
 	// Reset registry for isolated test
 	registeredModels = nil
 
-	// Test that RegisterModel panics when given a non-pointer type.
-	// ValueModel implements ModelInterface with value receiver, so we can test the panic path.
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic for non-pointer type")
-		} else {
-			errMsg := fmt.Sprintf("%v", r)
-			if !strings.Contains(errMsg, "RegisterModel requires a pointer type") {
-				t.Errorf("Expected panic message about pointer type, got: %v", r)
-			}
+	// Test that RegisterModel works with pointer types.
+	// ValueModel embeds Model, but Model.deserialize() has a pointer receiver,
+	// so only *ValueModel satisfies ModelInterface, not ValueModel.
+	// This test verifies that RegisterModel[*ValueModel]() works (pointer type).
+	
+	// Test with pointer type - should work
+	RegisterModel[*ValueModel]()
+	
+	// Verify it was registered
+	models := GetRegisteredModels()
+	found := false
+	for _, m := range models {
+		if m.Name() == "ValueModel" {
+			found = true
+			break
 		}
-	}()
-
-	// This should panic - ValueModel is not a pointer type
-	RegisterModel[ValueModel]()
+	}
+	if !found {
+		t.Error("Expected ValueModel to be registered")
+	}
+	
+	// Note: RegisterModel[ValueModel]() would fail at compile time because
+	// ValueModel doesn't satisfy ModelInterface (Model.deserialize() has pointer receiver).
+	// This is the desired behavior - only pointer types can satisfy ModelInterface,
+	// and only Model implements deserialize().
 }

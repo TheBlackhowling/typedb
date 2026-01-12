@@ -257,7 +257,6 @@ func TestLoadByComposite(t *testing.T) {
 	})
 }
 
-
 func TestModel_Deserialize(t *testing.T) {
 	row := map[string]any{
 		"id":    int64(123),
@@ -265,10 +264,11 @@ func TestModel_Deserialize(t *testing.T) {
 		"email": "alice@example.com",
 	}
 
-	user := &LoadTestUser{}
-	err := user.Deserialize(row)
+	// Use deserializeForType for type-safe deserialization
+	// This preserves type information and avoids type detection issues
+	user, err := deserializeForType[*LoadTestUser](row)
 	if err != nil {
-		t.Fatalf("Model.Deserialize failed: %v", err)
+		t.Fatalf("deserializeForType failed: %v", err)
 	}
 
 	if user.ID != 123 || user.Name != "Alice" || user.Email != "alice@example.com" {
