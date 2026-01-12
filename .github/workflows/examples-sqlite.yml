@@ -38,6 +38,11 @@ jobs:
           go get github.com/golang-migrate/migrate/v4/database/sqlite3
           go get github.com/golang-migrate/migrate/v4/source/file
       
+      - name: Install golang-migrate
+        run: |
+          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
+          sudo mv migrate /usr/local/bin/migrate
+      
       - name: Install SQLite development libraries
         run: |
           sudo apt-get update
