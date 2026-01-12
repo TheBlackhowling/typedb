@@ -53,7 +53,7 @@ func InsertAndReturn[T ModelInterface](ctx context.Context, exec Executor, inser
 	}
 
 	// Deserialize the returned row into a new model instance
-	model, err := DeserializeForType[T](row)
+	model, err := deserializeForType[T](row)
 	if err != nil {
 		return zero, fmt.Errorf("typedb: InsertAndReturn deserialization failed: %w", err)
 	}
@@ -61,16 +61,19 @@ func InsertAndReturn[T ModelInterface](ctx context.Context, exec Executor, inser
 	return model, nil
 }
 
-// InsertedId is an internal model used by InsertAndGetId to retrieve just the ID.
+// insertedId is an internal model used by InsertAndGetId to retrieve just the ID.
 // Note: This uses int64 to support all integer ID types (SMALLINT/int16, INTEGER/int32, BIGINT/int64).
 // The deserialization layer automatically converts smaller integer types to int64.
 // For type-safe ID retrieval with specific types, use InsertAndReturn with your own model.
-type InsertedId struct {
+type insertedId struct {
+	Model
 	ID int64 `db:"id"`
 }
 
-func (i *InsertedId) Deserialize(row map[string]any) error {
-	return Deserialize(row, i)
+func init() {
+	// Register insertedId so Model.deserialize can find the outer struct type
+	// when called directly on an insertedId instance.
+	RegisterModel[*insertedId]()
 }
 
 // InsertAndGetId executes an INSERT statement and returns the inserted ID as int64.
@@ -139,7 +142,7 @@ func InsertAndGetId(ctx context.Context, exec Executor, insertQuery string, args
 	}
 
 	// Use InsertAndReturn with the internal InsertedId model for RETURNING/OUTPUT databases
-	result, err := InsertAndReturn[*InsertedId](ctx, exec, insertQuery, args...)
+	result, err := InsertAndReturn[*insertedId](ctx, exec, insertQuery, args...)
 	if err != nil {
 		return 0, err
 	}
@@ -151,7 +154,7 @@ func InsertAndGetId(ctx context.Context, exec Executor, insertQuery string, args
 // Returns error if TableName() method doesn't exist or returns empty string.
 func getTableName(model ModelInterface) (string, error) {
 	// Try to call TableName() method
-	_, found := FindMethod(model, "TableName")
+	_, found := findMethod(model, "TableName")
 	if !found {
 		return "", fmt.Errorf("typedb: model must implement TableName() method")
 	}
@@ -172,7 +175,7 @@ func getTableName(model ModelInterface) (string, error) {
 
 // hasDotNotation checks if any db tags contain dot notation (indicating joined model).
 func hasDotNotation(model ModelInterface) bool {
-	modelType := GetModelType(model)
+	modelType := getModelType(model)
 	return checkDotNotationRecursive(modelType)
 }
 
@@ -272,7 +275,9 @@ func buildReturningClause(driverName, primaryKeyColumn string) string {
 }
 
 // serializeModelFields collects non-nil/non-zero fields from a model and returns columns and values.
-// Excludes primary key field and fields with db:"-" tag.
+// Excludes primary key field, fields with db:"-" tag, and fields with dbInsert:"false" tag.
+// Fields with db:"-" are excluded from all database operations (INSERT, UPDATE, SELECT).
+// Fields with dbInsert:"false" are excluded from INSERT but can still be used in UPDATE and SELECT.
 // Returns: column names and field values for serialization.
 func serializeModelFields(model ModelInterface, primaryKeyFieldName string) ([]string, []any, error) {
 	modelValue := reflect.ValueOf(model)
@@ -327,6 +332,11 @@ func serializeModelFields(model ModelInterface, primaryKeyFieldName string) ([]s
 
 			// Skip if this is the primary key field (we'll get it from RETURNING)
 			if field.Name == primaryKeyFieldName {
+				continue
+			}
+
+			// Skip fields with dbInsert:"false" tag
+			if field.Tag.Get("dbInsert") == "false" {
 				continue
 			}
 
@@ -410,7 +420,7 @@ func Insert[T ModelInterface](ctx context.Context, exec Executor, model T) error
 	}
 
 	// Find primary key field
-	primaryField, found := FindFieldByTag(model, "load", "primary")
+	primaryField, found := findFieldByTag(model, "load", "primary")
 	if !found {
 		return fmt.Errorf("typedb: Insert requires a field with load:\"primary\" tag")
 	}
@@ -475,7 +485,7 @@ func Insert[T ModelInterface](ctx context.Context, exec Executor, model T) error
 		}
 
 		// Set primary key on model
-		return SetFieldValue(model, primaryField.Name, id)
+		return setFieldValue(model, primaryField.Name, id)
 	}
 
 	// Handle Oracle special case (RETURNING INTO requires bind variables)
@@ -505,7 +515,7 @@ func Insert[T ModelInterface](ctx context.Context, exec Executor, model T) error
 		}
 
 		// Set primary key on original model
-		return SetFieldValue(model, primaryField.Name, returnedPKValue.Interface())
+		return setFieldValue(model, primaryField.Name, returnedPKValue.Interface())
 	}
 
 	// For databases with RETURNING support (PostgreSQL, SQLite, SQL Server)
@@ -531,5 +541,5 @@ func Insert[T ModelInterface](ctx context.Context, exec Executor, model T) error
 	}
 
 	// Set primary key on model
-	return SetFieldValue(model, primaryField.Name, idValue)
+	return setFieldValue(model, primaryField.Name, idValue)
 }

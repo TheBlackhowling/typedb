@@ -1,0 +1,580 @@
+package typedb
+
+import (
+	"context"
+	"fmt"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/DATA-DOG/go-sqlmock"
+)
+
+// UpdateModelWithSkipTag is a model with a field that should be skipped during Update
+type UpdateModelWithSkipTag struct {
+	Model
+	ID        int64  `db:"id" load:"primary"`
+	Name      string `db:"name"`
+	Email     string `db:"email"`
+	CreatedAt string `db:"created_at" dbUpdate:"false"` // Should be skipped in Update but can be read/inserted
+}
+
+// UpdateModelWithDbInsertFalse is a model with a field that should be skipped during Insert
+type UpdateModelWithDbInsertFalse struct {
+	Model
+	ID        int64  `db:"id" load:"primary"`
+	Name      string `db:"name"`
+	Email     string `db:"email"`
+	UpdatedAt string `db:"updated_at" dbInsert:"false"` // Should be skipped in Insert but can be read/updated
+}
+
+func (m *UpdateModelWithDbInsertFalse) TableName() string {
+	return "users"
+}
+
+func init() {
+	RegisterModel[*UpdateModelWithDbInsertFalse]()
+}
+
+// UpdateModelWithBothTags is a model with a field that should be skipped in both Insert and Update
+type UpdateModelWithBothTags struct {
+	Model
+	ID        int64  `db:"id" load:"primary"`
+	Name      string `db:"name"`
+	Email     string `db:"email"`
+	CreatedAt string `db:"created_at" dbInsert:"false" dbUpdate:"false"` // Should be skipped in Insert and Update but can be read
+}
+
+func (m *UpdateModelWithBothTags) TableName() string {
+	return "users"
+}
+
+func init() {
+	RegisterModel[*UpdateModelWithBothTags]()
+}
+
+func (m *UpdateModelWithSkipTag) TableName() string {
+	return "users"
+}
+
+func init() {
+	RegisterModel[*UpdateModelWithSkipTag]()
+}
+
+// UpdateModelWithSkipTagValue is a model with dbUpdate:"false" tag
+type UpdateModelWithSkipTagValue struct {
+	Model
+	ID        int64  `db:"id" load:"primary"`
+	Name      string `db:"name"`
+	Email     string `db:"email"`
+	UpdatedAt string `db:"updated_at" dbUpdate:"false"` // Should be skipped in Update but can be read/inserted
+}
+
+func (m *UpdateModelWithSkipTagValue) TableName() string {
+	return "users"
+}
+
+func init() {
+	RegisterModel[*UpdateModelWithSkipTagValue]()
+}
+
+// Update tests
+
+func TestUpdate_PostgreSQL_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	user := &InsertModel{ID: 123, Name: "John Updated", Email: "john.updated@example.com"}
+
+	mock.ExpectExec(`UPDATE "users" SET "name" = \$1, "email" = \$2 WHERE "id" = \$3`).
+		WithArgs("John Updated", "john.updated@example.com", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestUpdate_MySQL_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "mysql", 5*time.Second)
+	ctx := context.Background()
+
+	user := &InsertModel{ID: 123, Name: "John Updated"}
+
+	mock.ExpectExec("UPDATE `users` SET `name` = \\? WHERE `id` = \\?").
+		WithArgs("John Updated", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestUpdate_SQLite_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "sqlite3", 5*time.Second)
+	ctx := context.Background()
+
+	user := &InsertModel{ID: 123, Email: "updated@example.com"}
+
+	mock.ExpectExec(`UPDATE "users" SET "email" = \? WHERE "id" = \?`).
+		WithArgs("updated@example.com", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestUpdate_SQLServer_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "sqlserver", 5*time.Second)
+	ctx := context.Background()
+
+	user := &InsertModel{ID: 123, Name: "John Updated", Email: "john.updated@example.com"}
+
+	mock.ExpectExec(`UPDATE \[users\] SET \[name\] = @p1, \[email\] = @p2 WHERE \[id\] = @p3`).
+		WithArgs("John Updated", "john.updated@example.com", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestUpdate_Oracle_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "oracle", 5*time.Second)
+	ctx := context.Background()
+
+	user := &InsertModel{ID: 123, Name: "John Updated"}
+
+	mock.ExpectExec(`UPDATE "USERS" SET "NAME" = :1 WHERE "ID" = :2`).
+		WithArgs("John Updated", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestUpdate_NoTableName_Error(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	user := &NoTableNameModel{ID: 123}
+
+	err = Update(ctx, typedbDB, user)
+	if err == nil {
+		t.Error("Update() error = nil, want error")
+	}
+	if !strings.Contains(err.Error(), "TableName") {
+		t.Errorf("Update() error = %v, want error containing 'TableName'", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestUpdate_NoPrimaryKey_Error(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	user := &NoPrimaryKeyModel{ID: 123}
+
+	err = Update(ctx, typedbDB, user)
+	if err == nil {
+		t.Error("Update() error = nil, want error")
+	}
+	if !strings.Contains(err.Error(), "primary") {
+		t.Errorf("Update() error = %v, want error containing 'primary'", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestUpdate_PrimaryKeyNotSet_Error(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	user := &InsertModel{Name: "John"} // ID is zero
+
+	err = Update(ctx, typedbDB, user)
+	if err == nil {
+		t.Error("Update() error = nil, want error")
+	}
+	if !strings.Contains(err.Error(), "primary key") || !strings.Contains(err.Error(), "set") {
+		t.Errorf("Update() error = %v, want error about primary key not being set", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestUpdate_DotNotation_Error(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	user := &JoinedModel{UserID: 123, Bio: "Updated bio"}
+
+	err = Update(ctx, typedbDB, user)
+	if err == nil {
+		t.Error("Update() error = nil, want error")
+	}
+	if !strings.Contains(err.Error(), "dot notation") {
+		t.Errorf("Update() error = %v, want error containing 'dot notation'", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestUpdate_AllZeroFields_Error(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	user := &InsertModel{ID: 123} // Only primary key set, no other fields
+
+	err = Update(ctx, typedbDB, user)
+	if err == nil {
+		t.Error("Update() error = nil, want error")
+	}
+	if !strings.Contains(err.Error(), "at least one non-nil field") {
+		t.Errorf("Update() error = %v, want error about needing fields to update", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestUpdate_ZeroFieldsExcluded(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	user := &InsertModel{ID: 123, Name: "John Updated"} // Email is empty, should be excluded
+
+	mock.ExpectExec(`UPDATE "users" SET "name" = \$1 WHERE "id" = \$2`).
+		WithArgs("John Updated", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestUpdate_ExecError(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	user := &InsertModel{ID: 123, Name: "John Updated"}
+
+	mock.ExpectExec(`UPDATE "users" SET "name" = \$1 WHERE "id" = \$2`).
+		WithArgs("John Updated", int64(123)).
+		WillReturnError(fmt.Errorf("database error"))
+
+	err = Update(ctx, typedbDB, user)
+	if err == nil {
+		t.Error("Update() error = nil, want error")
+	}
+	if !strings.Contains(err.Error(), "Update failed") {
+		t.Errorf("Update() error = %v, want error containing 'Update failed'", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestUpdate_SkipTagDash_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	user := &UpdateModelWithSkipTag{
+		ID:        123,
+		Name:      "John Updated",
+		Email:     "john.updated@example.com",
+		CreatedAt: "2024-01-01", // Should be skipped due to dbUpdate:"false" tag
+	}
+
+	mock.ExpectExec(`UPDATE "users" SET "name" = \$1, "email" = \$2 WHERE "id" = \$3`).
+		WithArgs("John Updated", "john.updated@example.com", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestUpdate_DbUpdateFalseTagValue_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	user := &UpdateModelWithSkipTagValue{
+		ID:        123,
+		Name:      "John Updated",
+		Email:     "john.updated@example.com",
+		UpdatedAt: "2024-01-01", // Should be skipped due to dbUpdate:"false" tag
+	}
+
+	mock.ExpectExec(`UPDATE "users" SET "name" = \$1, "email" = \$2 WHERE "id" = \$3`).
+		WithArgs("John Updated", "john.updated@example.com", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestUpdate_SkipTagDashWithNonZeroValue_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// Even though CreatedAt has a non-zero value, it should be skipped
+	user := &UpdateModelWithSkipTag{
+		ID:        123,
+		Name:      "John Updated",
+		CreatedAt: "2024-01-01 10:00:00", // Non-zero but should be skipped
+	}
+
+	mock.ExpectExec(`UPDATE "users" SET "name" = \$1 WHERE "id" = \$2`).
+		WithArgs("John Updated", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestUpdate_DbInsertFalse_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// UpdatedAt should be included in UPDATE even though it has dbInsert:"false"
+	user := &UpdateModelWithDbInsertFalse{
+		ID:        123,
+		Name:      "John Updated",
+		Email:     "john.updated@example.com",
+		UpdatedAt: "2024-01-01", // Should be included in Update (dbInsert:"false" doesn't affect Update)
+	}
+
+	mock.ExpectExec(`UPDATE "users" SET "name" = \$1, "email" = \$2, "updated_at" = \$3 WHERE "id" = \$4`).
+		WithArgs("John Updated", "john.updated@example.com", "2024-01-01", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestUpdate_DbUpdateFalse_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// CreatedAt should be excluded from UPDATE due to dbUpdate:"false"
+	user := &UpdateModelWithSkipTag{
+		ID:        123,
+		Name:      "John Updated",
+		Email:     "john.updated@example.com",
+		CreatedAt: "2024-01-01", // Should be skipped due to dbUpdate:"false" tag
+	}
+
+	mock.ExpectExec(`UPDATE "users" SET "name" = \$1, "email" = \$2 WHERE "id" = \$3`).
+		WithArgs("John Updated", "john.updated@example.com", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestUpdate_BothTagsFalse_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// CreatedAt should be excluded from UPDATE due to dbUpdate:"false" (dbInsert:"false" doesn't affect Update)
+	user := &UpdateModelWithBothTags{
+		ID:        123,
+		Name:      "John Updated",
+		Email:     "john.updated@example.com",
+		CreatedAt: "2024-01-01", // Should be skipped due to dbUpdate:"false" tag
+	}
+
+	mock.ExpectExec(`UPDATE "users" SET "name" = \$1, "email" = \$2 WHERE "id" = \$3`).
+		WithArgs("John Updated", "john.updated@example.com", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}

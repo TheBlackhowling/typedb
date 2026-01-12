@@ -23,7 +23,7 @@ func QueryAll[T ModelInterface](ctx context.Context, exec Executor, query string
 
 	result := make([]T, 0, len(rows))
 	for _, row := range rows {
-		model, err := DeserializeForType[T](row)
+		model, err := deserializeForType[T](row)
 		if err != nil {
 			return nil, err
 		}
@@ -54,7 +54,7 @@ func QueryFirst[T ModelInterface](ctx context.Context, exec Executor, query stri
 		return zero, err
 	}
 
-	model, err := DeserializeForType[T](row)
+	model, err := deserializeForType[T](row)
 	if err != nil {
 		var zero T
 		return zero, err
@@ -81,7 +81,7 @@ func QueryOne[T ModelInterface](ctx context.Context, exec Executor, query string
 		return zero, err
 	}
 
-	model, err := DeserializeForType[T](row)
+	model, err := deserializeForType[T](row)
 	if err != nil {
 		var zero T
 		return zero, err

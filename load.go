@@ -19,13 +19,13 @@ import (
 //	err := typedb.Load(ctx, db, user)
 func Load[T ModelInterface](ctx context.Context, exec Executor, model T) error {
 	// Find primary key field
-	primaryField, found := FindFieldByTag(model, "load", "primary")
+	primaryField, found := findFieldByTag(model, "load", "primary")
 	if !found {
 		return fmt.Errorf("typedb: no field with load:\"primary\" tag found")
 	}
 
 	// Get field value
-	fieldValueReflect, err := GetFieldValue(model, primaryField.Name)
+	fieldValueReflect, err := getFieldValue(model, primaryField.Name)
 	if err != nil {
 		return fmt.Errorf("typedb: failed to get primary key value: %w", err)
 	}
@@ -39,7 +39,7 @@ func Load[T ModelInterface](ctx context.Context, exec Executor, model T) error {
 
 	// Find and call QueryBy{Field}() method
 	methodName := "QueryBy" + primaryField.Name
-	_, methodFound := FindMethod(model, methodName)
+	_, methodFound := findMethod(model, methodName)
 	if !methodFound {
 		return fmt.Errorf("typedb: QueryBy%s() method not found", primaryField.Name)
 	}
@@ -72,7 +72,7 @@ func Load[T ModelInterface](ctx context.Context, exec Executor, model T) error {
 //	err := typedb.LoadByField(ctx, db, user, "Email")
 func LoadByField[T ModelInterface](ctx context.Context, exec Executor, model T, fieldName string) error {
 	// Get field value
-	fieldValueReflect, err := GetFieldValue(model, fieldName)
+	fieldValueReflect, err := getFieldValue(model, fieldName)
 	if err != nil {
 		return fmt.Errorf("typedb: failed to get field %s value: %w", fieldName, err)
 	}
@@ -86,7 +86,7 @@ func LoadByField[T ModelInterface](ctx context.Context, exec Executor, model T, 
 
 	// Find and call QueryBy{Field}() method
 	methodName := "QueryBy" + fieldName
-	_, methodFound := FindMethod(model, methodName)
+	_, methodFound := findMethod(model, methodName)
 	if !methodFound {
 		return fmt.Errorf("typedb: QueryBy%s() method not found", fieldName)
 	}
@@ -120,7 +120,7 @@ func LoadByField[T ModelInterface](ctx context.Context, exec Executor, model T, 
 //	err := typedb.LoadByComposite(ctx, db, userPost, "userpost")
 func LoadByComposite[T ModelInterface](ctx context.Context, exec Executor, model T, compositeName string) error {
 	// Collect all fields with the composite tag
-	t := GetModelType(model)
+	t := getModelType(model)
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
@@ -142,7 +142,7 @@ func LoadByComposite[T ModelInterface](ctx context.Context, exec Executor, model
 	// Get values for all fields in composite key
 	fieldValues := make([]any, len(fieldNames))
 	for i, fieldName := range fieldNames {
-		valueReflect, err := GetFieldValue(model, fieldName)
+		valueReflect, err := getFieldValue(model, fieldName)
 		if err != nil {
 			return fmt.Errorf("typedb: failed to get field %s value: %w", fieldName, err)
 		}
@@ -159,7 +159,7 @@ func LoadByComposite[T ModelInterface](ctx context.Context, exec Executor, model
 	methodName := "QueryBy" + strings.Join(fieldNames, "")
 
 	// Find and call QueryBy{Field1}{Field2}...() method
-	_, methodFound := FindMethod(model, methodName)
+	_, methodFound := findMethod(model, methodName)
 	if !methodFound {
 		return fmt.Errorf("typedb: %s() method not found", methodName)
 	}
