@@ -29,8 +29,9 @@ func main() {
 		log.Fatalf("Failed to run migrations: %v", err)
 	}
 
-	// Open database connection
-	db, err := typedb.Open("sqlite3", dsn)
+	// Open database connection with foreign keys enabled
+	// SQLite requires foreign keys to be enabled per connection
+	db, err := typedb.Open("sqlite3", dsn+"?_foreign_keys=1")
 	if err != nil {
 		log.Fatalf("Failed to open database: %v", err)
 	}
