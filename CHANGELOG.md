@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.14] - 2026-01-12
+
+**Commit:** [`120d8f4`](https://github.com/TheBlackhowling/typedb/commit/120d8f459ee778bb4a5c0d1cda3d1463fce79734)
+**Pull Request:** [#20](https://github.com/TheBlackhowling/typedb/pull/20)
+
+**Summary:** Disable example workflows on PR sync and fix SQLite CI migration issues
+
+**Key Changes:**
+- ✅ **Automated Workflow**: New GitHub Actions workflow added
+- ✅ **Source Code**: Code changes included
+
+**Detailed Changes:** See [versions/0.1.14.md](versions/0.1.14.md)
+
+
 ## [0.1.13] - 2026-01-12
 
 **Commit:** [`7f09938`](https://github.com/TheBlackhowling/typedb/commit/7f0993867689d58620af14ff01f0c8775746d790)
