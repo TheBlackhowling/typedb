@@ -1,0 +1,327 @@
+# version: '3.8'  # Removed - obsolete in newer docker-compose versions
+
+services:
+  # PostgreSQL Database
+  postgresql:
+    image: postgres:16-alpine
+    container_name: typedb_postgresql
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: typedb_examples
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d typedb_examples"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+    networks:
+      - postgresql_network
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: typedb_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: typedb_examples
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "user", "-ppassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - mysql_network
+
+  # SQL Server Database
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: typedb_mssql
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "YourStrong!Passw0rd"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    healthcheck:
+      # SQL Server 2022 uses mssql-tools18 instead of mssql-tools
+      # -C flag trusts the server certificate (required for ODBC Driver 18)
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'YourStrong!Passw0rd' -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    volumes:
+      - mssql_data:/var/opt/mssql
+    networks:
+      - mssql_network
+
+  # Create SQL Server database
+  mssql-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: typedb_mssql_init
+    depends_on:
+      mssql:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        # SQL Server 2022 uses mssql-tools18 instead of mssql-tools
+        # -C flag trusts the server certificate (required for ODBC Driver 18)
+        until /opt/mssql-tools18/bin/sqlcmd -S mssql -U sa -P 'YourStrong!Passw0rd' -C -Q 'SELECT 1' &> /dev/null; do
+          echo "Waiting for SQL Server..."
+          sleep 2
+        done
+        /opt/mssql-tools18/bin/sqlcmd -S mssql -U sa -P 'YourStrong!Passw0rd' -C -Q "IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'typedb_examples') CREATE DATABASE typedb_examples"
+    networks:
+      - mssql_network
+
+  # Migration Runner for PostgreSQL
+  migrate-postgresql:
+    image: migrate/migrate:latest
+    container_name: typedb_migrate_postgresql
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    volumes:
+      - ./postgresql/migrations:/migrations
+    command:
+      - "-path=/migrations"
+      - "-database=postgres://user:password@postgresql:5432/typedb_examples?sslmode=disable"
+      - "up"
+    networks:
+      - postgresql_network
+
+  # Migration Runner for MySQL
+  migrate-mysql:
+    image: migrate/migrate:latest
+    container_name: typedb_migrate_mysql
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./mysql/migrations:/migrations
+    command:
+      - "-path=/migrations"
+      - "-database=mysql://user:password@tcp(mysql:3306)/typedb_examples?parseTime=true"
+      - "up"
+    networks:
+      - mysql_network
+
+  # Migration Runner for SQL Server
+  migrate-mssql:
+    image: migrate/migrate:latest
+    container_name: typedb_migrate_mssql
+    depends_on:
+      mssql-init:
+        condition: service_completed_successfully
+    volumes:
+      - ./mssql/migrations:/migrations
+    command:
+      - "-path=/migrations"
+      - "-database=sqlserver://sa:YourStrong!Passw0rd@mssql:1433?database=typedb_examples"
+      - "up"
+    networks:
+      - mssql_network
+
+  # Test Runner for PostgreSQL
+  test-postgresql:
+    image: golang:1.22-alpine
+    container_name: typedb_test_postgresql
+    depends_on:
+      migrate-postgresql:
+        condition: service_completed_successfully
+    working_dir: /app
+    volumes:
+      - ../:/app
+      - go_cache:/go/pkg/mod
+    environment:
+      POSTGRES_DSN: "postgres://user:password@postgresql:5432/typedb_examples?sslmode=disable"
+      GOTOOLCHAIN: "auto"
+    command: >
+      sh -c "
+        cd examples/postgresql &&
+        go mod download &&
+        go get github.com/lib/pq &&
+        go test -v
+      "
+    networks:
+      - postgresql_network
+
+  # Test Runner for MySQL
+  test-mysql:
+    image: golang:1.22-alpine
+    container_name: typedb_test_mysql
+    depends_on:
+      migrate-mysql:
+        condition: service_completed_successfully
+    working_dir: /app
+    volumes:
+      - ../:/app
+      - go_cache:/go/pkg/mod
+    environment:
+      MYSQL_DSN: "user:password@tcp(mysql:3306)/typedb_examples?parseTime=true"
+      GOTOOLCHAIN: "auto"
+    command: >
+      sh -c "
+        cd examples/mysql &&
+        go mod download &&
+        go get github.com/go-sql-driver/mysql &&
+        go test -v
+      "
+    networks:
+      - mysql_network
+
+  # Test Runner for SQL Server
+  test-mssql:
+    image: golang:1.23-alpine
+    container_name: typedb_test_mssql
+    depends_on:
+      migrate-mssql:
+        condition: service_completed_successfully
+    working_dir: /app
+    volumes:
+      - ../:/app
+      - go_cache:/go/pkg/mod
+    environment:
+      MSSQL_DSN: "sqlserver://sa:YourStrong!Passw0rd@mssql:1433?database=typedb_examples"
+      GOTOOLCHAIN: "auto"
+    command: >
+      sh -c "
+        apk add --no-cache gcc musl-dev &&
+        cd examples/mssql &&
+        go mod download &&
+        go get github.com/microsoft/go-mssqldb &&
+        go test -v
+      "
+    networks:
+      - mssql_network
+
+  # Test Runner for SQLite (no database container needed)
+  test-sqlite:
+    image: golang:1.22-alpine
+    container_name: typedb_test_sqlite
+    working_dir: /app
+    volumes:
+      - ../:/app
+      - go_cache:/go/pkg/mod
+    environment:
+      CGO_ENABLED: "1"
+      SQLITE_DSN: "typedb_examples_test.db"
+    command: >
+      sh -c "
+        apk add --no-cache sqlite-dev gcc musl-dev &&
+        cd examples/sqlite &&
+        go mod download &&
+        go get github.com/mattn/go-sqlite3 &&
+        go get github.com/golang-migrate/migrate/v4 &&
+        go get github.com/golang-migrate/migrate/v4/database/sqlite3 &&
+        go get github.com/golang-migrate/migrate/v4/source/file &&
+        go test -v
+      "
+
+  # Oracle Database (Free Edition - for development/testing only)
+  # Oracle Database Free is free for development and testing purposes
+  # Run ./setup-oracle.sh to automate authentication and license acceptance
+  oracle:
+    image: container-registry.oracle.com/database/free:latest
+    container_name: typedb_oracle
+    environment:
+      ORACLE_PWD: password
+      ORACLE_CHARACTERSET: AL32UTF8
+    ports:
+      - "1521:1521"
+    healthcheck:
+      test: ["CMD-SHELL", "sqlplus -S sys/password@localhost:1521/FREEPDB1 as sysdba <<< 'SELECT 1 FROM DUAL;' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 15
+      start_period: 120s
+    volumes:
+      - oracle_data:/opt/oracle/oradata
+    networks:
+      - oracle_network
+
+  # Migration Runner for Oracle
+  # Note: migrate/migrate doesn't support Oracle by default, so we use SQLPlus directly
+  migrate-oracle:
+    image: container-registry.oracle.com/database/free:latest
+    container_name: typedb_migrate_oracle
+    depends_on:
+      oracle:
+        condition: service_healthy
+    volumes:
+      - ./oracle/migrations:/migrations
+    environment:
+      ORACLE_PWD: password
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        echo "Waiting for Oracle to be ready..."
+        until sqlplus -S system/password@oracle:1521/FREEPDB1 <<< "SELECT 1 FROM DUAL;" &> /dev/null; do
+          sleep 2
+        done
+        echo "Running migrations..."
+        cd /migrations
+        # Create a user tablespace for LOBs (required for SecureFiles)
+        echo "CREATE TABLESPACE typedb_data DATAFILE '/opt/oracle/oradata/FREE/typedb_data.dbf' SIZE 100M AUTOEXTEND ON;" | sqlplus -S system/password@oracle:1521/FREEPDB1 || true
+        echo "CREATE USER typedb IDENTIFIED BY password DEFAULT TABLESPACE typedb_data QUOTA UNLIMITED ON typedb_data;" | sqlplus -S system/password@oracle:1521/FREEPDB1 || true
+        echo "GRANT CONNECT, RESOURCE TO typedb;" | sqlplus -S system/password@oracle:1521/FREEPDB1 || true
+        echo "GRANT CREATE SESSION TO typedb;" | sqlplus -S system/password@oracle:1521/FREEPDB1 || true
+        # Use SET SQLBLANKLINES ON to allow blank lines in SQL scripts
+        echo "SET SQLBLANKLINES ON;" | cat - 000001_create_tables.up.sql | sqlplus -S typedb/password@oracle:1521/FREEPDB1 || exit 1
+        echo "Migrations completed"
+    networks:
+      - oracle_network
+
+  # Test Runner for Oracle
+  test-oracle:
+    image: golang:1.22-alpine
+    container_name: typedb_test_oracle
+    depends_on:
+      migrate-oracle:
+        condition: service_completed_successfully
+    working_dir: /app
+    volumes:
+      - ../:/app
+      - go_cache:/go/pkg/mod
+    environment:
+      ORACLE_DSN: "oracle://typedb:password@oracle:1521/FREEPDB1"
+      GOTOOLCHAIN: "auto"
+    command: >
+      sh -c "
+        apk add --no-cache gcc musl-dev libaio-dev &&
+        cd examples/oracle &&
+        go mod download &&
+        go get github.com/sijms/go-ora/v2 &&
+        go test -v
+      "
+    networks:
+      - oracle_network
+
+volumes:
+  postgresql_data:
+  mysql_data:
+  mssql_data:
+  oracle_data:
+  go_cache:
+
+networks:
+  postgresql_network:
+    driver: bridge
+  mysql_network:
+    driver: bridge
+  mssql_network:
+    driver: bridge
+  oracle_network:
+    driver: bridge

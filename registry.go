@@ -8,6 +8,8 @@ import (
 var (
 	registeredModels []reflect.Type
 	registerMutex    sync.RWMutex
+	validationOnce   sync.Once
+	validationError  error
 )
 
 // RegisterModel registers a model type for validation.

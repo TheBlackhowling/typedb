@@ -2,6 +2,7 @@ package typedb
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"reflect"
 	"strings"
@@ -17,6 +18,28 @@ type InsertModel struct {
 	ID    int64  `db:"id" load:"primary"`
 	Name  string `db:"name"`
 	Email string `db:"email"`
+}
+
+// oracleTestWrapper wraps a DB to intercept Exec calls and populate sql.Out for testing
+type oracleTestWrapper struct {
+	*DB
+	testID int64
+}
+
+func (w *oracleTestWrapper) Exec(ctx context.Context, query string, args ...any) (sql.Result, error) {
+	// Find and populate sql.Out parameter before calling Exec
+	for _, arg := range args {
+		if out, ok := arg.(sql.Out); ok {
+			if dest, ok := out.Dest.(*int64); ok {
+				*dest = w.testID
+			}
+		}
+	}
+	return w.DB.Exec(ctx, query, args...)
+}
+
+func (w *oracleTestWrapper) GetDriverName() string {
+	return w.DB.driverName
 }
 
 func (m *InsertModel) TableName() string {
@@ -1132,7 +1155,8 @@ func TestInsert_SQLServer_Success(t *testing.T) {
 
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(123)
 
-	mock.ExpectQuery(`INSERT INTO \[users\] \(\[name\], \[email\]\) VALUES \(@p1, @p2\) OUTPUT INSERTED\.\[id\]`).
+	// SQL Server OUTPUT clause comes BEFORE VALUES, not after
+	mock.ExpectQuery(`INSERT INTO \[users\] \(\[name\], \[email\]\) OUTPUT INSERTED\.\[id\] VALUES \(@p1, @p2\)`).
 		WithArgs("John", "john@example.com").
 		WillReturnRows(rows)
 
@@ -1162,13 +1186,19 @@ func TestInsert_Oracle_Success(t *testing.T) {
 
 	user := &InsertModel{Name: "John", Email: "john@example.com"}
 
-	rows := sqlmock.NewRows([]string{"ID"}).AddRow(123)
-
-	mock.ExpectQuery(`INSERT INTO "USERS" \("NAME", "EMAIL"\) VALUES \(:1, :2\) RETURNING "ID"`).
-		WithArgs("John", "john@example.com").
-		WillReturnRows(rows)
-
-	err = Insert(ctx, typedbDB, user)
+	// Oracle uses Exec with RETURNING ... INTO :3 with sql.Out parameter
+	// The third argument is sql.Out{Dest: &id} for the RETURNING INTO clause
+	// sqlmock doesn't populate sql.Out automatically, so we wrap the DB
+	// to intercept Exec calls and manually populate the sql.Out value
+	result := sqlmock.NewResult(0, 1)
+	mock.ExpectExec(`INSERT INTO "USERS" \("NAME", "EMAIL"\) VALUES \(:1, :2\) RETURNING "ID" INTO :3`).
+		WithArgs("John", "john@example.com", sqlmock.AnyArg()).
+		WillReturnResult(result)
+	
+	// Wrap the DB to intercept Exec calls and populate sql.Out
+	wrappedDB := &oracleTestWrapper{DB: typedbDB, testID: 123}
+	
+	err = Insert(ctx, wrappedDB, user)
 	if err != nil {
 		t.Fatalf("Insert failed: %v", err)
 	}
@@ -1383,13 +1413,14 @@ func TestInsert_Oracle_InsertAndReturnError(t *testing.T) {
 
 	user := &InsertModel{Name: "John", Email: "john@example.com"}
 
-	mock.ExpectQuery(`INSERT INTO "USERS"`).
-		WithArgs("John", "john@example.com").
-		WillReturnError(fmt.Errorf("InsertAndReturn error"))
+	// Oracle uses Exec with RETURNING ... INTO :3 with sql.Out parameter
+	mock.ExpectExec(`INSERT INTO "USERS" \("NAME", "EMAIL"\) VALUES \(:1, :2\) RETURNING "ID" INTO :3`).
+		WithArgs("John", "john@example.com", sqlmock.AnyArg()).
+		WillReturnError(fmt.Errorf("Insert error"))
 
 	err = Insert(ctx, typedbDB, user)
 	if err == nil {
-		t.Fatal("Expected error from InsertAndReturn")
+		t.Fatal("Expected error from Insert")
 	}
 
 	if !strings.Contains(err.Error(), "Insert failed") {

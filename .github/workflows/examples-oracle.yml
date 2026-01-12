@@ -1,0 +1,95 @@
+name: Examples - Oracle
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+    paths:
+      - 'examples/oracle/**'
+      - '*.go'
+      - 'go.mod'
+      - 'go.sum'
+
+jobs:
+  test:
+    # Only run on PRs from the same repository (not forks) or on push to main
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: go.sum
+      
+      - name: Download dependencies
+        run: go mod download
+      
+      - name: Install Oracle driver
+        run: go get github.com/sijms/go-ora/v2
+      
+      - name: Try to pull Oracle image without authentication
+        id: try_oracle_pull
+        continue-on-error: true
+        run: |
+          docker pull container-registry.oracle.com/database/free:latest || exit 1
+          echo "oracle_available=true" >> $GITHUB_OUTPUT
+      
+      - name: Check Oracle credentials (if pull failed)
+        id: check_oracle
+        if: steps.try_oracle_pull.outcome == 'failure'
+        run: |
+          if [ -z "${{ secrets.ORACLE_USERNAME }}" ] || [ -z "${{ secrets.ORACLE_PASSWORD }}" ]; then
+            echo "oracle_available=false" >> $GITHUB_OUTPUT
+            echo "Oracle image pull failed and credentials not configured. Skipping Oracle tests."
+            echo "To enable Oracle tests, add ORACLE_USERNAME and ORACLE_PASSWORD as GitHub secrets."
+            echo "Oracle Database Free is free for development and testing purposes."
+            echo "Sign up at https://container-registry.oracle.com/"
+          else
+            echo "oracle_available=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Login to Oracle Container Registry (if pull failed)
+        if: steps.try_oracle_pull.outcome == 'failure' && steps.check_oracle.outputs.oracle_available == 'true'
+        run: |
+          echo "${{ secrets.ORACLE_PASSWORD }}" | docker login container-registry.oracle.com -u "${{ secrets.ORACLE_USERNAME }}" --password-stdin || true
+      
+      - name: Start Oracle database
+        if: steps.try_oracle_pull.outputs.oracle_available == 'true' || steps.check_oracle.outputs.oracle_available == 'true'
+        run: |
+          cd examples
+          docker compose up -d oracle
+          echo "Waiting for Oracle to be ready..."
+          timeout 300 bash -c 'until docker compose exec -T oracle sqlplus -S sys/password@localhost:1521/FREEPDB1 as sysdba <<< "SELECT 1 FROM DUAL;" &>/dev/null; do sleep 5; done' || exit 1
+      
+      - name: Run Oracle migrations
+        if: steps.try_oracle_pull.outputs.oracle_available == 'true' || steps.check_oracle.outputs.oracle_available == 'true'
+        run: |
+          cd examples
+          docker compose run --rm migrate-oracle
+      
+      - name: Run Oracle examples
+        if: steps.try_oracle_pull.outputs.oracle_available == 'true' || steps.check_oracle.outputs.oracle_available == 'true'
+        env:
+          ORACLE_DSN: "oracle://typedb:password@localhost:1521/FREEPDB1"
+        run: |
+          cd examples/oracle
+          go mod tidy
+          go run example.go examples_query.go examples_load.go examples_insert.go examples_update.go examples_transaction.go examples_raw.go models.go
+      
+      - name: Cleanup Oracle container
+        if: always() && (steps.try_oracle_pull.outputs.oracle_available == 'true' || steps.check_oracle.outputs.oracle_available == 'true')
+        run: |
+          cd examples
+          docker compose down -v oracle || true
+      
+      - name: Skip Oracle tests (no credentials)
+        if: steps.try_oracle_pull.outcome == 'failure' && steps.check_oracle.outputs.oracle_available == 'false'
+        run: |
+          echo "Oracle tests skipped - credentials not configured"
+          echo "This is not a failure. Oracle tests are optional."
