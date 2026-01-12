@@ -78,4 +78,5 @@ jobs:
           MSSQL_DSN: "server=localhost;user id=sa;password=YourPassword123!;database=typedb_examples"
         run: |
           cd examples/mssql
+          go mod tidy
           go run example.go examples_query.go examples_load.go examples_insert.go examples_update.go examples_transaction.go examples_raw.go models.go
