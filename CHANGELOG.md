@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.12] - 2026-01-12
+
+**Commit:** [`5dc06ec`](https://github.com/TheBlackhowling/typedb/commit/5dc06ec3ca44b2b71ab88ac428191645b90465e1)
+**Pull Request:** [#18](https://github.com/TheBlackhowling/typedb/pull/18)
+
+**Summary:** Remove redundant Deserialize method overrides and improve Model.Deserialize() code coverage
+
+**Key Changes:**
+- ✅ **Source Code**: Code changes included
+
+**Detailed Changes:** See [versions/0.1.12.md](versions/0.1.12.md)
+
+
 ## [0.1.11] - 2026-01-11
 
 **Commit:** [`c51b08c`](https://github.com/TheBlackhowling/typedb/commit/c51b08c2f669c186068fc534de42ccd189341032)
