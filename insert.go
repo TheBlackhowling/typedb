@@ -584,8 +584,37 @@ func Insert[T ModelInterface](ctx context.Context, exec Executor, model T) error
 		return setFieldValue(model, primaryField.Name, id)
 	}
 
+	// Handle Oracle (go-ora driver has issues with RETURNING via QueryRowMap)
+	// Use Exec + separate SELECT to get the inserted ID
+	if driverNameLower == "oracle" {
+		insertQueryNoReturning := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
+			quotedTableName,
+			strings.Join(quotedColumns, ", "),
+			strings.Join(placeholders, ", "))
+		
+		_, err := exec.Exec(ctx, insertQueryNoReturning, values...)
+		if err != nil {
+			return fmt.Errorf("typedb: Insert failed: %w", err)
+		}
 
-	// For databases with RETURNING support (PostgreSQL, SQLite, SQL Server, Oracle)
+		// For Oracle, use MAX(id) to get the last inserted row
+		quotedPK := quoteIdentifier(driverName, primaryKeyColumn)
+		maxIDQuery := fmt.Sprintf("SELECT MAX(%s) as id FROM %s", quotedPK, quotedTableName)
+		row, err := exec.QueryRowMap(ctx, maxIDQuery)
+		if err != nil {
+			return fmt.Errorf("typedb: Insert failed to get ID: %w", err)
+		}
+		idValue, ok := row["id"]
+		if !ok {
+			idValue, ok = row["ID"]
+		}
+		if !ok || idValue == nil {
+			return fmt.Errorf("typedb: Insert failed to get ID from query")
+		}
+		return setFieldValue(model, primaryField.Name, idValue)
+	}
+
+	// For databases with RETURNING support (PostgreSQL, SQLite, SQL Server)
 	// SQL Server OUTPUT clause comes after VALUES
 	var insertQuery string
 	if driverNameLower == "sqlserver" || driverNameLower == "mssql" {
@@ -610,7 +639,7 @@ func Insert[T ModelInterface](ctx context.Context, exec Executor, model T) error
 	// Extract primary key value from returned row
 	idValue, ok := row[primaryKeyColumn]
 	if !ok {
-		// Try uppercase (Oracle, SQL Server sometimes)
+		// Try uppercase (SQL Server sometimes)
 		idValue, ok = row[strings.ToUpper(primaryKeyColumn)]
 		if !ok {
 			return fmt.Errorf("typedb: Insert RETURNING clause did not return primary key column %s", primaryKeyColumn)
