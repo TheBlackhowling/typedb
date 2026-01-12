@@ -150,11 +150,26 @@ func setFieldValue(model any, fieldName string, value any) error {
 	}
 
 	valueV := reflect.ValueOf(value)
-	if !valueV.Type().AssignableTo(fieldValue.Type()) {
+	
+	// Handle type conversion for numeric types
+	if valueV.Type().AssignableTo(fieldValue.Type()) {
+		fieldValue.Set(valueV)
+	} else if valueV.Kind() == reflect.Int64 && fieldValue.Kind() == reflect.Int {
+		// Convert int64 to int
+		fieldValue.SetInt(valueV.Int())
+	} else if valueV.Kind() == reflect.Int && fieldValue.Kind() == reflect.Int64 {
+		// Convert int to int64
+		fieldValue.SetInt(int64(valueV.Int()))
+	} else if valueV.Kind() == reflect.Float64 && fieldValue.Kind() == reflect.Float32 {
+		// Convert float64 to float32
+		fieldValue.SetFloat(valueV.Float())
+	} else if valueV.Kind() == reflect.Float32 && fieldValue.Kind() == reflect.Float64 {
+		// Convert float32 to float64
+		fieldValue.SetFloat(valueV.Float())
+	} else {
 		return fmt.Errorf("typedb: cannot assign %v to field %s of type %v", valueV.Type(), fieldName, fieldValue.Type())
 	}
-
-	fieldValue.Set(valueV)
+	
 	return nil
 }
 

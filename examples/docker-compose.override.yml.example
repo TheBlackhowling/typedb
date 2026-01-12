@@ -1,0 +1,21 @@
+# Example override file for local development
+# Copy this to docker-compose.override.yml and customize as needed
+# docker-compose.override.yml is automatically loaded by docker-compose
+
+version: '3.8'
+
+services:
+  # Override PostgreSQL port if needed
+  postgresql:
+    ports:
+      - "5432:5432"
+
+  # Override MySQL port if needed
+  mysql:
+    ports:
+      - "3306:3306"
+
+  # Override SQL Server port if needed
+  mssql:
+    ports:
+      - "1433:1433"

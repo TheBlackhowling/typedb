@@ -1,0 +1,70 @@
+name: Examples - MySQL
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+    paths:
+      - 'examples/mysql/**'
+      - '*.go'
+      - 'go.mod'
+      - 'go.sum'
+
+jobs:
+  test:
+    # Only run on PRs from the same repository (not forks) or on push to main
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: typedb_examples
+          MYSQL_USER: user
+          MYSQL_PASSWORD: password
+        options: >-
+          --health-cmd "mysqladmin ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 3306:3306
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: go.sum
+      
+      - name: Download dependencies
+        run: go mod download
+      
+      - name: Install MySQL driver
+        run: go get github.com/go-sql-driver/mysql
+      
+      - name: Install golang-migrate
+        run: |
+          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
+          sudo mv migrate /usr/local/bin/migrate
+      
+      - name: Run migrations
+        env:
+          MYSQL_URL: "mysql://user:password@tcp(localhost:3306)/typedb_examples?parseTime=true"
+        run: |
+          cd examples/mysql
+          migrate -path migrations -database "$MYSQL_URL" up
+      
+      - name: Run MySQL examples
+        env:
+          MYSQL_DSN: "user:password@tcp(localhost:3306)/typedb_examples?parseTime=true"
+        run: |
+          cd examples/mysql
+          go mod tidy
+          go run example.go examples_query.go examples_load.go examples_insert.go examples_update.go examples_transaction.go examples_raw.go models.go
