@@ -44,8 +44,8 @@ jobs:
           CGO_ENABLED=1 go get github.com/golang-migrate/migrate/v4
           CGO_ENABLED=1 go get github.com/golang-migrate/migrate/v4/database/sqlite3
           CGO_ENABLED=1 go get github.com/golang-migrate/migrate/v4/source/file
-          # Build the driver to ensure it's compiled with CGO
-          CGO_ENABLED=1 go build -buildmode=archive github.com/mattn/go-sqlite3 || true
+          # Build the driver package to ensure it's compiled with CGO
+          CGO_ENABLED=1 go build -buildmode=archive github.com/mattn/go-sqlite3
       
       - name: Install golang-migrate
         run: |
@@ -68,9 +68,11 @@ jobs:
         run: |
           cd examples/sqlite
           CGO_ENABLED=1 go mod tidy
-          CGO_ENABLED=1 go run example.go examples_query.go examples_load.go examples_insert.go examples_update.go examples_transaction.go examples_raw.go models.go
+          # Build the package with CGO enabled to ensure sqlite3 driver is compiled correctly
+          CGO_ENABLED=1 go build -o sqlite_examples .
+          ./sqlite_examples
       
       - name: Cleanup test database
         if: always()
         run: |
-          rm -f examples/sqlite/*.db
+          rm -f examples/sqlite/*.db examples/sqlite/sqlite_examples

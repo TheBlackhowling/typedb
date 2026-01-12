@@ -42,6 +42,15 @@ coverage
 coverage/
 *.coverprofile
 
+# Compiled binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+sqlite_examples
+*_examples
+
 # Environment files (uncomment if applicable)
 # .env
 # .env.local

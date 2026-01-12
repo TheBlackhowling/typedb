@@ -2,6 +2,7 @@ package typedb
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"reflect"
 	"strings"
@@ -23,6 +24,9 @@ func getDriverName(exec Executor) string {
 		return e.driverName
 	case *Tx:
 		return e.driverName
+	case interface{ GetDriverName() string }:
+		// Handle wrappers that expose driver name (e.g., oracleTestWrapper)
+		return e.GetDriverName()
 	default:
 		return ""
 	}
@@ -585,28 +589,39 @@ func Insert[T ModelInterface](ctx context.Context, exec Executor, model T) error
 	}
 
 	// Handle Oracle (go-ora driver requires special RETURNING INTO syntax)
-	// Use RETURNING ... INTO :id /*LastInsertId*/ with Exec() and LastInsertId()
+	// Use RETURNING ... INTO with sql.Out for bind variable
 	if driverNameLower == "oracle" {
 		quotedPK := quoteIdentifier(driverName, primaryKeyColumn)
-		// Oracle requires RETURNING ... INTO :bindvar with /*LastInsertId*/ comment
-		insertQuery := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s) RETURNING %s INTO :%s /*LastInsertId*/",
+		// Oracle requires RETURNING ... INTO :N where N is the next positional placeholder
+		// Use sql.Out to capture the returned ID
+		returningPlaceholder := fmt.Sprintf(":%d", len(values)+1)
+		insertQuery := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s) RETURNING %s INTO %s",
 			quotedTableName,
 			strings.Join(quotedColumns, ", "),
 			strings.Join(placeholders, ", "),
 			quotedPK,
-			strings.ToLower(primaryKeyColumn))
+			returningPlaceholder)
 		
-		result, err := exec.Exec(ctx, insertQuery, values...)
+		// Create sql.Out parameter for the RETURNING INTO bind variable
+		var id int64
+		outParam := sql.Out{Dest: &id}
+		
+		// Append sql.Out to values for the RETURNING INTO clause
+		args := make([]any, len(values)+1)
+		copy(args, values)
+		args[len(values)] = outParam
+		
+		result, err := exec.Exec(ctx, insertQuery, args...)
 		if err != nil {
 			return fmt.Errorf("typedb: Insert failed: %w", err)
 		}
 
-		// Use LastInsertId() which is thread-safe (uses connection-specific state)
-		id, err := result.LastInsertId()
-		if err != nil {
-			return fmt.Errorf("typedb: Insert failed to get last insert ID: %w", err)
+		// Verify the operation succeeded
+		if result == nil {
+			return fmt.Errorf("typedb: Insert returned nil result")
 		}
 
+		// The ID is now in the id variable from sql.Out
 		// Set primary key on model
 		return setFieldValue(model, primaryField.Name, id)
 	}
