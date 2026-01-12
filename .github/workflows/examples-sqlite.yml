@@ -88,18 +88,6 @@ jobs:
           /tmp/test_sqlite || (echo "sqlite3 driver test failed" && exit 1)
           rm -f /tmp/test_sqlite /tmp/test_sqlite.go
       
-      - name: Run migrations
-        env:
-          CGO_ENABLED: 1
-          SQLITE_DSN: "typedb_examples_test.db"
-        run: |
-          cd examples/sqlite
-          export CGO_ENABLED=1
-          go mod tidy
-          # Build and run migration runner with CGO enabled
-          # Use go run to avoid package conflicts (run_migrations.go and example.go both have main())
-          go run run_migrations.go
-      
       - name: Run SQLite examples
         env:
           CGO_ENABLED: 1
