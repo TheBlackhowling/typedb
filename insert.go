@@ -46,6 +46,102 @@ func getDriverName(exec Executor) string {
 func InsertAndReturn[T ModelInterface](ctx context.Context, exec Executor, insertQuery string, args ...any) (T, error) {
 	var zero T
 
+	// Check if this is Oracle - Oracle's go-ora driver has issues with RETURNING via QueryContext
+	driverName := getDriverName(exec)
+	driverNameLower := strings.ToLower(driverName)
+	
+	if driverNameLower == "oracle" {
+		// For Oracle, parse the query to extract INSERT and RETURNING parts
+		// Then execute INSERT separately and query back the returned columns
+		queryUpper := strings.ToUpper(insertQuery)
+		returningIdx := strings.Index(queryUpper, "RETURNING")
+		if returningIdx == -1 {
+			return zero, fmt.Errorf("typedb: InsertAndReturn requires RETURNING clause for Oracle")
+		}
+		
+		// Extract INSERT part (without RETURNING)
+		insertPart := insertQuery[:returningIdx]
+		returningPart := insertQuery[returningIdx+9:] // Skip "RETURNING "
+		returningPart = strings.TrimSpace(returningPart)
+		
+		// Execute INSERT without RETURNING
+		_, err := exec.Exec(ctx, insertPart, args...)
+		if err != nil {
+			return zero, fmt.Errorf("typedb: InsertAndReturn failed to execute INSERT: %w", err)
+		}
+		
+		// Parse table name from INSERT query to build SELECT
+		// INSERT INTO table_name ... -> SELECT ... FROM table_name WHERE ...
+		// For Oracle, we'll use MAX(id) approach since we can't easily build WHERE clause
+		// But we need to return the columns specified in RETURNING
+		// Actually, we can query back using MAX(id) and then SELECT those columns
+		
+		// Extract table name from INSERT query
+		insertUpper := strings.ToUpper(insertPart)
+		tableStart := strings.Index(insertUpper, "INTO ")
+		if tableStart == -1 {
+			return zero, fmt.Errorf("typedb: InsertAndReturn failed to parse table name from query")
+		}
+		tableStart += 5 // Skip "INTO "
+		tableEnd := strings.Index(insertUpper[tableStart:], " ")
+		if tableEnd == -1 {
+			tableEnd = len(insertUpper) - tableStart
+		}
+		tableName := insertPart[tableStart : tableStart+tableEnd]
+		tableName = strings.TrimSpace(tableName)
+		
+		// Build SELECT query using RETURNING columns and MAX(id) to get the last inserted row
+		// Parse RETURNING columns (handle "RETURNING col1, col2, ...")
+		returningCols := strings.Split(returningPart, ",")
+		for i := range returningCols {
+			returningCols[i] = strings.TrimSpace(returningCols[i])
+		}
+		
+		// Find ID column (usually first or named 'id')
+		var idCol string
+		for _, col := range returningCols {
+			colUpper := strings.ToUpper(strings.TrimSpace(col))
+			if colUpper == "ID" || strings.HasSuffix(colUpper, ".ID") {
+				idCol = strings.TrimSpace(col)
+				break
+			}
+		}
+		if idCol == "" && len(returningCols) > 0 {
+			// Use first column as ID
+			idCol = returningCols[0]
+		}
+		
+		// Query MAX(id) then SELECT the row
+		maxIDQuery := fmt.Sprintf("SELECT MAX(%s) as max_id FROM %s", idCol, tableName)
+		idRow, err := exec.QueryRowMap(ctx, maxIDQuery)
+		if err != nil {
+			return zero, fmt.Errorf("typedb: InsertAndReturn failed to get ID: %w", err)
+		}
+		maxID, ok := idRow["max_id"]
+		if !ok {
+			maxID, ok = idRow["MAX_ID"]
+		}
+		if !ok || maxID == nil {
+			return zero, fmt.Errorf("typedb: InsertAndReturn failed to get inserted ID")
+		}
+		
+		// Build SELECT query for the returned columns
+		selectCols := strings.Join(returningCols, ", ")
+		selectQuery := fmt.Sprintf("SELECT %s FROM %s WHERE %s = :1", selectCols, tableName, idCol)
+		row, err := exec.QueryRowMap(ctx, selectQuery, maxID)
+		if err != nil {
+			return zero, fmt.Errorf("typedb: InsertAndReturn failed to query returned row: %w", err)
+		}
+		
+		// Deserialize the returned row into a new model instance
+		model, err := deserializeForType[T](row)
+		if err != nil {
+			return zero, fmt.Errorf("typedb: InsertAndReturn deserialization failed: %w", err)
+		}
+		
+		return model, nil
+	}
+
 	// Execute the INSERT with RETURNING/OUTPUT and get the returned row
 	row, err := exec.QueryRowMap(ctx, insertQuery, args...)
 	if err != nil {
@@ -488,42 +584,57 @@ func Insert[T ModelInterface](ctx context.Context, exec Executor, model T) error
 		return setFieldValue(model, primaryField.Name, id)
 	}
 
-	// Handle Oracle special case (RETURNING INTO requires bind variables)
-	// Oracle drivers typically handle RETURNING INTO automatically via QueryRowMap
-	// Use InsertAndReturn to handle Oracle's RETURNING INTO syntax
+	// Handle Oracle (go-ora driver has issues with RETURNING via QueryContext)
+	// Use Exec + separate SELECT to get the inserted ID
 	if driverNameLower == "oracle" {
-		insertQuery := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)%s",
+		// Oracle's go-ora driver has issues with RETURNING via QueryContext
+		// So we insert first, then query back using the inserted values
+		insertQueryNoReturning := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
 			quotedTableName,
 			strings.Join(quotedColumns, ", "),
-			strings.Join(placeholders, ", "),
-			returningClause)
-
-		// Use InsertAndReturn to get the full model back (handles Oracle bind variables)
-		returnedModel, err := InsertAndReturn[T](ctx, exec, insertQuery, values...)
+			strings.Join(placeholders, ", "))
+		
+		_, err := exec.Exec(ctx, insertQueryNoReturning, values...)
 		if err != nil {
 			return fmt.Errorf("typedb: Insert failed: %w", err)
 		}
 
-		// Get the primary key value from returned model and set it on original model
-		returnedValue := reflect.ValueOf(returnedModel)
-		if returnedValue.Kind() == reflect.Ptr {
-			returnedValue = returnedValue.Elem()
+		// For Oracle, use MAX(id) since CLOB fields can't be used in WHERE clauses
+		// and we can't easily detect which fields are CLOB without schema inspection
+		// This works for single-threaded scenarios like seeding
+		maxIDQuery := fmt.Sprintf("SELECT MAX(%s) as id FROM %s", 
+			quoteIdentifier(driverName, primaryKeyColumn),
+			quotedTableName)
+		row, err := exec.QueryRowMap(ctx, maxIDQuery)
+		if err != nil {
+			return fmt.Errorf("typedb: Insert failed to get ID: %w", err)
 		}
-		returnedPKValue := returnedValue.FieldByName(primaryField.Name)
-		if !returnedPKValue.IsValid() {
-			return fmt.Errorf("typedb: Insert failed to get primary key from returned model")
+		idValue, ok := row["id"]
+		if !ok {
+			idValue, ok = row["ID"]
 		}
-
-		// Set primary key on original model
-		return setFieldValue(model, primaryField.Name, returnedPKValue.Interface())
+		if !ok || idValue == nil {
+			return fmt.Errorf("typedb: Insert failed to get ID from query")
+		}
+		return setFieldValue(model, primaryField.Name, idValue)
 	}
 
-	// For databases with RETURNING support (PostgreSQL, SQLite, SQL Server)
-	insertQuery := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)%s",
-		quotedTableName,
-		strings.Join(quotedColumns, ", "),
-		strings.Join(placeholders, ", "),
-		returningClause)
+	// For databases with RETURNING support (PostgreSQL, SQLite)
+	// SQL Server OUTPUT clause must come before VALUES
+	var insertQuery string
+	if driverNameLower == "sqlserver" || driverNameLower == "mssql" {
+		insertQuery = fmt.Sprintf("INSERT INTO %s (%s)%s VALUES (%s)",
+			quotedTableName,
+			strings.Join(quotedColumns, ", "),
+			returningClause,
+			strings.Join(placeholders, ", "))
+	} else {
+		insertQuery = fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)%s",
+			quotedTableName,
+			strings.Join(quotedColumns, ", "),
+			strings.Join(placeholders, ", "),
+			returningClause)
+	}
 
 	row, err := exec.QueryRowMap(ctx, insertQuery, values...)
 	if err != nil {

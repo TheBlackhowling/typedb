@@ -1,0 +1,57 @@
+name: Examples - SQLite
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+    paths:
+      - 'examples/sqlite/**'
+      - '*.go'
+      - 'go.mod'
+      - 'go.sum'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: go.sum
+      
+      - name: Download dependencies
+        run: go mod download
+      
+      - name: Install SQLite driver and migration dependencies
+        env:
+          CGO_ENABLED: 1
+        run: |
+          cd examples/sqlite
+          go get github.com/mattn/go-sqlite3
+          go get github.com/golang-migrate/migrate/v4
+          go get github.com/golang-migrate/migrate/v4/database/sqlite3
+          go get github.com/golang-migrate/migrate/v4/source/file
+      
+      - name: Install SQLite development libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsqlite3-dev gcc
+      
+      - name: Run SQLite examples
+        env:
+          CGO_ENABLED: 1
+          SQLITE_DSN: "typedb_examples_test.db"
+        run: |
+          cd examples/sqlite
+          go run example.go examples_query.go examples_load.go examples_insert.go examples_update.go examples_transaction.go examples_raw.go models.go
+      
+      - name: Cleanup test database
+        if: always()
+        run: |
+          rm -f examples/sqlite/*.db

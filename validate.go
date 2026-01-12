@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+	"sync"
 )
 
 // ValidationError represents a validation error for a specific model.
@@ -244,8 +245,23 @@ func ValidateAllRegistered() error {
 
 // MustValidateAllRegistered validates all registered models and panics if validation fails.
 // This is called automatically by Open() to ensure all models are valid before use.
+// Validation is performed lazily on first call - subsequent calls reuse the cached result.
+// This allows models to be registered in init() functions across multiple packages,
+// as validation will occur when Open() is first called (after all init() functions have run).
 func MustValidateAllRegistered() {
-	if err := ValidateAllRegistered(); err != nil {
-		panic(err)
+	validationOnce.Do(func() {
+		validationError = ValidateAllRegistered()
+	})
+	if validationError != nil {
+		panic(validationError)
 	}
+}
+
+// ResetValidation resets the validation cache, forcing re-validation on next call.
+// This is useful for testing or when models are registered dynamically after Open().
+// Note: This should rarely be needed in production code, as models should be registered
+// in init() functions before Open() is called.
+func ResetValidation() {
+	validationOnce = sync.Once{}
+	validationError = nil
 }
