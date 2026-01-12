@@ -1162,11 +1162,12 @@ func TestInsert_Oracle_Success(t *testing.T) {
 
 	user := &InsertModel{Name: "John", Email: "john@example.com"}
 
-	rows := sqlmock.NewRows([]string{"ID"}).AddRow(123)
-
-	mock.ExpectQuery(`INSERT INTO "USERS" \("NAME", "EMAIL"\) VALUES \(:1, :2\) RETURNING "ID"`).
+	// Oracle uses Exec with RETURNING ... INTO :id /*LastInsertId*/
+	// sqlmock.NewResult(lastInsertId, rowsAffected) - first param is LastInsertId()
+	result := sqlmock.NewResult(123, 1)
+	mock.ExpectExec(`INSERT INTO "USERS" \("NAME", "EMAIL"\) VALUES \(:1, :2\) RETURNING "ID" INTO :id /\*LastInsertId\*/`).
 		WithArgs("John", "john@example.com").
-		WillReturnRows(rows)
+		WillReturnResult(result)
 
 	err = Insert(ctx, typedbDB, user)
 	if err != nil {
@@ -1383,13 +1384,14 @@ func TestInsert_Oracle_InsertAndReturnError(t *testing.T) {
 
 	user := &InsertModel{Name: "John", Email: "john@example.com"}
 
-	mock.ExpectQuery(`INSERT INTO "USERS"`).
+	// Oracle uses Exec with RETURNING ... INTO :id /*LastInsertId*/
+	mock.ExpectExec(`INSERT INTO "USERS" \("NAME", "EMAIL"\) VALUES \(:1, :2\) RETURNING "ID" INTO :id /\*LastInsertId\*/`).
 		WithArgs("John", "john@example.com").
-		WillReturnError(fmt.Errorf("InsertAndReturn error"))
+		WillReturnError(fmt.Errorf("Insert error"))
 
 	err = Insert(ctx, typedbDB, user)
 	if err == nil {
-		t.Fatal("Expected error from InsertAndReturn")
+		t.Fatal("Expected error from Insert")
 	}
 
 	if !strings.Contains(err.Error(), "Insert failed") {
