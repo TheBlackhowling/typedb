@@ -30,25 +30,27 @@ jobs:
       - name: Download dependencies
         run: go mod download
       
+      - name: Install SQLite development libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsqlite3-dev gcc
+      
       - name: Install SQLite driver and migration dependencies
         env:
           CGO_ENABLED: 1
         run: |
           cd examples/sqlite
-          go get github.com/mattn/go-sqlite3
-          go get github.com/golang-migrate/migrate/v4
-          go get github.com/golang-migrate/migrate/v4/database/sqlite3
-          go get github.com/golang-migrate/migrate/v4/source/file
+          CGO_ENABLED=1 go get github.com/mattn/go-sqlite3
+          CGO_ENABLED=1 go get github.com/golang-migrate/migrate/v4
+          CGO_ENABLED=1 go get github.com/golang-migrate/migrate/v4/database/sqlite3
+          CGO_ENABLED=1 go get github.com/golang-migrate/migrate/v4/source/file
+          # Build the driver to ensure it's compiled with CGO
+          CGO_ENABLED=1 go build -buildmode=archive github.com/mattn/go-sqlite3 || true
       
       - name: Install golang-migrate
         run: |
           curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
           sudo mv migrate /usr/local/bin/migrate
-      
-      - name: Install SQLite development libraries
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libsqlite3-dev gcc
       
       - name: Run migrations
         env:
