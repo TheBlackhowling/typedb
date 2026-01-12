@@ -75,7 +75,7 @@ func TestDeserialize_BasicTypes(t *testing.T) {
 		"created_at": "2023-01-01T12:00:00Z",
 	}
 
-	err := Deserialize(row, user)
+	err := deserialize(row, user)
 	if err != nil {
 		t.Fatalf("Deserialize failed: %v", err)
 	}
@@ -114,7 +114,7 @@ func TestDeserialize_IntConversions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			row := map[string]any{"id": tt.value}
-			err := Deserialize(row, user)
+			err := deserialize(row, user)
 			if err != nil {
 				t.Fatalf("Deserialize failed: %v", err)
 			}
@@ -148,7 +148,7 @@ func TestDeserialize_BoolConversions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			row := map[string]any{"published": tt.value}
-			err := Deserialize(row, post)
+			err := deserialize(row, post)
 			if err != nil {
 				t.Fatalf("Deserialize failed: %v", err)
 			}
@@ -169,7 +169,7 @@ func TestDeserialize_PointerFields(t *testing.T) {
 		"deleted": nil,
 	}
 
-	err := Deserialize(row, model)
+	err := deserialize(row, model)
 	if err != nil {
 		t.Fatalf("Deserialize failed: %v", err)
 	}
@@ -198,7 +198,7 @@ func TestDeserialize_NilValues(t *testing.T) {
 		"deleted": nil,
 	}
 
-	err := Deserialize(row, model)
+	err := deserialize(row, model)
 	if err != nil {
 		t.Fatalf("Deserialize failed: %v", err)
 	}
@@ -235,7 +235,7 @@ func TestDeserialize_StringArrays(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			row := map[string]any{"tags": tt.value}
-			err := Deserialize(row, model)
+			err := deserialize(row, model)
 			if err != nil {
 				t.Fatalf("Deserialize failed: %v", err)
 			}
@@ -264,7 +264,7 @@ func TestDeserialize_IntArrays(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			row := map[string]any{"numbers": tt.value}
-			err := Deserialize(row, model)
+			err := deserialize(row, model)
 			if err != nil {
 				t.Fatalf("Deserialize failed: %v", err)
 			}
@@ -285,7 +285,7 @@ func TestDeserialize_JSONB(t *testing.T) {
 		"config":   `{"setting": "value"}`,
 	}
 
-	err := Deserialize(row, model)
+	err := deserialize(row, model)
 	if err != nil {
 		t.Fatalf("Deserialize failed: %v", err)
 	}
@@ -312,7 +312,7 @@ func TestDeserialize_DotNotation(t *testing.T) {
 		"users.name": "John",
 	}
 
-	err := Deserialize(row, model)
+	err := deserialize(row, model)
 	if err != nil {
 		t.Fatalf("Deserialize failed: %v", err)
 	}
@@ -333,7 +333,7 @@ func TestDeserialize_EmbeddedStructs(t *testing.T) {
 		"name": "Derived",
 	}
 
-	err := Deserialize(row, model)
+	err := deserialize(row, model)
 	if err != nil {
 		t.Fatalf("Deserialize failed: %v", err)
 	}
@@ -355,7 +355,7 @@ func TestDeserializeForType(t *testing.T) {
 		"created_at": "2023-01-01T12:00:00Z",
 	}
 
-	user, err := DeserializeForType[*DeserializeUser](row)
+	user, err := deserializeForType[*DeserializeUser](row)
 	if err != nil {
 		t.Fatalf("DeserializeForType failed: %v", err)
 	}
@@ -383,7 +383,7 @@ func TestDeserialize_NilDest(t *testing.T) {
 	var user *DeserializeUser = nil
 	row := map[string]any{"id": 123}
 
-	err := Deserialize(row, user)
+	err := deserialize(row, user)
 	if err == nil {
 		t.Error("Expected error for nil dest")
 	}
@@ -398,7 +398,7 @@ func TestDeserialize_UnknownFields(t *testing.T) {
 	}
 
 	// Should not error on unknown fields
-	err := Deserialize(row, user)
+	err := deserialize(row, user)
 	if err != nil {
 		t.Fatalf("Deserialize should ignore unknown fields, got error: %v", err)
 	}
@@ -424,7 +424,7 @@ func TestDeserialize_TimeFormats(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			row := map[string]any{"created_at": tt.value}
-			err := Deserialize(row, user)
+			err := deserialize(row, user)
 			if err != nil {
 				t.Fatalf("Deserialize failed: %v", err)
 			}
@@ -450,7 +450,7 @@ func TestDeserializeInt(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DeserializeInt(tt.value)
+			got, err := deserializeInt(tt.value)
 			if err != nil {
 				t.Fatalf("DeserializeInt failed: %v", err)
 			}
@@ -479,7 +479,7 @@ func TestDeserializeBool(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DeserializeBool(tt.value)
+			got, err := deserializeBool(tt.value)
 			if err != nil {
 				t.Fatalf("DeserializeBool failed: %v", err)
 			}
@@ -504,7 +504,7 @@ func TestDeserializeString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := DeserializeString(tt.value)
+			got := deserializeString(tt.value)
 			if got != tt.want {
 				t.Errorf("Expected %q, got %q", tt.want, got)
 			}
@@ -525,7 +525,7 @@ func TestDeserializeJSONB(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DeserializeJSONB(tt.value)
+			got, err := deserializeJSONB(tt.value)
 			if err != nil {
 				t.Fatalf("DeserializeJSONB failed: %v", err)
 			}
@@ -539,28 +539,28 @@ func TestDeserializeJSONB(t *testing.T) {
 }
 
 func TestDeserializeJSONB_InvalidJSON(t *testing.T) {
-	_, err := DeserializeJSONB("invalid json")
+	_, err := deserializeJSONB("invalid json")
 	if err == nil {
 		t.Error("Expected error for invalid JSON")
 	}
 }
 
 func TestDeserializeJSONB_UnsupportedType(t *testing.T) {
-	_, err := DeserializeJSONB(123)
+	_, err := deserializeJSONB(123)
 	if err == nil {
 		t.Error("Expected error for unsupported type")
 	}
 }
 
 func TestDeserializeIntArray_InvalidFormat(t *testing.T) {
-	_, err := DeserializeIntArray("invalid")
+	_, err := deserializeIntArray("invalid")
 	if err == nil {
 		t.Error("Expected error for invalid array format")
 	}
 }
 
 func TestDeserializeStringArray_InvalidFormat(t *testing.T) {
-	_, err := DeserializeStringArray(123)
+	_, err := deserializeStringArray(123)
 	if err == nil {
 		t.Error("Expected error for invalid array format")
 	}
@@ -580,7 +580,7 @@ func TestDeserializeMap(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DeserializeMap(tt.value)
+			got, err := deserializeMap(tt.value)
 			if err != nil {
 				t.Fatalf("DeserializeMap failed: %v", err)
 			}
@@ -592,7 +592,7 @@ func TestDeserializeMap(t *testing.T) {
 }
 
 func TestDeserializeMap_UnsupportedType(t *testing.T) {
-	_, err := DeserializeMap(123)
+	_, err := deserializeMap(123)
 	if err == nil {
 		t.Error("Expected error for unsupported type")
 	}
@@ -614,7 +614,7 @@ func TestDeserializeInt64(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DeserializeInt64(tt.value)
+			got, err := deserializeInt64(tt.value)
 			if err != nil {
 				t.Fatalf("DeserializeInt64 failed: %v", err)
 			}
@@ -641,7 +641,7 @@ func TestDeserializeInt32(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DeserializeInt32(tt.value)
+			got, err := deserializeInt32(tt.value)
 			if err != nil {
 				t.Fatalf("DeserializeInt32 failed: %v", err)
 			}
@@ -666,7 +666,7 @@ func TestDeserializeTime(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DeserializeTime(tt.value)
+			got, err := deserializeTime(tt.value)
 			if tt.want {
 				if err != nil {
 					t.Fatalf("DeserializeTime failed: %v", err)
@@ -688,7 +688,7 @@ func TestDeserializeToField_Reflection(t *testing.T) {
 	type CustomInt int
 	var customInt CustomInt
 
-	err := DeserializeToField(&customInt, 123)
+	err := deserializeToField(&customInt, 123)
 	if err != nil {
 		t.Fatalf("DeserializeToField failed: %v", err)
 	}
@@ -699,7 +699,7 @@ func TestDeserializeToField_Reflection(t *testing.T) {
 
 func TestDeserializeToField_PointerType(t *testing.T) {
 	var intPtr *int
-	err := DeserializeToField(&intPtr, 456)
+	err := deserializeToField(&intPtr, 456)
 	if err != nil {
 		t.Fatalf("DeserializeToField failed: %v", err)
 	}
@@ -710,7 +710,7 @@ func TestDeserializeToField_PointerType(t *testing.T) {
 
 func TestDeserializeToField_NilValue(t *testing.T) {
 	var intPtr *int
-	err := DeserializeToField(&intPtr, nil)
+	err := deserializeToField(&intPtr, nil)
 	if err != nil {
 		t.Fatalf("DeserializeToField failed: %v", err)
 	}
@@ -719,7 +719,7 @@ func TestDeserializeToField_NilValue(t *testing.T) {
 	}
 
 	var i int
-	err = DeserializeToField(&i, nil)
+	err = deserializeToField(&i, nil)
 	if err != nil {
 		t.Fatalf("DeserializeToField failed: %v", err)
 	}
@@ -735,7 +735,7 @@ type BadModel struct {
 }
 
 func (b *BadModel) Deserialize(row map[string]any) error {
-	return Deserialize(row, b)
+	return deserialize(row, b)
 }
 
 func TestDeserializeForType_ErrorPath(t *testing.T) {
@@ -746,7 +746,7 @@ func TestDeserializeForType_ErrorPath(t *testing.T) {
 
 	// BadModel implements ModelInterface via Deserialize method
 	// But Deserialize will fail because "invalid" can't be converted to int
-	_, err := DeserializeForType[*BadModel](row)
+	_, err := deserializeForType[*BadModel](row)
 	if err == nil {
 		t.Error("Expected error for invalid deserialization")
 	}
@@ -771,7 +771,7 @@ func TestSerializeJSONB(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := SerializeJSONB(tt.value)
+			got, err := serializeJSONB(tt.value)
 			if tt.value == nil {
 				if err != nil {
 					t.Fatalf("SerializeJSONB failed: %v", err)
@@ -813,7 +813,7 @@ func TestSerializeJSONB(t *testing.T) {
 func TestSerializeJSONB_Error(t *testing.T) {
 	// Test with a type that can't be marshaled (channel)
 	ch := make(chan int)
-	_, err := SerializeJSONB(ch)
+	_, err := serializeJSONB(ch)
 	if err == nil {
 		t.Error("Expected error for unmarshalable type")
 	}
@@ -843,7 +843,7 @@ func TestSerializeIntArray(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := SerializeIntArray(tt.value)
+			got, err := serializeIntArray(tt.value)
 			if err != nil {
 				t.Fatalf("SerializeIntArray failed: %v", err)
 			}
@@ -855,12 +855,12 @@ func TestSerializeIntArray(t *testing.T) {
 }
 
 func TestSerializeIntArray_Error(t *testing.T) {
-	_, err := SerializeIntArray("not an array")
+	_, err := serializeIntArray("not an array")
 	if err == nil {
 		t.Error("Expected error for non-array type")
 	}
 
-	_, err = SerializeIntArray([]any{1, "not a number", 3})
+	_, err = serializeIntArray([]any{1, "not a number", 3})
 	if err == nil {
 		t.Error("Expected error for invalid element")
 	}
@@ -885,9 +885,9 @@ func TestSerializeStringArray(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := SerializeStringArray(tt.value)
+			got, err := serializeStringArray(tt.value)
 			if err != nil {
-				t.Fatalf("SerializeStringArray failed: %v", err)
+				t.Fatalf("serializeStringArray failed: %v", err)
 			}
 			if got != tt.want {
 				t.Errorf("Expected %q, got %q", tt.want, got)
@@ -897,7 +897,7 @@ func TestSerializeStringArray(t *testing.T) {
 }
 
 func TestSerializeStringArray_Error(t *testing.T) {
-	_, err := SerializeStringArray(123)
+	_, err := serializeStringArray(123)
 	if err == nil {
 		t.Error("Expected error for non-array type")
 	}
@@ -930,9 +930,9 @@ func TestSerialize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Serialize(tt.value)
+			got, err := serialize(tt.value)
 			if err != nil {
-				t.Fatalf("Serialize failed: %v", err)
+				t.Fatalf("serialize failed: %v", err)
 			}
 			if tt.value == nil {
 				if got != nil {
@@ -984,7 +984,7 @@ func TestSerializeJSONB_MoreTypes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := SerializeJSONB(tt.value)
+			got, err := serializeJSONB(tt.value)
 			if err != nil {
 				t.Fatalf("SerializeJSONB failed: %v", err)
 			}
@@ -1026,7 +1026,7 @@ func TestDeserializeInt_AllTypes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DeserializeInt(tt.value)
+			got, err := deserializeInt(tt.value)
 			if err != nil {
 				t.Fatalf("DeserializeInt failed: %v", err)
 			}
@@ -1053,7 +1053,7 @@ func TestDeserializeInt64_AllTypes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DeserializeInt64(tt.value)
+			got, err := deserializeInt64(tt.value)
 			if err != nil {
 				t.Fatalf("DeserializeInt64 failed: %v", err)
 			}
@@ -1079,7 +1079,7 @@ func TestDeserializeInt32_AllTypes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DeserializeInt32(tt.value)
+			got, err := deserializeInt32(tt.value)
 			if err != nil {
 				t.Fatalf("DeserializeInt32 failed: %v", err)
 			}
@@ -1118,7 +1118,7 @@ func TestDeserializeBool_AllTypes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DeserializeBool(tt.value)
+			got, err := deserializeBool(tt.value)
 			if err != nil {
 				t.Fatalf("DeserializeBool failed: %v", err)
 			}
@@ -1176,7 +1176,7 @@ func TestBuildFieldMap_SkipDashTag(t *testing.T) {
 
 func TestDeserializeToField_NonPointerTarget(t *testing.T) {
 	var i int
-	err := DeserializeToField(i, 123)
+	err := deserializeToField(i, 123)
 	if err == nil {
 		t.Error("Expected error for non-pointer target")
 	}
@@ -1186,7 +1186,7 @@ func TestDeserializeToField_ReflectionAssignable(t *testing.T) {
 	// Test AssignableTo path in deserializeWithReflection
 	type MyInt int
 	var myInt MyInt
-	err := DeserializeToField(&myInt, MyInt(123))
+	err := deserializeToField(&myInt, MyInt(123))
 	if err != nil {
 		t.Fatalf("DeserializeToField failed: %v", err)
 	}
@@ -1199,7 +1199,7 @@ func TestDeserializeToField_ReflectionConvertible(t *testing.T) {
 	// Test ConvertibleTo path in deserializeWithReflection
 	type MyInt int
 	var myInt MyInt
-	err := DeserializeToField(&myInt, int(456))
+	err := deserializeToField(&myInt, int(456))
 	if err != nil {
 		t.Fatalf("DeserializeToField failed: %v", err)
 	}
@@ -1212,7 +1212,7 @@ func TestDeserializeToField_ReflectionPointerTarget(t *testing.T) {
 	// Test pointer target with AssignableTo
 	type MyInt int
 	var myIntPtr *MyInt
-	err := DeserializeToField(&myIntPtr, MyInt(789))
+	err := deserializeToField(&myIntPtr, MyInt(789))
 	if err != nil {
 		t.Fatalf("DeserializeToField failed: %v", err)
 	}
@@ -1225,7 +1225,7 @@ func TestDeserializeToField_ReflectionPointerTargetConvertible(t *testing.T) {
 	// Test pointer target with ConvertibleTo
 	type MyInt int
 	var myIntPtr *MyInt
-	err := DeserializeToField(&myIntPtr, int(999))
+	err := deserializeToField(&myIntPtr, int(999))
 	if err != nil {
 		t.Fatalf("DeserializeToField failed: %v", err)
 	}
@@ -1239,7 +1239,7 @@ func TestDeserializeToField_ReflectionError(t *testing.T) {
 	type MyInt int
 	type MyString string
 	var myInt MyInt
-	err := DeserializeToField(&myInt, MyString("invalid"))
+	err := deserializeToField(&myInt, MyString("invalid"))
 	if err == nil {
 		t.Error("Expected error for incompatible types")
 	}
@@ -1284,14 +1284,14 @@ type BadTypeModel struct {
 	ID int `db:"id"`
 }
 
-func TestDeserialize_ErrorFromDeserializeToField(t *testing.T) {
+func TestDeserialize_ErrorFromdeserializeToField(t *testing.T) {
 	badModel := &BadTypeModel{}
 
 	row := map[string]any{
 		"id": "not an int", // This will cause DeserializeInt to fail
 	}
 
-	err := Deserialize(row, badModel)
+	err := deserialize(row, badModel)
 	if err == nil {
 		t.Error("Expected error for invalid type conversion")
 	}
@@ -1299,7 +1299,7 @@ func TestDeserialize_ErrorFromDeserializeToField(t *testing.T) {
 
 func TestDeserializeIntArray_Int32Slice(t *testing.T) {
 	arr := []int32{1, 2, 3}
-	result, err := DeserializeIntArray(arr)
+	result, err := deserializeIntArray(arr)
 	if err != nil {
 		t.Fatalf("DeserializeIntArray failed: %v", err)
 	}
@@ -1311,7 +1311,7 @@ func TestDeserializeIntArray_Int32Slice(t *testing.T) {
 func TestDeserializeIntArray_ErrorInElement(t *testing.T) {
 	// Test error path when DeserializeInt fails on an element
 	arr := []any{1, "not a number", 3}
-	_, err := DeserializeIntArray(arr)
+	_, err := deserializeIntArray(arr)
 	if err == nil {
 		t.Error("Expected error for invalid element")
 	}
@@ -1319,7 +1319,7 @@ func TestDeserializeIntArray_ErrorInElement(t *testing.T) {
 
 func TestDeserializeIntArray_ErrorInPostgresFormat(t *testing.T) {
 	// Test error path when parsing postgres array format fails
-	_, err := DeserializeIntArray("{1,not a number,3}")
+	_, err := deserializeIntArray("{1,not a number,3}")
 	if err == nil {
 		t.Error("Expected error for invalid postgres array format")
 	}
@@ -1340,7 +1340,7 @@ func TestDeserializeBool_DefaultCaseMore(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DeserializeBool(tt.value)
+			got, err := deserializeBool(tt.value)
 			if err != nil {
 				// Some might fail, that's okay
 				return
@@ -1376,7 +1376,7 @@ func TestDeserializeInt64_MoreTypes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DeserializeInt64(tt.value)
+			got, err := deserializeInt64(tt.value)
 			if err != nil {
 				t.Fatalf("DeserializeInt64 failed: %v", err)
 			}
@@ -1400,7 +1400,7 @@ func TestDeserializeInt32_MoreTypes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DeserializeInt32(tt.value)
+			got, err := deserializeInt32(tt.value)
 			if err != nil {
 				t.Fatalf("DeserializeInt32 failed: %v", err)
 			}
@@ -1414,7 +1414,7 @@ func TestDeserializeInt32_MoreTypes(t *testing.T) {
 func TestDeserializeInt_DefaultCase(t *testing.T) {
 	// Test default case (fmt.Sprintf fallback) - this will fail to parse
 	// but we're testing that the default case is executed
-	_, err := DeserializeInt([]int{123})
+	_, err := deserializeInt([]int{123})
 	// Default case uses fmt.Sprintf which produces "{123}" which fails to parse
 	// So we expect an error, but the important thing is the default case was hit
 	if err == nil {
@@ -1424,7 +1424,7 @@ func TestDeserializeInt_DefaultCase(t *testing.T) {
 
 func TestDeserializeInt64_DefaultCase(t *testing.T) {
 	// Test default case - will fail to parse but tests the path
-	_, err := DeserializeInt64([]int{456})
+	_, err := deserializeInt64([]int{456})
 	if err == nil {
 		t.Error("Expected error for default case with unparseable string")
 	}
@@ -1432,7 +1432,7 @@ func TestDeserializeInt64_DefaultCase(t *testing.T) {
 
 func TestDeserializeInt32_DefaultCase(t *testing.T) {
 	// Test default case - will fail to parse but tests the path
-	_, err := DeserializeInt32([]int{789})
+	_, err := deserializeInt32([]int{789})
 	if err == nil {
 		t.Error("Expected error for default case with unparseable string")
 	}
@@ -1452,7 +1452,7 @@ func TestDeserializeBool_DefaultCase(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DeserializeBool(tt.value)
+			got, err := deserializeBool(tt.value)
 			if err != nil {
 				// Some values might not parse, that's okay for default case
 				return
@@ -1466,7 +1466,7 @@ func TestDeserializeBool_DefaultCase(t *testing.T) {
 
 func TestDeserializeToField_FloatTypes(t *testing.T) {
 	var f64 float64
-	err := DeserializeToField(&f64, 123.45)
+	err := deserializeToField(&f64, 123.45)
 	if err != nil {
 		t.Fatalf("DeserializeToField failed: %v", err)
 	}
@@ -1475,7 +1475,7 @@ func TestDeserializeToField_FloatTypes(t *testing.T) {
 	}
 
 	var f32 float32
-	err = DeserializeToField(&f32, float32(67.89))
+	err = deserializeToField(&f32, float32(67.89))
 	if err != nil {
 		t.Fatalf("DeserializeToField failed: %v", err)
 	}
@@ -1486,47 +1486,47 @@ func TestDeserializeToField_FloatTypes(t *testing.T) {
 
 func TestDeserializeToField_ErrorFromConverter(t *testing.T) {
 	var i int
-	err := DeserializeToField(&i, "not a number")
+	err := deserializeToField(&i, "not a number")
 	if err == nil {
 		t.Error("Expected error for invalid conversion")
 	}
 
 	var i64 int64
-	err = DeserializeToField(&i64, "not a number")
+	err = deserializeToField(&i64, "not a number")
 	if err == nil {
 		t.Error("Expected error for invalid conversion")
 	}
 
 	var i32 int32
-	err = DeserializeToField(&i32, "not a number")
+	err = deserializeToField(&i32, "not a number")
 	if err == nil {
 		t.Error("Expected error for invalid conversion")
 	}
 
 	var b bool
-	err = DeserializeToField(&b, "not a bool")
+	err = deserializeToField(&b, "not a bool")
 	// This might succeed due to default case parsing, so we don't check error
 
 	var t1 time.Time
-	err = DeserializeToField(&t1, "not a time")
+	err = deserializeToField(&t1, "not a time")
 	if err == nil {
 		t.Error("Expected error for invalid time conversion")
 	}
 
 	var arr []int
-	err = DeserializeToField(&arr, "not an array")
+	err = deserializeToField(&arr, "not an array")
 	if err == nil {
 		t.Error("Expected error for invalid array conversion")
 	}
 
 	var jsonb map[string]any
-	err = DeserializeToField(&jsonb, "not json")
+	err = deserializeToField(&jsonb, "not json")
 	if err == nil {
 		t.Error("Expected error for invalid JSON conversion")
 	}
 
 	var m map[string]string
-	err = DeserializeToField(&m, "not json")
+	err = deserializeToField(&m, "not json")
 	if err == nil {
 		t.Error("Expected error for invalid map conversion")
 	}
@@ -1534,7 +1534,7 @@ func TestDeserializeToField_ErrorFromConverter(t *testing.T) {
 
 func TestDeserializeTime_DefaultCase(t *testing.T) {
 	// Test default case (fmt.Sprintf fallback)
-	_, err := DeserializeTime([]int{123})
+	_, err := deserializeTime([]int{123})
 	// Default case will try to parse fmt.Sprintf output, which will fail
 	if err == nil {
 		t.Error("Expected error for default case with unparseable time")
@@ -1544,17 +1544,17 @@ func TestDeserializeTime_DefaultCase(t *testing.T) {
 func TestDeserializeToField_PointerErrorPaths(t *testing.T) {
 	// Test error paths for pointer types
 	var intPtr *int
-	err := DeserializeToField(&intPtr, "not a number")
+	err := deserializeToField(&intPtr, "not a number")
 	if err == nil {
 		t.Error("Expected error for invalid conversion to pointer")
 	}
 
 	var boolPtr *bool
-	err = DeserializeToField(&boolPtr, "not a bool")
+	err = deserializeToField(&boolPtr, "not a bool")
 	// Might succeed due to default parsing
 
 	var timePtr *time.Time
-	err = DeserializeToField(&timePtr, "not a time")
+	err = deserializeToField(&timePtr, "not a time")
 	if err == nil {
 		t.Error("Expected error for invalid time conversion to pointer")
 	}
@@ -1604,7 +1604,7 @@ func TestDeserialize_NonStructDest(t *testing.T) {
 func TestDeserializeToField_MoreTypes(t *testing.T) {
 	// Test uint types
 	var u uint
-	err := DeserializeToField(&u, uint(123))
+	err := deserializeToField(&u, uint(123))
 	if err != nil {
 		t.Fatalf("DeserializeToField failed: %v", err)
 	}
@@ -1613,7 +1613,7 @@ func TestDeserializeToField_MoreTypes(t *testing.T) {
 	}
 
 	var u64 uint64
-	err = DeserializeToField(&u64, uint64(456))
+	err = deserializeToField(&u64, uint64(456))
 	if err != nil {
 		t.Fatalf("DeserializeToField failed: %v", err)
 	}
@@ -1622,7 +1622,7 @@ func TestDeserializeToField_MoreTypes(t *testing.T) {
 	}
 
 	var u32 uint32
-	err = DeserializeToField(&u32, uint32(789))
+	err = deserializeToField(&u32, uint32(789))
 	if err != nil {
 		t.Fatalf("DeserializeToField failed: %v", err)
 	}
@@ -1708,13 +1708,13 @@ func TestDeserializeUint64(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DeserializeUint64(tt.value)
+			got, err := deserializeUint64(tt.value)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("DeserializeUint64() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("deserializeUint64() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !tt.wantErr && got != tt.want {
-				t.Errorf("DeserializeUint64() = %v, want %v", got, tt.want)
+				t.Errorf("deserializeUint64() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -1764,7 +1764,7 @@ func TestDeserializeUint32(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DeserializeUint32(tt.value)
+			got, err := deserializeUint32(tt.value)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DeserializeUint32() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1820,13 +1820,13 @@ func TestDeserializeUint(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DeserializeUint(tt.value)
+			got, err := deserializeUint(tt.value)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("DeserializeUint() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("deserializeUint() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !tt.wantErr && got != tt.want {
-				t.Errorf("DeserializeUint() = %v, want %v", got, tt.want)
+				t.Errorf("deserializeUint() = %v, want %v", got, tt.want)
 			}
 		})
 	}

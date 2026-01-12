@@ -16,7 +16,7 @@ type QueryTestUser struct {
 }
 
 func (u *QueryTestUser) Deserialize(row map[string]any) error {
-	return Deserialize(row, u)
+	return deserialize(row, u)
 }
 
 func init() {

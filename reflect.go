@@ -14,10 +14,10 @@ var (
 	ErrMethodNotFound = errors.New("typedb: method not found")
 )
 
-// GetModelType returns the reflect.Type of a model.
+// getModelType returns the reflect.Type of a model.
 // Requires a pointer type and returns the underlying struct type.
 // Panics if model is not a pointer.
-func GetModelType(model any) reflect.Type {
+func getModelType(model any) reflect.Type {
 	t := reflect.TypeOf(model)
 	if t.Kind() != reflect.Ptr {
 		panic("typedb: GetModelType requires a pointer type")
@@ -25,22 +25,12 @@ func GetModelType(model any) reflect.Type {
 	return t.Elem()
 }
 
-// FindFieldByTag finds a struct field by its tag value.
+// findFieldByTag finds a struct field by its tag value.
 // Searches through embedded structs (like Model base).
 // Requires a pointer type.
 // Returns the field and true if found, nil and false otherwise.
-//
-// Example:
-//
-//	type User struct {
-//	    typedb.Model
-//	    ID int `db:"id" load:"primary"`
-//	}
-//
-//	field, found := FindFieldByTag(&User{}, "load", "primary")
-//	// field.Name == "ID", found == true
-func FindFieldByTag(model any, tagKey, tagValue string) (*reflect.StructField, bool) {
-	t := GetModelType(model)
+func findFieldByTag(model any, tagKey, tagValue string) (*reflect.StructField, bool) {
+	t := getModelType(model)
 	return findFieldByTagRecursive(t, tagKey, tagValue)
 }
 
@@ -105,10 +95,10 @@ func splitTag(tag string) []string {
 	return parts
 }
 
-// GetFieldValue gets the value of a field by name from a model.
+// getFieldValue gets the value of a field by name from a model.
 // Requires a pointer type.
 // Returns an error if the field is not found or cannot be accessed.
-func GetFieldValue(model any, fieldName string) (reflect.Value, error) {
+func getFieldValue(model any, fieldName string) (reflect.Value, error) {
 	v := reflect.ValueOf(model)
 	if v.Kind() != reflect.Ptr {
 		return reflect.Value{}, fmt.Errorf("typedb: model must be a pointer type")
@@ -131,10 +121,10 @@ func GetFieldValue(model any, fieldName string) (reflect.Value, error) {
 	return v.FieldByIndex(field.Index), nil
 }
 
-// SetFieldValue sets the value of a field by name in a model.
+// setFieldValue sets the value of a field by name in a model.
 // Requires a pointer type.
 // Returns an error if the field is not found, cannot be accessed, or value type is incompatible.
-func SetFieldValue(model any, fieldName string, value any) error {
+func setFieldValue(model any, fieldName string, value any) error {
 	v := reflect.ValueOf(model)
 	if v.Kind() != reflect.Ptr {
 		return fmt.Errorf("typedb: model must be a pointer type")
@@ -201,10 +191,10 @@ func findFieldByNameRecursive(t reflect.Type, fieldName string) (*reflect.Struct
 	return nil, false
 }
 
-// FindMethod finds a method by name on a model.
+// findMethod finds a method by name on a model.
 // Requires a pointer type (methods are typically defined on pointer receivers).
 // Returns the method and true if found, nil and false otherwise.
-func FindMethod(model any, methodName string) (*reflect.Method, bool) {
+func findMethod(model any, methodName string) (*reflect.Method, bool) {
 	t := reflect.TypeOf(model)
 	method, found := t.MethodByName(methodName)
 	if !found {
@@ -213,10 +203,10 @@ func FindMethod(model any, methodName string) (*reflect.Method, bool) {
 	return &method, true
 }
 
-// CallMethod calls a method by name on a model with the given arguments.
+// callMethod calls a method by name on a model with the given arguments.
 // Requires a pointer type (methods are typically defined on pointer receivers).
 // Returns the method results and an error if the method is not found or call fails.
-func CallMethod(model any, methodName string, args ...any) ([]reflect.Value, error) {
+func callMethod(model any, methodName string, args ...any) ([]reflect.Value, error) {
 	v := reflect.ValueOf(model)
 	method := v.MethodByName(methodName)
 	if !method.IsValid() {

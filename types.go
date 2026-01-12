@@ -52,14 +52,16 @@ type Config struct {
 }
 
 // ModelInterface defines the contract for model types that can be deserialized.
-// Models must implement Deserialize to convert database rows into struct fields.
+// Models satisfy this interface by embedding Model, which provides deserialize().
+// The deserialize() method is unexported - users should use the public API functions
+// (QueryAll, QueryFirst, QueryOne, InsertAndReturn, Load, etc.) instead of calling deserialize() directly.
 type ModelInterface interface {
-	Deserialize(row map[string]any) error
+	deserialize(row map[string]any) error
 }
 
 // Model is the base struct that models should embed.
 // It provides common functionality for model types.
-// Methods will be implemented in model.go (Layer 7).
+// Models that embed Model automatically satisfy ModelInterface through Model.deserialize().
 type Model struct{}
 
 // Option configures DB connection settings.
