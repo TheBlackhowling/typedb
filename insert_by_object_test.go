@@ -1155,7 +1155,8 @@ func TestInsert_SQLServer_Success(t *testing.T) {
 
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(123)
 
-	mock.ExpectQuery(`INSERT INTO \[users\] \(\[name\], \[email\]\) VALUES \(@p1, @p2\) OUTPUT INSERTED\.\[id\]`).
+	// SQL Server OUTPUT clause comes BEFORE VALUES, not after
+	mock.ExpectQuery(`INSERT INTO \[users\] \(\[name\], \[email\]\) OUTPUT INSERTED\.\[id\] VALUES \(@p1, @p2\)`).
 		WithArgs("John", "john@example.com").
 		WillReturnRows(rows)
 

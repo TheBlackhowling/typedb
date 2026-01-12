@@ -627,14 +627,14 @@ func Insert[T ModelInterface](ctx context.Context, exec Executor, model T) error
 	}
 
 	// For databases with RETURNING support (PostgreSQL, SQLite, SQL Server)
-	// SQL Server OUTPUT clause comes after VALUES
+	// SQL Server OUTPUT clause comes BEFORE VALUES, not after
 	var insertQuery string
 	if driverNameLower == "sqlserver" || driverNameLower == "mssql" {
-		insertQuery = fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)%s",
+		insertQuery = fmt.Sprintf("INSERT INTO %s (%s)%s VALUES (%s)",
 			quotedTableName,
 			strings.Join(quotedColumns, ", "),
-			strings.Join(placeholders, ", "),
-			returningClause)
+			returningClause,
+			strings.Join(placeholders, ", "))
 	} else {
 		insertQuery = fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)%s",
 			quotedTableName,
