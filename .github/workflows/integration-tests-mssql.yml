@@ -28,10 +28,11 @@ jobs:
           SA_PASSWORD: YourPassword123!
           MSSQL_PID: Express
         options: >-
-          --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourPassword123! -Q 'SELECT 1'"
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P YourPassword123! -C -Q 'SELECT 1'"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
+          --health-start-period 30s
         ports:
           - 1433:1433
     
@@ -56,10 +57,18 @@ jobs:
           curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
           sudo mv migrate /usr/local/bin/migrate
       
+      - name: Install SQL Server tools
+        run: |
+          curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+          curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
+          echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> $GITHUB_ENV
+      
       - name: Wait for SQL Server to be ready
         run: |
           for i in {1..30}; do
-            if /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P 'YourPassword123!' -Q 'SELECT 1' &>/dev/null; then
+            if /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'YourPassword123!' -C -Q 'SELECT 1' &>/dev/null; then
               echo "SQL Server is ready"
               break
             fi
@@ -69,7 +78,7 @@ jobs:
       
       - name: Create database
         run: |
-          /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P 'YourPassword123!' -Q "IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'typedb_examples') CREATE DATABASE typedb_examples" || true
+          /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'YourPassword123!' -C -Q "IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'typedb_examples') CREATE DATABASE typedb_examples" || true
       
       - name: Run migrations
         env:
