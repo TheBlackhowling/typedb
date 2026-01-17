@@ -20,10 +20,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     
-    # Note: Oracle requires Oracle Instant Client and is complex to set up in CI
-    # This workflow will skip tests if Oracle is not available
-    # For production CI, consider using Oracle's official Docker images or cloud services
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -40,28 +36,62 @@ jobs:
       - name: Install Oracle driver
         run: go get github.com/sijms/go-ora/v2
       
-      - name: Install golang-migrate
+      - name: Try to pull Oracle image without authentication
+        id: try_oracle_pull
+        continue-on-error: true
         run: |
-          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
-          sudo mv migrate /usr/local/bin/migrate
+          docker pull container-registry.oracle.com/database/free:latest || exit 1
+          echo "oracle_available=true" >> $GITHUB_OUTPUT
       
-      - name: Run migrations (will skip if database unavailable)
-        env:
-          ORACLE_URL: "oracle://user:password@localhost:1521/XE"
+      - name: Check Oracle credentials (if pull failed)
+        id: check_oracle
+        if: steps.try_oracle_pull.outcome == 'failure'
         run: |
-          cd integration_tests/oracle
-          migrate -path migrations -database "$ORACLE_URL" up || echo "Migrations skipped - Oracle not available"
+          if [ -z "${{ secrets.ORACLE_USERNAME }}" ] || [ -z "${{ secrets.ORACLE_PASSWORD }}" ]; then
+            echo "oracle_available=false" >> $GITHUB_OUTPUT
+            echo "Oracle image pull failed and credentials not configured. Skipping Oracle tests."
+            echo "To enable Oracle tests, add ORACLE_USERNAME and ORACLE_PASSWORD as GitHub secrets."
+            echo "Oracle Database Free is free for development and testing purposes."
+            echo "Sign up at https://container-registry.oracle.com/"
+          else
+            echo "oracle_available=true" >> $GITHUB_OUTPUT
+          fi
       
-      - name: Run Oracle integration tests (will skip if database unavailable)
+      - name: Login to Oracle Container Registry (if pull failed)
+        if: steps.try_oracle_pull.outcome == 'failure' && steps.check_oracle.outputs.oracle_available == 'true'
+        run: |
+          echo "${{ secrets.ORACLE_PASSWORD }}" | docker login container-registry.oracle.com -u "${{ secrets.ORACLE_USERNAME }}" --password-stdin || true
+      
+      - name: Start Oracle database
+        if: steps.try_oracle_pull.outputs.oracle_available == 'true' || steps.check_oracle.outputs.oracle_available == 'true'
+        run: |
+          cd integration_tests
+          docker compose up -d oracle
+          echo "Waiting for Oracle to be ready..."
+          timeout 300 bash -c 'until docker compose exec -T oracle sqlplus -S sys/password@localhost:1521/FREEPDB1 as sysdba <<< "SELECT 1 FROM DUAL;" &>/dev/null; do sleep 5; done' || exit 1
+      
+      - name: Run Oracle migrations
+        if: steps.try_oracle_pull.outputs.oracle_available == 'true' || steps.check_oracle.outputs.oracle_available == 'true'
+        run: |
+          cd integration_tests
+          docker compose run --rm migrate-oracle
+      
+      - name: Run Oracle integration tests
+        if: steps.try_oracle_pull.outputs.oracle_available == 'true' || steps.check_oracle.outputs.oracle_available == 'true'
         env:
-          ORACLE_DSN: "oracle://user:password@localhost:1521/XE"
+          ORACLE_DSN: "oracle://typedb:password@localhost:1521/FREEPDB1"
         run: |
           cd integration_tests/oracle
           go test -v
       
-      - name: Note about Oracle setup
-        if: always()
+      - name: Cleanup Oracle container
+        if: always() && (steps.try_oracle_pull.outputs.oracle_available == 'true' || steps.check_oracle.outputs.oracle_available == 'true')
         run: |
-          echo "Oracle tests require Oracle Instant Client and database setup."
-          echo "Tests will skip gracefully if Oracle is not available."
-          echo "For production CI, configure Oracle database connection."
+          cd integration_tests
+          docker compose down -v oracle || true
+      
+      - name: Skip Oracle tests (no credentials)
+        if: steps.try_oracle_pull.outcome == 'failure' && steps.check_oracle.outputs.oracle_available == 'false'
+        run: |
+          echo "Oracle tests skipped - credentials not configured"
+          echo "This is not a failure. Oracle tests are optional."
