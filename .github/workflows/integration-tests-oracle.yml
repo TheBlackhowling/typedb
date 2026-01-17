@@ -1,0 +1,67 @@
+name: Integration Tests - Oracle
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'integration_tests/oracle/**'
+      - '*.go'
+      - 'go.mod'
+      - 'go.sum'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'integration_tests/oracle/**'
+      - '*.go'
+      - 'go.mod'
+      - 'go.sum'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    # Note: Oracle requires Oracle Instant Client and is complex to set up in CI
+    # This workflow will skip tests if Oracle is not available
+    # For production CI, consider using Oracle's official Docker images or cloud services
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: go.sum
+      
+      - name: Download dependencies
+        run: go mod download
+      
+      - name: Install Oracle driver
+        run: go get github.com/sijms/go-ora/v2
+      
+      - name: Install golang-migrate
+        run: |
+          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
+          sudo mv migrate /usr/local/bin/migrate
+      
+      - name: Run migrations (will skip if database unavailable)
+        env:
+          ORACLE_URL: "oracle://user:password@localhost:1521/XE"
+        run: |
+          cd integration_tests/oracle
+          migrate -path migrations -database "$ORACLE_URL" up || echo "Migrations skipped - Oracle not available"
+      
+      - name: Run Oracle integration tests (will skip if database unavailable)
+        env:
+          ORACLE_DSN: "oracle://user:password@localhost:1521/XE"
+        run: |
+          cd integration_tests/oracle
+          go test -v
+      
+      - name: Note about Oracle setup
+        if: always()
+        run: |
+          echo "Oracle tests require Oracle Instant Client and database setup."
+          echo "Tests will skip gracefully if Oracle is not available."
+          echo "For production CI, configure Oracle database connection."
