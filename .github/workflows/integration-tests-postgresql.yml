@@ -1,0 +1,71 @@
+name: Integration Tests - PostgreSQL
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'integration_tests/postgresql/**'
+      - '*.go'
+      - 'go.mod'
+      - 'go.sum'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'integration_tests/postgresql/**'
+      - '*.go'
+      - 'go.mod'
+      - 'go.sum'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: typedb_examples
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: go.sum
+      
+      - name: Download dependencies
+        run: go mod download
+      
+      - name: Install PostgreSQL driver
+        run: go get github.com/lib/pq
+      
+      - name: Install golang-migrate
+        run: |
+          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
+          sudo mv migrate /usr/local/bin/migrate
+      
+      - name: Run migrations
+        env:
+          POSTGRES_URL: "postgres://user:password@localhost:5432/typedb_examples?sslmode=disable"
+        run: |
+          cd integration_tests/postgresql
+          migrate -path migrations -database "$POSTGRES_URL" up
+      
+      - name: Run PostgreSQL integration tests
+        env:
+          POSTGRES_DSN: "postgres://user:password@localhost:5432/typedb_examples?sslmode=disable"
+        run: |
+          cd integration_tests/postgresql
+          go test -v
