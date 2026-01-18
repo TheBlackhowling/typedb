@@ -237,6 +237,123 @@ func TestUpdate_PartialUpdate_MultipleChangedFields(t *testing.T) {
 	}
 }
 
+// TestUpdate_NonPartialUpdate_AllNonZeroFields tests that non-partial update includes all non-zero fields
+// even if they haven't changed (when model doesn't have partial update enabled)
+func TestUpdate_NonPartialUpdate_AllNonZeroFields(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// InsertModel doesn't have partial update enabled
+	// When updating, ALL non-zero fields should be included, regardless of whether they changed
+	user := &InsertModel{
+		ID:    123,
+		Name:  "John Updated",
+		Email: "john@example.com", // This field is set but hasn't changed - should still be included
+	}
+
+	// Expect UPDATE to include ALL non-zero fields (both name and email)
+	mock.ExpectExec(`UPDATE "users" SET "name" = \$1, "email" = \$2 WHERE "id" = \$3`).
+		WithArgs("John Updated", "john@example.com", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+// TestUpdate_NonPartialUpdate_OnlySetFields tests that non-partial update only includes fields that are set
+func TestUpdate_NonPartialUpdate_OnlySetFields(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// InsertModel doesn't have partial update enabled
+	// Only set fields should be included (zero values are excluded)
+	user := &InsertModel{
+		ID:   123,
+		Name: "John Updated",
+		// Email is not set (zero value) - should be excluded
+	}
+
+	// Expect UPDATE to only include name (email is zero value, so excluded)
+	mock.ExpectExec(`UPDATE "users" SET "name" = \$1 WHERE "id" = \$2`).
+		WithArgs("John Updated", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+// TestUpdate_PartialUpdate_UnchangedFieldsExcluded tests that partial update excludes unchanged fields
+// This is the key difference from non-partial update
+func TestUpdate_PartialUpdate_UnchangedFieldsExcluded(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// Create a user and simulate deserialization (save original copy)
+	user := &UpdateModelWithPartialUpdate{
+		ID:    123,
+		Name:  "John",
+		Email: "john@example.com",
+	}
+
+	// Simulate deserialization by saving original copy
+	row := map[string]any{
+		"id":    int64(123),
+		"name":  "John",
+		"email": "john@example.com",
+	}
+	if err := deserialize(row, user); err != nil {
+		t.Fatalf("Failed to deserialize: %v", err)
+	}
+
+	// Modify only name, keep email unchanged
+	user.Name = "John Updated"
+	// Email remains unchanged - should NOT be included in UPDATE with partial update
+
+	// Expect UPDATE to only include changed fields (name), NOT unchanged fields (email)
+	mock.ExpectExec(`UPDATE "users" SET "name" = \$1 WHERE "id" = \$2`).
+		WithArgs("John Updated", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
 // Update tests
 
 func TestUpdate_PostgreSQL_Success(t *testing.T) {
