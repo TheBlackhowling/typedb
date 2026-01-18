@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.16] - 2026-01-18
+
+**Commit:** [`00d3d3e`](https://github.com/TheBlackhowling/typedb/commit/00d3d3ed85d5f58753f60c8f32f8a548ed212744)
+**Pull Request:** [#22](https://github.com/TheBlackhowling/typedb/pull/22)
+
+**Summary:** Add automatic timestamp population for updated_at fields during UPDATE operations using database functions
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.16.md](versions/0.1.16.md)
+
+
 ## [0.1.15] - 2026-01-18
 
 **Commit:** [`babb7f4`](https://github.com/TheBlackhowling/typedb/commit/babb7f4ec141e54bc70cf511a71d86edf7bce4d9)
