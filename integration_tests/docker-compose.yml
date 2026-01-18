@@ -178,6 +178,7 @@ services:
         echo "SET SQLBLANKLINES ON;" | cat - 000004_insert_type_examples.up.sql | sqlplus -S typedb/password@oracle:1521/FREEPDB1 || exit 1
         echo "SET SQLBLANKLINES ON;" | cat - 000005_create_long_raw_table.up.sql | sqlplus -S typedb/password@oracle:1521/FREEPDB1 || exit 1
         echo "SET SQLBLANKLINES ON;" | cat - 000006_insert_long_raw_examples.up.sql | sqlplus -S typedb/password@oracle:1521/FREEPDB1 || exit 1
+        echo "SET SQLBLANKLINES ON;" | cat - 000007_add_updated_at_columns.up.sql | sqlplus -S typedb/password@oracle:1521/FREEPDB1 || exit 1
         echo "Migrations completed"
     networks:
       - integration_network
