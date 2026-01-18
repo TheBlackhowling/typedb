@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.19] - 2026-01-18
+
+**Commit:** [`a6eee08`](https://github.com/TheBlackhowling/typedb/commit/a6eee0849afb5b8666385ae0916ae378d3c0945b)
+**Pull Request:** [#26](https://github.com/TheBlackhowling/typedb/pull/26)
+
+**Summary:** PR #26
+
+**Key Changes:**
+- Removed: Model.Load()
+
+**Detailed Changes:** See [versions/0.1.19.md](versions/0.1.19.md)
+
+
 ## [0.1.18] - 2026-01-18
 
 **Commit:** [`63f0ee6`](https://github.com/TheBlackhowling/typedb/commit/63f0ee6c51d353ad48350fd111808795519102c0)
