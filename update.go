@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"unsafe"
 )
 
 // Update updates a model in the database by automatically building the UPDATE query.
@@ -20,7 +21,13 @@ import (
 // Fields with dbUpdate:"auto-timestamp" tag are automatically populated with database timestamp functions
 // (e.g., CURRENT_TIMESTAMP, NOW(), GETDATE()) and do not need to be set in the model.
 //
-// Example:
+// Partial Update:
+// When a model is registered with RegisterModelWithOptions(ModelOptions{PartialUpdate: true}),
+// Update() will only update fields that have changed since the last deserialization (Load, Query, etc.).
+// This requires keeping a copy of the deserialized object, which uses additional memory.
+// The original copy is automatically saved after deserialization and refreshed after successful updates.
+//
+// Example (standard update):
 //
 //	type User struct {
 //	    Model
@@ -37,6 +44,20 @@ import (
 //	user := &User{ID: 123, Name: "John Updated"}
 //	err := typedb.Update(ctx, db, user)
 //	// Generates: UPDATE users SET name = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2
+//
+// Example (partial update):
+//
+//	func init() {
+//	    typedb.RegisterModelWithOptions[*User](typedb.ModelOptions{PartialUpdate: true})
+//	}
+//
+//	// Load user
+//	user := &User{ID: 123}
+//	typedb.Load(ctx, db, user) // Original copy saved automatically
+//
+//	// Modify only name
+//	user.Name = "New Name"
+//	typedb.Update(ctx, db, user) // Only updates name field, not email
 func Update[T ModelInterface](ctx context.Context, exec Executor, model T) error {
 	// Validate model has TableName() method
 	tableName, err := getTableName(model)
@@ -81,9 +102,22 @@ func Update[T ModelInterface](ctx context.Context, exec Executor, model T) error
 	// Get driver name for database-specific SQL generation
 	driverName := getDriverName(exec)
 
+	// Check if partial update is enabled for this model
+	structType := reflect.TypeOf(model).Elem()
+	opts := GetModelOptions(structType)
+	var changedFields map[string]bool
+	if opts.PartialUpdate {
+		// Get changed fields by comparing with original copy
+		changedFields, err = getChangedFields(model, primaryField.Name)
+		if err != nil {
+			return fmt.Errorf("typedb: Update failed to get changed fields: %w", err)
+		}
+	}
+
 	// Collect fields and values (excluding primary key, nil/zero values, and fields with noupdate tag)
 	// Also collects auto-update timestamp fields
-	columns, values, autoUpdateColumns, err := serializeModelFieldsForUpdate(model, primaryField.Name, driverName)
+	// If partial update is enabled, only include changed fields
+	columns, values, autoUpdateColumns, err := serializeModelFieldsForUpdate(model, primaryField.Name, driverName, changedFields)
 	if err != nil {
 		return fmt.Errorf("typedb: Update failed to serialize model: %w", err)
 	}
@@ -132,6 +166,14 @@ func Update[T ModelInterface](ctx context.Context, exec Executor, model T) error
 		return fmt.Errorf("typedb: Update failed: %w", err)
 	}
 
+	// If partial update is enabled, refresh the original copy after successful update
+	if opts.PartialUpdate {
+		if err := saveOriginalCopyIfEnabled(model); err != nil {
+			// Log error but don't fail the update - the update succeeded
+			// The original copy will be refreshed on the next deserialization
+		}
+	}
+
 	return nil
 }
 
@@ -158,8 +200,9 @@ func getTimestampFunction(driverName string) string {
 // Fields with db:"-" are excluded from all database operations (INSERT, UPDATE, SELECT).
 // Fields with dbUpdate:"false" are excluded from UPDATE but can still be used in INSERT and SELECT.
 // Fields with dbUpdate:"auto-timestamp" are automatically populated with database timestamp functions.
+// If changedFields is provided (partial update enabled), only includes fields that have changed.
 // Returns: column names, field values for serialization, and auto-update column names.
-func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName string, driverName string) ([]string, []any, []string, error) {
+func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName string, driverName string, changedFields map[string]bool) ([]string, []any, []string, error) {
 	modelValue := reflect.ValueOf(model)
 	if modelValue.Kind() != reflect.Ptr || modelValue.IsNil() {
 		return nil, nil, nil, fmt.Errorf("typedb: model must be a non-nil pointer")
@@ -232,7 +275,10 @@ func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName str
 					parts := strings.Split(dbTag, ".")
 					columnName = parts[len(parts)-1]
 				}
-				autoUpdateColumns = append(autoUpdateColumns, columnName)
+				// Include auto-timestamp fields if partial update is disabled, or if field has changed
+				if changedFields == nil || changedFields[columnName] {
+					autoUpdateColumns = append(autoUpdateColumns, columnName)
+				}
 				continue
 			}
 
@@ -248,6 +294,11 @@ func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName str
 				columnName = parts[len(parts)-1]
 			}
 
+			// If partial update is enabled, only include changed fields
+			if changedFields != nil && !changedFields[columnName] {
+				continue
+			}
+
 			columns = append(columns, columnName)
 			values = append(values, fieldValue.Interface())
 		}
@@ -256,4 +307,146 @@ func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName str
 	processFields(modelType, modelValue)
 
 	return columns, values, autoUpdateColumns, nil
+}
+
+// getChangedFields compares the current model state with its original copy and returns
+// a map of column names that have changed. Returns nil if partial update is not enabled
+// or if no original copy exists.
+func getChangedFields(model ModelInterface, primaryKeyFieldName string) (map[string]bool, error) {
+	modelValue := reflect.ValueOf(model)
+	if modelValue.Kind() != reflect.Ptr || modelValue.IsNil() {
+		return nil, fmt.Errorf("model must be a non-nil pointer")
+	}
+
+	structValue := modelValue.Elem()
+	if structValue.Kind() != reflect.Struct {
+		return nil, fmt.Errorf("model must be a pointer to struct")
+	}
+
+	// Get the original copy from Model.originalCopy field using unsafe
+	var originalCopy interface{}
+	for i := 0; i < structValue.NumField(); i++ {
+		field := structValue.Type().Field(i)
+		if field.Anonymous && field.Type == reflect.TypeOf(Model{}) {
+			// Use unsafe to access unexported field
+			modelFieldValue := structValue.Field(i)
+			modelFieldPtr := unsafe.Pointer(modelFieldValue.UnsafeAddr())
+			originalCopyFieldType := field.Type.Field(0) // Model.originalCopy field
+			originalCopyFieldPtr := unsafe.Pointer(uintptr(modelFieldPtr) + uintptr(originalCopyFieldType.Offset))
+			originalCopy = *(*interface{})(originalCopyFieldPtr)
+			if originalCopy != nil {
+				break
+			}
+		}
+	}
+
+	if originalCopy == nil {
+		// No original copy exists - treat all fields as changed (fallback to normal update)
+		return nil, nil
+	}
+
+	originalValue := reflect.ValueOf(originalCopy)
+	if originalValue.Kind() != reflect.Ptr || originalValue.IsNil() {
+		return nil, fmt.Errorf("original copy must be a non-nil pointer")
+	}
+
+	originalStructValue := originalValue.Elem()
+	if originalStructValue.Kind() != reflect.Struct {
+		return nil, fmt.Errorf("original copy must be a pointer to struct")
+	}
+
+	// Build field maps for comparison
+	currentFields := buildFieldMapForComparison(structValue, primaryKeyFieldName)
+	originalFields := buildFieldMapForComparison(originalStructValue, primaryKeyFieldName)
+
+	// Compare fields and identify changes
+	changedFields := make(map[string]bool)
+	for columnName, currentFieldValue := range currentFields {
+		originalFieldValue, exists := originalFields[columnName]
+		if !exists {
+			// Field exists in current but not in original - consider it changed
+			changedFields[columnName] = true
+			continue
+		}
+
+		// Compare field values - get actual values for comparison
+		currentVal := currentFieldValue.Interface()
+		originalVal := originalFieldValue.Interface()
+		
+		// Use DeepEqual for comparison
+		if !reflect.DeepEqual(currentVal, originalVal) {
+			changedFields[columnName] = true
+		}
+	}
+
+	// Also check for fields that exist in original but not in current (shouldn't happen, but be safe)
+	for columnName := range originalFields {
+		if _, exists := currentFields[columnName]; !exists {
+			changedFields[columnName] = true
+		}
+	}
+
+	return changedFields, nil
+}
+
+// buildFieldMapForComparison builds a map of column names to field values for comparison.
+// Excludes primary key and fields with db:"-" tag.
+func buildFieldMapForComparison(structValue reflect.Value, primaryKeyFieldName string) map[string]reflect.Value {
+	fieldMap := make(map[string]reflect.Value)
+	structType := structValue.Type()
+
+	var processFields func(reflect.Type, reflect.Value)
+	processFields = func(t reflect.Type, v reflect.Value) {
+		if t.Kind() != reflect.Struct {
+			return
+		}
+
+		for i := 0; i < t.NumField(); i++ {
+			field := t.Field(i)
+			if !field.IsExported() {
+				continue
+			}
+
+			fieldValue := v.Field(i)
+
+			// Handle embedded structs
+			if field.Anonymous {
+				embeddedType := field.Type
+				if embeddedType.Kind() == reflect.Ptr {
+					if fieldValue.IsNil() {
+						continue
+					}
+					embeddedType = embeddedType.Elem()
+					fieldValue = fieldValue.Elem()
+				}
+				if embeddedType.Kind() == reflect.Struct {
+					processFields(embeddedType, fieldValue)
+					continue
+				}
+			}
+
+			// Get db tag
+			dbTag := field.Tag.Get("db")
+			if dbTag == "" || dbTag == "-" {
+				continue
+			}
+
+			// Skip primary key field
+			if field.Name == primaryKeyFieldName {
+				continue
+			}
+
+			// Extract column name (handle dot notation - use last part)
+			columnName := dbTag
+			if strings.Contains(dbTag, ".") {
+				parts := strings.Split(dbTag, ".")
+				columnName = parts[len(parts)-1]
+			}
+
+			fieldMap[columnName] = fieldValue
+		}
+	}
+
+	processFields(structType, structValue)
+	return fieldMap
 }

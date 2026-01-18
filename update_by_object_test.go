@@ -95,6 +95,148 @@ func init() {
 	RegisterModel[*UpdateModelWithAutoTimestamp]()
 }
 
+// UpdateModelWithPartialUpdate is a model with partial update enabled
+type UpdateModelWithPartialUpdate struct {
+	Model
+	ID    int64  `db:"id" load:"primary"`
+	Name  string `db:"name"`
+	Email string `db:"email"`
+}
+
+func (m *UpdateModelWithPartialUpdate) TableName() string {
+	return "users"
+}
+
+func init() {
+	RegisterModelWithOptions[*UpdateModelWithPartialUpdate](ModelOptions{PartialUpdate: true})
+}
+
+// TestUpdate_PartialUpdate_OnlyChangedFields tests that partial update only updates changed fields
+func TestUpdate_PartialUpdate_OnlyChangedFields(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// Create a user and simulate deserialization (save original copy)
+	user := &UpdateModelWithPartialUpdate{
+		ID:    123,
+		Name:  "John",
+		Email: "john@example.com",
+	}
+
+	// Simulate deserialization by saving original copy
+	row := map[string]any{
+		"id":    int64(123),
+		"name":  "John",
+		"email": "john@example.com",
+	}
+	if err := deserialize(row, user); err != nil {
+		t.Fatalf("Failed to deserialize: %v", err)
+	}
+
+	// Modify only name
+	user.Name = "John Updated"
+	// Email remains unchanged
+
+	// Expect UPDATE to only include changed fields (name)
+	mock.ExpectExec(`UPDATE "users" SET "name" = \$1 WHERE "id" = \$2`).
+		WithArgs("John Updated", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+// TestUpdate_PartialUpdate_NoOriginalCopy tests that partial update falls back to normal update when no original copy exists
+func TestUpdate_PartialUpdate_NoOriginalCopy(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// Create a user without deserialization (no original copy)
+	user := &UpdateModelWithPartialUpdate{
+		ID:    123,
+		Name:  "John Updated",
+		Email: "john.updated@example.com",
+	}
+
+	// Expect UPDATE to include all non-zero fields (fallback behavior)
+	mock.ExpectExec(`UPDATE "users" SET "name" = \$1, "email" = \$2 WHERE "id" = \$3`).
+		WithArgs("John Updated", "john.updated@example.com", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+// TestUpdate_PartialUpdate_MultipleChangedFields tests that partial update includes all changed fields
+func TestUpdate_PartialUpdate_MultipleChangedFields(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// Create a user and simulate deserialization
+	user := &UpdateModelWithPartialUpdate{
+		ID:    123,
+		Name:  "John",
+		Email: "john@example.com",
+	}
+
+	row := map[string]any{
+		"id":    int64(123),
+		"name":  "John",
+		"email": "john@example.com",
+	}
+	if err := deserialize(row, user); err != nil {
+		t.Fatalf("Failed to deserialize: %v", err)
+	}
+
+	// Modify both name and email
+	user.Name = "John Updated"
+	user.Email = "john.updated@example.com"
+
+	// Expect UPDATE to include both changed fields
+	mock.ExpectExec(`UPDATE "users" SET "name" = \$1, "email" = \$2 WHERE "id" = \$3`).
+		WithArgs("John Updated", "john.updated@example.com", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
 // Update tests
 
 func TestUpdate_PostgreSQL_Success(t *testing.T) {

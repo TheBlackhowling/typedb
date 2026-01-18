@@ -28,6 +28,8 @@ func (u *User) QueryByEmail() string {
 
 func init() {
 	typedb.RegisterModel[*User]()
+	// Register User with partial update enabled for testing
+	typedb.RegisterModelWithOptions[*User](typedb.ModelOptions{PartialUpdate: true})
 }
 
 // Post represents a blog post

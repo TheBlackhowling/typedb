@@ -73,7 +73,82 @@ func deserialize(row map[string]any, dest ModelInterface) error {
 		}
 	}
 
+	// Save original copy if partial update is enabled for this model
+	if err := saveOriginalCopyIfEnabled(dest); err != nil {
+		return fmt.Errorf("typedb: failed to save original copy: %w", err)
+	}
+
 	return nil
+}
+
+// saveOriginalCopyIfEnabled saves a deep copy of the model if partial update tracking is enabled.
+// The copy is stored in the Model.originalCopy field for later comparison during Update operations.
+func saveOriginalCopyIfEnabled(model ModelInterface) error {
+	modelValue := reflect.ValueOf(model)
+	if modelValue.Kind() != reflect.Ptr || modelValue.IsNil() {
+		return nil // Not a valid model pointer
+	}
+
+	structType := modelValue.Elem().Type()
+	opts := GetModelOptions(structType)
+	if !opts.PartialUpdate {
+		return nil // Partial update not enabled for this model
+	}
+
+	// Create a deep copy of the model
+	originalCopy := deepCopyModel(model)
+	if originalCopy == nil {
+		return fmt.Errorf("failed to create deep copy")
+	}
+
+	// Store the copy in the Model.originalCopy field
+	// Find the Model field (typically first embedded field)
+	structValue := modelValue.Elem()
+	if structValue.Kind() == reflect.Struct && structValue.NumField() > 0 {
+		// Look for embedded Model field
+		for i := 0; i < structValue.NumField(); i++ {
+			field := structValue.Type().Field(i)
+			if field.Anonymous && field.Type == reflect.TypeOf(Model{}) {
+				// Found the Model field, access its originalCopy field
+				modelFieldValue := structValue.Field(i)
+				// Use unsafe to set unexported field
+				modelFieldPtr := unsafe.Pointer(modelFieldValue.UnsafeAddr())
+				originalCopyFieldType := field.Type.Field(0) // Model.originalCopy field
+				originalCopyFieldPtr := unsafe.Pointer(uintptr(modelFieldPtr) + uintptr(originalCopyFieldType.Offset))
+				*(*interface{})(originalCopyFieldPtr) = originalCopy
+				return nil
+			}
+		}
+	}
+
+	return nil
+}
+
+// deepCopyModel creates a deep copy of a model using JSON marshaling/unmarshaling.
+// This ensures all fields are properly copied, including nested structures.
+func deepCopyModel(model ModelInterface) interface{} {
+	modelValue := reflect.ValueOf(model)
+	if modelValue.Kind() != reflect.Ptr || modelValue.IsNil() {
+		return nil
+	}
+
+	// Use JSON marshaling for deep copy
+	data, err := json.Marshal(model)
+	if err != nil {
+		return nil
+	}
+
+	// Create a new instance of the same type
+	structType := modelValue.Elem().Type()
+	newPtr := reflect.New(structType)
+	newModel := newPtr.Interface()
+
+	// Unmarshal into the new instance
+	if err := json.Unmarshal(data, newModel); err != nil {
+		return nil
+	}
+
+	return newModel
 }
 
 // buildFieldMapFromPtr creates a field map by accessing fields through the pointer
