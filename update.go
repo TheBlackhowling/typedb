@@ -282,11 +282,6 @@ func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName str
 				continue
 			}
 
-			// Skip nil/zero values for regular fields
-			if isZeroOrNil(fieldValue) {
-				continue
-			}
-
 			// Extract column name (handle dot notation - use last part)
 			columnName := dbTag
 			if strings.Contains(dbTag, ".") {
@@ -295,9 +290,16 @@ func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName str
 			}
 
 			// If partial update is enabled, only include changed fields
-			if changedFields != nil && !changedFields[columnName] {
-				continue
+			if changedFields != nil {
+				if !changedFields[columnName] {
+					continue
+				}
+				// Skip nil/zero values when partial update is enabled
+				if isZeroOrNil(fieldValue) {
+					continue
+				}
 			}
+			// When partial update is disabled, include ALL fields (including zero values)
 
 			columns = append(columns, columnName)
 			values = append(values, fieldValue.Interface())
