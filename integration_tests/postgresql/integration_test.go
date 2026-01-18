@@ -980,9 +980,6 @@ func TestPostgreSQL_Update_NonPartialUpdate(t *testing.T) {
 		t.Fatalf("Failed to load user: %v", err)
 	}
 
-	originalLoadedName := userBeforeUpdate.Name
-	originalLoadedEmail := userBeforeUpdate.Email
-
 	// Create a new User instance with only ID and Name set (Email not set = zero value)
 	// Since User model has partial update enabled, we need to test with a model that doesn't
 	// But wait - User has partial update enabled. We need to test the default behavior.
