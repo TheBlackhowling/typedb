@@ -142,7 +142,7 @@ func getTimestampFunction(driverName string) string {
 	case "postgres", "sqlite3":
 		return "CURRENT_TIMESTAMP"
 	case "mysql":
-		return "NOW(6)" // Use microsecond precision for MySQL
+		return "NOW()"
 	case "sqlserver", "mssql":
 		return "GETDATE()"
 	case "oracle":

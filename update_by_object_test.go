@@ -646,7 +646,7 @@ func TestUpdate_AutoTimestamp_MySQL(t *testing.T) {
 		// UpdatedAt is not set - should be auto-populated
 	}
 
-	mock.ExpectExec("UPDATE `users` SET `name` = \\?, `updated_at` = NOW\\(6\\) WHERE `id` = \\?").
+	mock.ExpectExec("UPDATE `users` SET `name` = \\?, `updated_at` = NOW\\(\\) WHERE `id` = \\?").
 		WithArgs("John Updated", int64(123)).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
