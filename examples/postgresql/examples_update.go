@@ -32,6 +32,14 @@ func Example10_Update_AutoTimestamp(ctx context.Context, db *typedb.DB, firstUse
 	// Note: This example requires the User model to have an UpdatedAt field with dbUpdate:"auto-timestamp" tag
 	// and the database table to have an updated_at column
 	
+	// Load user first to get the initial UpdatedAt value
+	userBeforeUpdate := &User{ID: firstUser.ID}
+	if err := typedb.Load(ctx, db, userBeforeUpdate); err != nil {
+		log.Fatalf("Failed to load user before update: %v", err)
+	}
+	originalUpdatedAt := userBeforeUpdate.UpdatedAt
+	fmt.Printf("  Original UpdatedAt: %s\n", originalUpdatedAt)
+	
 	// Update user - UpdatedAt will be automatically populated with CURRENT_TIMESTAMP
 	userToUpdate := &User{
 		ID:   firstUser.ID,
@@ -42,15 +50,19 @@ func Example10_Update_AutoTimestamp(ctx context.Context, db *typedb.DB, firstUse
 		log.Fatalf("Failed to update user: %v", err)
 	}
 	
-	// Verify update and check updated_at was populated
+	// Reload user to verify UpdatedAt was changed
 	updatedUser := &User{ID: firstUser.ID}
 	if err := typedb.Load(ctx, db, updatedUser); err != nil {
 		log.Fatalf("Failed to load updated user: %v", err)
 	}
 	fmt.Printf("  ✓ Updated user name to: %s\n", updatedUser.Name)
-	if updatedUser.UpdatedAt != "" {
-		fmt.Printf("  ✓ UpdatedAt was automatically set to: %s\n", updatedUser.UpdatedAt)
+	fmt.Printf("  New UpdatedAt: %s\n", updatedUser.UpdatedAt)
+	
+	// Verify UpdatedAt changed (should be different from original)
+	if updatedUser.UpdatedAt == originalUpdatedAt {
+		log.Fatalf("UpdatedAt should have changed, but it's still: %s", updatedUser.UpdatedAt)
 	}
+	fmt.Printf("  ✓ UpdatedAt was automatically updated (changed from original value)\n")
 }
 
 // runUpdateExamples demonstrates Update operations.
