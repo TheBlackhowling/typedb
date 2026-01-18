@@ -15,6 +15,7 @@ A type-safe, generic database query library for Go that prioritizes SQL-first de
 - **Minimal Abstraction** - Stay close to SQL while getting convenient deserialization and type safety
 - **Database Portability** - Work with any `database/sql` driver (PostgreSQL, MySQL, SQLite, MSSQL, Oracle) without vendor lock-in
 - **Performance Control** - Understand exactly what SQL is being executed without ORM query generation surprises
+- **API Response Design** - typedb makes it easy to plan and design API responses with models that map 1:1 with website views. Write SQL queries with easy-to-deserialize interfaces that return exactly the data structure your frontend needs, creating a clean separation between your database schema and your API contract.
 - **Testing ORM Applications** - When testing applications that use ORMs, typedb provides a lightweight alternative without building a second ORM application. This is particularly useful for integration tests where you need to verify database state without coupling to the application's ORM layer.
 
 ### When NOT to Use typedb
@@ -52,9 +53,38 @@ typedb is designed to work with any database that has a `database/sql` driver. T
 go get github.com/TheBlackHowling/typedb
 ```
 
-## Quick Start
+## Getting Started
 
-### Basic Usage
+### Requirements
+
+- Go 1.18 or later (for generics support)
+- Any `database/sql` driver
+
+### Examples
+
+Database-specific examples demonstrating typedb usage are available for all supported databases:
+
+- **[PostgreSQL Examples](examples/postgresql/)** - Full-featured examples including arrays and JSONB
+- **[MySQL Examples](examples/mysql/)** - Examples for MySQL database
+- **[SQLite Examples](examples/sqlite/)** - File-based database examples
+- **[SQL Server (MSSQL) Examples](examples/mssql/)** - Microsoft SQL Server examples
+- **[Oracle Examples](examples/oracle/)** - Oracle Database examples
+
+Each example directory includes:
+- Complete working examples demonstrating typedb features
+- Database schema and migration files
+- Setup instructions and usage patterns
+
+For comprehensive test coverage (including error cases), see the [Integration Tests](#testing) section below.
+
+### Quick Start
+
+- [Basic Usage](#basic-usage)
+- [Model Load Methods](#model-load-methods)
+- [Composite Keys](#composite-keys)
+- [Transactions](#transactions)
+
+#### Basic Usage
 
 ```go
 package main
@@ -106,7 +136,7 @@ func main() {
 }
 ```
 
-### Model Load Methods
+#### Model Load Methods
 
 ```go
 package main
@@ -156,7 +186,7 @@ func main() {
 }
 ```
 
-### Composite Keys
+#### Composite Keys
 
 ```go
 package main
@@ -200,7 +230,7 @@ func main() {
 }
 ```
 
-### Transactions
+#### Transactions
 
 ```go
 err := db.WithTx(ctx, func(tx *typedb.Tx) error {
@@ -429,34 +459,6 @@ err = typedb.Update(ctx, db, user)
 
 - `Open(driverName, dsn, opts...)` - Opens database connection with validation
 - `NewDB(db *sql.DB, timeout)` - Creates DB instance from existing connection
-
-## Requirements
-
-- Go 1.18 or later (for generics support)
-- Any `database/sql` driver
-
-## Documentation
-
-- [Design Draft](docs/backlog/typedb-design-draft.md) - Complete design documentation
-- [Complex Models](docs/backlog/typedb-complex-models-design.md) - Multi-table models and JOINs
-- [Loader Pattern](docs/backlog/typedb-loader-pattern-discussion.md) - Model loading patterns
-
-## Examples
-
-Database-specific examples demonstrating typedb usage are available for all supported databases:
-
-- **[PostgreSQL Examples](examples/postgresql/)** - Full-featured examples including arrays and JSONB
-- **[MySQL Examples](examples/mysql/)** - Examples for MySQL database
-- **[SQLite Examples](examples/sqlite/)** - File-based database examples
-- **[SQL Server (MSSQL) Examples](examples/mssql/)** - Microsoft SQL Server examples
-- **[Oracle Examples](examples/oracle/)** - Oracle Database examples
-
-Each example directory includes:
-- Complete working examples demonstrating typedb features
-- Database schema and migration files
-- Setup instructions and usage patterns
-
-For comprehensive test coverage (including error cases), see the [Integration Tests](#testing) section below.
 
 ## Testing
 
