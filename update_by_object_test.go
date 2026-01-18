@@ -78,6 +78,23 @@ func init() {
 	RegisterModel[*UpdateModelWithSkipTagValue]()
 }
 
+// UpdateModelWithAutoTimestamp is a model with a field that should be auto-populated with database timestamp
+type UpdateModelWithAutoTimestamp struct {
+	Model
+	ID        int64  `db:"id" load:"primary"`
+	Name      string `db:"name"`
+	Email     string `db:"email"`
+	UpdatedAt string `db:"updated_at" dbUpdate:"auto-timestamp"` // Should be auto-populated with database timestamp function
+}
+
+func (m *UpdateModelWithAutoTimestamp) TableName() string {
+	return "users"
+}
+
+func init() {
+	RegisterModel[*UpdateModelWithAutoTimestamp]()
+}
+
 // Update tests
 
 func TestUpdate_PostgreSQL_Success(t *testing.T) {
@@ -566,6 +583,227 @@ func TestUpdate_BothTagsFalse_Success(t *testing.T) {
 	}
 
 	mock.ExpectExec(`UPDATE "users" SET "name" = \$1, "email" = \$2 WHERE "id" = \$3`).
+		WithArgs("John Updated", "john.updated@example.com", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+// TestUpdate_AutoTimestamp_PostgreSQL tests auto-updated timestamp with PostgreSQL
+func TestUpdate_AutoTimestamp_PostgreSQL(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// UpdatedAt should be auto-populated with CURRENT_TIMESTAMP, not included in args
+	user := &UpdateModelWithAutoTimestamp{
+		ID:   123,
+		Name: "John Updated",
+		Email: "john.updated@example.com",
+		// UpdatedAt is not set - should be auto-populated
+	}
+
+	mock.ExpectExec(`UPDATE "users" SET "name" = \$1, "email" = \$2, "updated_at" = CURRENT_TIMESTAMP WHERE "id" = \$3`).
+		WithArgs("John Updated", "john.updated@example.com", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+// TestUpdate_AutoTimestamp_MySQL tests auto-updated timestamp with MySQL
+func TestUpdate_AutoTimestamp_MySQL(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "mysql", 5*time.Second)
+	ctx := context.Background()
+
+	user := &UpdateModelWithAutoTimestamp{
+		ID:   123,
+		Name: "John Updated",
+		// UpdatedAt is not set - should be auto-populated
+	}
+
+	mock.ExpectExec("UPDATE `users` SET `name` = \\?, `updated_at` = NOW\\(\\) WHERE `id` = \\?").
+		WithArgs("John Updated", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+// TestUpdate_AutoTimestamp_SQLite tests auto-updated timestamp with SQLite
+func TestUpdate_AutoTimestamp_SQLite(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "sqlite3", 5*time.Second)
+	ctx := context.Background()
+
+	user := &UpdateModelWithAutoTimestamp{
+		ID:   123,
+		Email: "updated@example.com",
+		// UpdatedAt is not set - should be auto-populated
+	}
+
+	mock.ExpectExec(`UPDATE "users" SET "email" = \?, "updated_at" = CURRENT_TIMESTAMP WHERE "id" = \?`).
+		WithArgs("updated@example.com", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+// TestUpdate_AutoTimestamp_SQLServer tests auto-updated timestamp with SQL Server
+func TestUpdate_AutoTimestamp_SQLServer(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "sqlserver", 5*time.Second)
+	ctx := context.Background()
+
+	user := &UpdateModelWithAutoTimestamp{
+		ID:   123,
+		Name: "John Updated",
+		Email: "john.updated@example.com",
+		// UpdatedAt is not set - should be auto-populated
+	}
+
+	mock.ExpectExec(`UPDATE \[users\] SET \[name\] = @p1, \[email\] = @p2, \[updated_at\] = GETDATE\(\) WHERE \[id\] = @p3`).
+		WithArgs("John Updated", "john.updated@example.com", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+// TestUpdate_AutoTimestamp_Oracle tests auto-updated timestamp with Oracle
+func TestUpdate_AutoTimestamp_Oracle(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "oracle", 5*time.Second)
+	ctx := context.Background()
+
+	user := &UpdateModelWithAutoTimestamp{
+		ID:   123,
+		Name: "John Updated",
+		// UpdatedAt is not set - should be auto-populated
+	}
+
+	mock.ExpectExec(`UPDATE "USERS" SET "NAME" = :1, "UPDATED_AT" = CURRENT_TIMESTAMP WHERE "ID" = :2`).
+		WithArgs("John Updated", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+// TestUpdate_AutoTimestamp_OnlyAutoField tests Update with only auto-timestamp field (no regular fields)
+func TestUpdate_AutoTimestamp_OnlyAutoField(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// Only UpdatedAt field with dbUpdate:"auto-timestamp", no other fields set
+	user := &UpdateModelWithAutoTimestamp{
+		ID: 123,
+		// Name and Email are zero values, UpdatedAt is auto
+	}
+
+	mock.ExpectExec(`UPDATE "users" SET "updated_at" = CURRENT_TIMESTAMP WHERE "id" = \$1`).
+		WithArgs(int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+// TestUpdate_AutoTimestamp_WithRegularFields tests Update with both auto-timestamp and regular fields
+func TestUpdate_AutoTimestamp_WithRegularFields(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	user := &UpdateModelWithAutoTimestamp{
+		ID:   123,
+		Name: "John Updated",
+		Email: "john.updated@example.com",
+		// UpdatedAt is auto-populated
+	}
+
+	mock.ExpectExec(`UPDATE "users" SET "name" = \$1, "email" = \$2, "updated_at" = CURRENT_TIMESTAMP WHERE "id" = \$3`).
 		WithArgs("John Updated", "john.updated@example.com", int64(123)).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 

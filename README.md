@@ -306,6 +306,18 @@ Automatically build UPDATE queries from your model struct. Requires:
 - Model must not have dot notation in db tags (single-table models only)
 - At least one non-zero field to update (besides primary key)
 
+**Auto-Updated Timestamp Fields:**
+
+Fields with `dbUpdate:"auto-timestamp"` tag are automatically populated with database timestamp functions (e.g., `CURRENT_TIMESTAMP`, `NOW()`, `GETDATE()`) and do not need to be set in the model. The appropriate database function is used based on the driver:
+
+- PostgreSQL/SQLite/Oracle: `CURRENT_TIMESTAMP`
+- MySQL: `NOW()` (uses standard `TIMESTAMP` column type)
+- SQL Server: `GETDATE()`
+
+**MySQL Timestamp Precision:**
+
+MySQL uses `NOW()` with standard `TIMESTAMP` columns by default, which provides second-level precision. This is sufficient for most use cases. If you need microsecond precision, you can use `TIMESTAMP(6)` columns in your schema, but you'll need to manually specify `NOW(6)` in your UPDATE queries. Custom timestamp precision configuration may be added in the future if there's sufficient demand.
+
 ```go
 type User struct {
     typedb.Model
@@ -313,6 +325,7 @@ type User struct {
     Name      string `db:"name"`
     Email     string `db:"email"`
     CreatedAt string `db:"created_at" dbUpdate:"false"` // Excluded from UPDATE
+    UpdatedAt string `db:"updated_at" dbUpdate:"auto-timestamp"`  // Auto-populated with database timestamp
 }
 
 func (u *User) TableName() string {
@@ -322,19 +335,22 @@ func (u *User) TableName() string {
 // Usage - automatically builds UPDATE query
 user := &User{ID: 123, Name: "John Updated", Email: "john.updated@example.com"}
 err := typedb.Update(ctx, db, user)
-// Generates: UPDATE users SET name = $1, email = $2 WHERE id = $3
+// Generates: UPDATE users SET name = $1, email = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3
+// UpdatedAt is automatically populated by the database
 
 // Zero/nil fields are automatically excluded
 user2 := &User{ID: 123, Name: "Jane Updated"} // Email is empty, will be skipped
 err = typedb.Update(ctx, db, user2)
-// Generates: UPDATE users SET name = $1 WHERE id = $2
+// Generates: UPDATE users SET name = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2
 ```
 
 **Field Exclusion Tags:**
 - `db:"-"` - Excludes field from all database operations (INSERT, UPDATE, SELECT)
 - `dbInsert:"false"` - Excludes field from INSERT operations only
 - `dbUpdate:"false"` - Excludes field from UPDATE operations only
+- `dbUpdate:"auto-timestamp"` - Automatically populates field with database timestamp function (e.g., `CURRENT_TIMESTAMP`, `NOW()`, `GETDATE()`) during UPDATE
 - Fields with `dbUpdate:"false"` can still be read via SELECT queries
+- Fields with `dbUpdate:"auto-timestamp"` are automatically included in UPDATE queries using database functions, even if not set in the model
 
 **Database Support:**
 - All supported databases (PostgreSQL, MySQL, SQLite, SQL Server, Oracle)
