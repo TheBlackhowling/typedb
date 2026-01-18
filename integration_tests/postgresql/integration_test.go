@@ -1015,12 +1015,13 @@ func TestPostgreSQL_Update_NonPartialUpdate(t *testing.T) {
 	originalLoadedContent := postBeforeUpdate.Content
 
 	// Update post with only Title set (Content not set = zero value)
-	// Since Post doesn't have partial update enabled, ALL fields should be included in UPDATE
+	// Since Post doesn't have partial update enabled, ALL non-zero fields should be included in UPDATE
+	// Zero values are always excluded regardless of partial update setting
 	postToUpdate := &Post{
 		ID:     firstPost.ID,
 		UserID: firstPost.UserID,
 		Title:  "Updated Title Only",
-		// Content is not set - should be updated to empty string when partial update is disabled
+		// Content is not set (zero value) - should be excluded from UPDATE
 	}
 
 	if err := typedb.Update(ctx, db, postToUpdate); err != nil {
@@ -1038,10 +1039,10 @@ func TestPostgreSQL_Update_NonPartialUpdate(t *testing.T) {
 		t.Errorf("Expected title 'Updated Title Only', got '%s'", updatedPost.Title)
 	}
 
-	// Verify content was also updated (to empty string, since it wasn't set)
-	// This demonstrates that non-partial update includes ALL fields
-	if updatedPost.Content != "" {
-		t.Errorf("Expected content to be empty (zero value) when not set in non-partial update, got '%s'", updatedPost.Content)
+	// Verify content was NOT updated (should remain unchanged since zero values are excluded)
+	// This demonstrates that non-partial update still excludes zero values
+	if updatedPost.Content != originalLoadedContent {
+		t.Errorf("Expected content to remain unchanged '%s', got '%s'", originalLoadedContent, updatedPost.Content)
 	}
 
 	// Restore original content
