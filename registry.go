@@ -5,12 +5,25 @@ import (
 	"sync"
 )
 
+// ModelOptions configures behavior for a registered model.
+type ModelOptions struct {
+	// PartialUpdate enables tracking of original model state after deserialization.
+	// When enabled, Update() will only update fields that have changed since the last deserialization.
+	// This requires keeping a copy of the deserialized object, which uses additional memory.
+	PartialUpdate bool
+}
+
 var (
 	registeredModels []reflect.Type
+	modelOptions     map[reflect.Type]ModelOptions // Maps model type to its options
 	registerMutex    sync.RWMutex
 	validationOnce   sync.Once
 	validationError  error
 )
+
+func init() {
+	modelOptions = make(map[reflect.Type]ModelOptions)
+}
 
 // RegisterModel registers a model type for validation.
 // Requires a pointer type (e.g., RegisterModel[*User]()).
@@ -45,6 +58,59 @@ func RegisterModel[T ModelInterface]() {
 	}
 
 	registeredModels = append(registeredModels, t)
+}
+
+// RegisterModelWithOptions registers a model type with options for validation and behavior configuration.
+// Requires a pointer type (e.g., RegisterModelWithOptions[*User](ModelOptions{PartialUpdate: true})).
+// Models should call this function in their init() functions when they need custom behavior.
+//
+// Example:
+//
+//	type User struct {
+//	    typedb.Model
+//	    ID int `db:"id" load:"primary"`
+//	}
+//
+//	func init() {
+//	    typedb.RegisterModelWithOptions[*User](typedb.ModelOptions{PartialUpdate: true})
+//	}
+func RegisterModelWithOptions[T ModelInterface](opts ModelOptions) {
+	var model T
+	t := reflect.TypeOf(model)
+	if t.Kind() != reflect.Ptr {
+		panic("typedb: RegisterModelWithOptions requires a pointer type (e.g., RegisterModelWithOptions[*User](...))")
+	}
+	t = t.Elem()
+
+	registerMutex.Lock()
+	defer registerMutex.Unlock()
+
+	// Register the model type if not already registered
+	alreadyRegistered := false
+	for _, registered := range registeredModels {
+		if registered == t {
+			alreadyRegistered = true
+			break
+		}
+	}
+	if !alreadyRegistered {
+		registeredModels = append(registeredModels, t)
+	}
+
+	// Store options for this model type
+	modelOptions[t] = opts
+}
+
+// GetModelOptions returns the options for a registered model type.
+// Returns zero-value ModelOptions if the model is not registered or has no options.
+func GetModelOptions(modelType reflect.Type) ModelOptions {
+	registerMutex.RLock()
+	defer registerMutex.RUnlock()
+
+	if opts, ok := modelOptions[modelType]; ok {
+		return opts
+	}
+	return ModelOptions{}
 }
 
 // GetRegisteredModels returns all registered model types.

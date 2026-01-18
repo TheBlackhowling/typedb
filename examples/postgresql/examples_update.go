@@ -65,8 +65,50 @@ func Example10_Update_AutoTimestamp(ctx context.Context, db *typedb.DB, firstUse
 	fmt.Printf("  ✓ UpdatedAt was automatically updated (changed from original value)\n")
 }
 
+// Example11_Update_PartialUpdate demonstrates partial update functionality
+func Example11_Update_PartialUpdate(ctx context.Context, db *typedb.DB, firstUser *User) {
+	fmt.Println("\n--- Example 11: Update - Partial Update ---")
+	// Note: This example requires the User model to be registered with RegisterModelWithOptions
+	// and ModelOptions{PartialUpdate: true}
+	
+	// Load user first to save original copy (required for partial update)
+	userToUpdate := &User{ID: firstUser.ID}
+	if err := typedb.Load(ctx, db, userToUpdate); err != nil {
+		log.Fatalf("Failed to load user: %v", err)
+	}
+	
+	originalName := userToUpdate.Name
+	originalEmail := userToUpdate.Email
+	fmt.Printf("  Original Name: %s\n", originalName)
+	fmt.Printf("  Original Email: %s\n", originalEmail)
+	
+	// Modify only name, keep email unchanged
+	userToUpdate.Name = "Partially Updated Name"
+	// Email remains unchanged - will NOT be included in UPDATE
+	
+	if err := typedb.Update(ctx, db, userToUpdate); err != nil {
+		log.Fatalf("Failed to update user: %v", err)
+	}
+	
+	// Reload to verify only name was updated
+	updatedUser := &User{ID: firstUser.ID}
+	if err := typedb.Load(ctx, db, updatedUser); err != nil {
+		log.Fatalf("Failed to load updated user: %v", err)
+	}
+	
+	fmt.Printf("  ✓ Updated name to: %s\n", updatedUser.Name)
+	fmt.Printf("  ✓ Email remained unchanged: %s\n", updatedUser.Email)
+	
+	// Verify email was not changed
+	if updatedUser.Email != originalEmail {
+		log.Fatalf("Email should not have changed, but it did. Original: %s, New: %s", originalEmail, updatedUser.Email)
+	}
+	fmt.Printf("  ✓ Partial update successful - only changed fields were updated\n")
+}
+
 // runUpdateExamples demonstrates Update operations.
 func runUpdateExamples(ctx context.Context, db *typedb.DB, firstUser *User) {
 	Example9_Update(ctx, db, firstUser)
 	Example10_Update_AutoTimestamp(ctx, db, firstUser)
+	Example11_Update_PartialUpdate(ctx, db, firstUser)
 }
