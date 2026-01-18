@@ -11,6 +11,7 @@ type User struct {
 	Name      string `db:"name"`
 	Email     string `db:"email" load:"unique"`
 	CreatedAt string `db:"created_at"`
+	UpdatedAt string `db:"updated_at" dbUpdate:"auto"`
 }
 
 func (u *User) TableName() string {
@@ -18,11 +19,11 @@ func (u *User) TableName() string {
 }
 
 func (u *User) QueryByID() string {
-	return "SELECT id, name, email, created_at FROM users WHERE id = ?"
+	return "SELECT id, name, email, created_at, updated_at FROM users WHERE id = ?"
 }
 
 func (u *User) QueryByEmail() string {
-	return "SELECT id, name, email, created_at FROM users WHERE email = ?"
+	return "SELECT id, name, email, created_at, updated_at FROM users WHERE email = ?"
 }
 
 func init() {
@@ -39,6 +40,7 @@ type Post struct {
 	Tags      string `db:"tags"`      // JSON stored as TEXT
 	Metadata  string `db:"metadata"`  // JSON stored as TEXT
 	CreatedAt string `db:"created_at"`
+	UpdatedAt string `db:"updated_at" dbUpdate:"auto"`
 }
 
 func (p *Post) TableName() string {
@@ -50,7 +52,7 @@ func (p *Post) QueryByID() string {
 }
 
 func (p *Post) QueryByUserID() string {
-	return "SELECT id, user_id, title, content, tags, metadata, created_at FROM posts WHERE user_id = ?"
+	return "SELECT id, user_id, title, content, tags, metadata, created_at, updated_at FROM posts WHERE user_id = ?"
 }
 
 func init() {

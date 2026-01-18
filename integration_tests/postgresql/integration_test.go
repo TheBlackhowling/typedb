@@ -741,7 +741,7 @@ func TestPostgreSQL_Update(t *testing.T) {
 	}
 
 	// Get first user
-	firstUser, err := typedb.QueryFirst[*User](ctx, db, "SELECT id, name, email, created_at FROM users ORDER BY id LIMIT 1")
+	firstUser, err := typedb.QueryFirst[*User](ctx, db, "SELECT id, name, email, created_at, updated_at FROM users ORDER BY id LIMIT 1")
 	if err != nil || firstUser == nil {
 		t.Fatal("Need at least one user in database")
 	}
@@ -774,6 +774,70 @@ func TestPostgreSQL_Update(t *testing.T) {
 	}
 	if err := typedb.Update(ctx, db, restoreUser); err != nil {
 		t.Fatalf("Failed to restore original name: %v", err)
+	}
+}
+
+// TestPostgreSQL_Update_AutoTimestamp tests auto-updated timestamp functionality
+func TestPostgreSQL_Update_AutoTimestamp(t *testing.T) {
+	ctx := context.Background()
+	db, err := typedb.Open("postgres", getTestDSN())
+	if err != nil {
+		t.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	if err := db.Ping(ctx); err != nil {
+		t.Fatalf("Database ping failed: %v", err)
+	}
+
+	// Get first user
+	firstUser, err := typedb.QueryFirst[*User](ctx, db, "SELECT id, name, email, created_at, updated_at FROM users ORDER BY id LIMIT 1")
+	if err != nil || firstUser == nil {
+		t.Fatal("Need at least one user in database")
+	}
+
+	originalUpdatedAt := firstUser.UpdatedAt
+	originalName := firstUser.Name
+
+	// Register cleanup to restore original values
+	t.Cleanup(func() {
+		if firstUser.ID != 0 {
+			restoreUser := &User{
+				ID:   firstUser.ID,
+				Name: originalName,
+			}
+			typedb.Update(ctx, db, restoreUser)
+		}
+	})
+
+	// Update user - UpdatedAt should be auto-populated
+	userToUpdate := &User{
+		ID:   firstUser.ID,
+		Name: "Updated Name for Timestamp Test",
+		// UpdatedAt is not set - should be auto-populated
+	}
+	if err := typedb.Update(ctx, db, userToUpdate); err != nil {
+		t.Fatalf("Update failed: %v", err)
+	}
+
+	// Verify update and check updated_at was populated
+	updatedUser := &User{ID: firstUser.ID}
+	if err := typedb.Load(ctx, db, updatedUser); err != nil {
+		t.Fatalf("Failed to load updated user: %v", err)
+	}
+
+	if updatedUser.Name != "Updated Name for Timestamp Test" {
+		t.Errorf("Expected name 'Updated Name for Timestamp Test', got '%s'", updatedUser.Name)
+	}
+
+	// Verify updated_at was set (should be populated after update)
+	if updatedUser.UpdatedAt == "" {
+		t.Error("UpdatedAt should be populated after update")
+	}
+	// If original was empty/NULL, that's fine - just verify it's now set
+	// If original had a value, verify it changed
+	if originalUpdatedAt != "" && updatedUser.UpdatedAt == originalUpdatedAt {
+		t.Error("UpdatedAt should change after update")
 	}
 }
 
