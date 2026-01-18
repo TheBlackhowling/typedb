@@ -900,6 +900,9 @@ func TestMySQL_Update_AutoTimestamp(t *testing.T) {
 		}
 	})
 
+	// Wait a moment before update to ensure timestamp will be different
+	time.Sleep(2 * time.Second)
+
 	// Update user - UpdatedAt should be auto-populated
 	userToUpdate := &User{
 		ID:   firstUser.ID,
@@ -909,9 +912,6 @@ func TestMySQL_Update_AutoTimestamp(t *testing.T) {
 	if err := typedb.Update(ctx, db, userToUpdate); err != nil {
 		t.Fatalf("Update failed: %v", err)
 	}
-
-	// Wait a moment to ensure timestamp changes (MySQL timestamp precision)
-	time.Sleep(2 * time.Second)
 
 	// Verify update and check updated_at was populated
 	updatedUser := &User{ID: firstUser.ID}
