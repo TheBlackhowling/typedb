@@ -929,8 +929,16 @@ func TestMySQL_Update_AutoTimestamp(t *testing.T) {
 	}
 	// Verify UpdatedAt changed from the original value
 	// If original was empty/NULL, it should now be set (different)
-	// If original had a value, it should have changed
-	if updatedUser.UpdatedAt == originalUpdatedAt {
-		t.Errorf("UpdatedAt should have changed after update. Original: %q, New: %q", originalUpdatedAt, updatedUser.UpdatedAt)
+	// If original had a value, it should have changed (new >= original after delay)
+	if originalUpdatedAt == "" {
+		// Original was empty, verify it's now set
+		if updatedUser.UpdatedAt == "" {
+			t.Error("UpdatedAt should be populated after update")
+		}
+	} else {
+		// Original had a value, verify it changed
+		if updatedUser.UpdatedAt == originalUpdatedAt {
+			t.Errorf("UpdatedAt should have changed after update. Original: %q, New: %q", originalUpdatedAt, updatedUser.UpdatedAt)
+		}
 	}
 }
