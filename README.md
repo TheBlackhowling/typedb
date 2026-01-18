@@ -441,6 +441,35 @@ err = typedb.Update(ctx, db, user)
 - [Complex Models](docs/backlog/typedb-complex-models-design.md) - Multi-table models and JOINs
 - [Loader Pattern](docs/backlog/typedb-loader-pattern-discussion.md) - Model loading patterns
 
+## Examples
+
+Database-specific examples demonstrating typedb usage are available for all supported databases:
+
+- **[PostgreSQL Examples](examples/postgresql/)** - Full-featured examples including arrays and JSONB
+- **[MySQL Examples](examples/mysql/)** - Examples for MySQL database
+- **[SQLite Examples](examples/sqlite/)** - File-based database examples
+- **[SQL Server (MSSQL) Examples](examples/mssql/)** - Microsoft SQL Server examples
+- **[Oracle Examples](examples/oracle/)** - Oracle Database examples
+
+Each example directory includes:
+- Complete working examples demonstrating typedb features
+- Database schema and migration files
+- Setup instructions and usage patterns
+
+For comprehensive test coverage (including error cases), see the [Integration Tests](#testing) section below.
+
+## Testing
+
+typedb is comprehensively tested across all supported databases to ensure full functionality and database compatibility. Our testing approach includes:
+
+- **Integration Tests** - Comprehensive test suites for PostgreSQL, MySQL, SQLite, SQL Server, and Oracle covering both happy paths and error cases
+- **Example Programs** - Working examples for each database demonstrating real-world usage patterns
+- **Cross-Database Validation** - All features are tested against each supported database to ensure consistent behavior
+
+See the [integration_tests/](integration_tests/) directory for complete test coverage.
+
+**Additional Database Support:** We are open to expanding our test coverage to include additional databases. If you need support for a database not currently covered, please open an issue to discuss adding it to our test matrix.
+
 ## Contributing
 
 Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
