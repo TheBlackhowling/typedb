@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.15] - 2026-01-18
+
+**Commit:** [`babb7f4`](https://github.com/TheBlackhowling/typedb/commit/babb7f4ec141e54bc70cf511a71d86edf7bce4d9)
+**Pull Request:** [#21](https://github.com/TheBlackhowling/typedb/pull/21)
+
+**Summary:** Complete comprehensive integration test coverage for all supported databases with full API testing and resilient test patterns
+
+**Key Changes:**
+- ... and 2 more files
+- ✅ **Automated Workflow**: New GitHub Actions workflow added
+- ✅ **Source Code**: Code changes included
+- ✅ **Documentation**: Comprehensive documentation added
+
+**Detailed Changes:** See [versions/0.1.15.md](versions/0.1.15.md)
+
+
 ## [0.1.14] - 2026-01-12
 
 **Commit:** [`120d8f4`](https://github.com/TheBlackhowling/typedb/commit/120d8f459ee778bb4a5c0d1cda3d1463fce79734)
