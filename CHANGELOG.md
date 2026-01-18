@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.18] - 2026-01-18
+
+**Commit:** [`63f0ee6`](https://github.com/TheBlackhowling/typedb/commit/63f0ee6c51d353ad48350fd111808795519102c0)
+**Pull Request:** [#24](https://github.com/TheBlackhowling/typedb/pull/24)
+
+**Summary:** Fix compilation error in PostgreSQL examples by adding missing UpdatedAt field
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.18.md](versions/0.1.18.md)
+
+
 ## [0.1.17] - 2026-01-18
 
 **Commit:** [`155f0a8`](https://github.com/TheBlackhowling/typedb/commit/155f0a861c2a2653f25b4311c1ed04670e3ae0a7)
