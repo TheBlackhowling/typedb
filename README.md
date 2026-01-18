@@ -396,6 +396,7 @@ err = typedb.Update(ctx, db, user)
 
 - Partial update requires the model to be loaded from the database first (via `Load`, `QueryFirst`, `QueryOne`, or `QueryAll`) before calling `Update`
 - If a model hasn't been loaded, `Update` will behave as if partial update is disabled (all non-null fields will be updated)
+- **Memory Overhead**: Partial update stores a deep copy of the model internally, effectively doubling memory usage for the duration the model object is in memory. Consider this when enabling partial update for large models or high-volume scenarios
 - Partial update works with all field types including strings, numbers, booleans, slices, maps, and nested structs
 - The comparison uses `reflect.DeepEqual`, so be aware that JSON round-trip conversions (e.g., `int` to `float64`) may be detected as changes for map/slice fields
 - Partial update is optional and disabled by default - models registered with `RegisterModel` will use full updates
