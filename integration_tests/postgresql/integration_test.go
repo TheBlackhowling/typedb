@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/TheBlackHowling/typedb"
 	_ "github.com/lib/pq" // PostgreSQL driver
@@ -819,6 +820,9 @@ func TestPostgreSQL_Update_AutoTimestamp(t *testing.T) {
 	if err := typedb.Update(ctx, db, userToUpdate); err != nil {
 		t.Fatalf("Update failed: %v", err)
 	}
+
+	// Wait a moment to ensure timestamp changes (database timestamp precision)
+	time.Sleep(2 * time.Second)
 
 	// Verify update and check updated_at was populated
 	updatedUser := &User{ID: firstUser.ID}

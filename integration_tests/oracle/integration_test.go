@@ -875,6 +875,9 @@ func TestOracle_Update_AutoTimestamp(t *testing.T) {
 		t.Fatalf("Update failed: %v", err)
 	}
 
+	// Wait a moment to ensure timestamp changes (database timestamp precision)
+	time.Sleep(2 * time.Second)
+
 	// Verify update and check updated_at was populated
 	updatedUser := &User{ID: firstUser.ID}
 	if err := typedb.Load(ctx, db, updatedUser); err != nil {
