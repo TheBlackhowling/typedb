@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.20] - 2026-01-18
+
+**Commit:** [`ff13db2`](https://github.com/TheBlackhowling/typedb/commit/ff13db22a6a507e730be6860a3c011020b8ca8aa)
+**Pull Request:** [#27](https://github.com/TheBlackhowling/typedb/pull/27)
+
+**Summary:** Refactor integration tests into smaller files and reorganize README documentation
+
+**Key Changes:**
+- ... and 19 more files
+
+**Detailed Changes:** See [versions/0.1.20.md](versions/0.1.20.md)
+
+
 ## [0.1.19] - 2026-01-18
 
 **Commit:** [`a6eee08`](https://github.com/TheBlackhowling/typedb/commit/a6eee0849afb5b8666385ae0916ae378d3c0945b)
