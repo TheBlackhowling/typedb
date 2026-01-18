@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.17] - 2026-01-18
+
+**Commit:** [`155f0a8`](https://github.com/TheBlackhowling/typedb/commit/155f0a861c2a2653f25b4311c1ed04670e3ae0a7)
+**Pull Request:** [#23](https://github.com/TheBlackhowling/typedb/pull/23)
+
+**Summary:** Add partial update feature that tracks changes and only updates modified fields
+
+**Key Changes:**
+- ... and 5 more files
+
+**Detailed Changes:** See [versions/0.1.17.md](versions/0.1.17.md)
+
+
 ## [0.1.16] - 2026-01-18
 
 **Commit:** [`00d3d3e`](https://github.com/TheBlackhowling/typedb/commit/00d3d3ed85d5f58753f60c8f32f8a548ed212744)
