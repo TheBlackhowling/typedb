@@ -983,7 +983,6 @@ func TestMySQL_Update_PartialUpdate(t *testing.T) {
 		t.Fatalf("Failed to load user: %v", err)
 	}
 
-	originalLoadedName := userToUpdate.Name
 	originalLoadedEmail := userToUpdate.Email
 
 	// Modify only name, keep email unchanged
