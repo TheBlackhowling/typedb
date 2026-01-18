@@ -26,7 +26,35 @@ func Example9_Update(ctx context.Context, db *typedb.DB, firstUser *User) {
 	fmt.Printf("  ✓ Updated user name to: %s\n", updatedUser.Name)
 }
 
+// Example10_Update_AutoTimestamp demonstrates Update with auto-populated timestamp
+func Example10_Update_AutoTimestamp(ctx context.Context, db *typedb.DB, firstUser *User) {
+	fmt.Println("\n--- Example 10: Update - Auto-Timestamp ---")
+	// Note: This example requires the User model to have an UpdatedAt field with dbUpdate:"auto" tag
+	// and the database table to have an updated_at column
+	
+	// Update user - UpdatedAt will be automatically populated with CURRENT_TIMESTAMP
+	userToUpdate := &User{
+		ID:   firstUser.ID,
+		Name: "Updated Name with Auto Timestamp",
+		// UpdatedAt is not set - will be auto-populated by database
+	}
+	if err := typedb.Update(ctx, db, userToUpdate); err != nil {
+		log.Fatalf("Failed to update user: %v", err)
+	}
+	
+	// Verify update and check updated_at was populated
+	updatedUser := &User{ID: firstUser.ID}
+	if err := typedb.Load(ctx, db, updatedUser); err != nil {
+		log.Fatalf("Failed to load updated user: %v", err)
+	}
+	fmt.Printf("  ✓ Updated user name to: %s\n", updatedUser.Name)
+	if updatedUser.UpdatedAt != "" {
+		fmt.Printf("  ✓ UpdatedAt was automatically set to: %s\n", updatedUser.UpdatedAt)
+	}
+}
+
 // runUpdateExamples demonstrates Update operations.
 func runUpdateExamples(ctx context.Context, db *typedb.DB, firstUser *User) {
 	Example9_Update(ctx, db, firstUser)
+	Example10_Update_AutoTimestamp(ctx, db, firstUser)
 }

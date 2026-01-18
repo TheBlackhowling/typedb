@@ -17,13 +17,17 @@ import (
 // Nil/zero value fields are excluded from the UPDATE.
 // Only fields that are set (non-zero/non-nil) will be updated.
 //
+// Fields with dbUpdate:"auto" tag are automatically populated with database timestamp functions
+// (e.g., CURRENT_TIMESTAMP, NOW(), GETDATE()) and do not need to be set in the model.
+//
 // Example:
 //
 //	type User struct {
 //	    Model
-//	    ID    int    `db:"id" load:"primary"`
-//	    Name  string `db:"name"`
-//	    Email string `db:"email"`
+//	    ID        int    `db:"id" load:"primary"`
+//	    Name      string `db:"name"`
+//	    Email     string `db:"email"`
+//	    UpdatedAt string `db:"updated_at" dbUpdate:"auto"`
 //	}
 //
 //	func (u *User) TableName() string {
@@ -32,7 +36,7 @@ import (
 //
 //	user := &User{ID: 123, Name: "John Updated"}
 //	err := typedb.Update(ctx, db, user)
-//	// Generates: UPDATE users SET name = $1 WHERE id = $2
+//	// Generates: UPDATE users SET name = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2
 func Update[T ModelInterface](ctx context.Context, exec Executor, model T) error {
 	// Validate model has TableName() method
 	tableName, err := getTableName(model)
@@ -74,18 +78,19 @@ func Update[T ModelInterface](ctx context.Context, exec Executor, model T) error
 		return fmt.Errorf("typedb: Update requires primary key field %s to be set (non-zero value)", primaryField.Name)
 	}
 
+	// Get driver name for database-specific SQL generation
+	driverName := getDriverName(exec)
+
 	// Collect fields and values (excluding primary key, nil/zero values, and fields with noupdate tag)
-	columns, values, err := serializeModelFieldsForUpdate(model, primaryField.Name)
+	// Also collects auto-update timestamp fields
+	columns, values, autoUpdateColumns, err := serializeModelFieldsForUpdate(model, primaryField.Name, driverName)
 	if err != nil {
 		return fmt.Errorf("typedb: Update failed to serialize model: %w", err)
 	}
 
-	if len(columns) == 0 {
+	if len(columns) == 0 && len(autoUpdateColumns) == 0 {
 		return fmt.Errorf("typedb: Update requires at least one non-nil field to update")
 	}
-
-	// Get driver name for database-specific SQL generation
-	driverName := getDriverName(exec)
 
 	// Build UPDATE query
 	quotedTableName := quoteIdentifier(driverName, tableName)
@@ -93,10 +98,21 @@ func Update[T ModelInterface](ctx context.Context, exec Executor, model T) error
 
 	// Build SET clause
 	var setClauses []string
-	for i, col := range columns {
+	placeholderIndex := 1
+	
+	// Add regular fields with placeholders
+	for _, col := range columns {
 		quotedCol := quoteIdentifier(driverName, col)
-		placeholder := generatePlaceholder(driverName, i+1)
+		placeholder := generatePlaceholder(driverName, placeholderIndex)
 		setClauses = append(setClauses, fmt.Sprintf("%s = %s", quotedCol, placeholder))
+		placeholderIndex++
+	}
+	
+	// Add auto-update timestamp fields with database functions
+	for _, col := range autoUpdateColumns {
+		quotedCol := quoteIdentifier(driverName, col)
+		timestampFunc := getTimestampFunction(driverName)
+		setClauses = append(setClauses, fmt.Sprintf("%s = %s", quotedCol, timestampFunc))
 	}
 
 	// Add primary key value to args for WHERE clause
@@ -119,24 +135,44 @@ func Update[T ModelInterface](ctx context.Context, exec Executor, model T) error
 	return nil
 }
 
+// getTimestampFunction returns the database-specific function for getting the current timestamp.
+func getTimestampFunction(driverName string) string {
+	driverName = strings.ToLower(driverName)
+	switch driverName {
+	case "postgres", "sqlite3":
+		return "CURRENT_TIMESTAMP"
+	case "mysql":
+		return "NOW()"
+	case "sqlserver", "mssql":
+		return "GETDATE()"
+	case "oracle":
+		return "CURRENT_TIMESTAMP"
+	default:
+		// Default to SQL standard
+		return "CURRENT_TIMESTAMP"
+	}
+}
+
 // serializeModelFieldsForUpdate collects non-nil/non-zero fields from a model for UPDATE operations.
 // Excludes primary key field, fields with db:"-" tag, and fields with dbUpdate:"false" tag.
 // Fields with db:"-" are excluded from all database operations (INSERT, UPDATE, SELECT).
 // Fields with dbUpdate:"false" are excluded from UPDATE but can still be used in INSERT and SELECT.
-// Returns: column names and field values for serialization.
-func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName string) ([]string, []any, error) {
+// Fields with dbUpdate:"auto" are automatically populated with database timestamp functions.
+// Returns: column names, field values for serialization, and auto-update column names.
+func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName string, driverName string) ([]string, []any, []string, error) {
 	modelValue := reflect.ValueOf(model)
 	if modelValue.Kind() != reflect.Ptr || modelValue.IsNil() {
-		return nil, nil, fmt.Errorf("typedb: model must be a non-nil pointer")
+		return nil, nil, nil, fmt.Errorf("typedb: model must be a non-nil pointer")
 	}
 
 	modelValue = modelValue.Elem()
 	if modelValue.Kind() != reflect.Struct {
-		return nil, nil, fmt.Errorf("typedb: model must be a pointer to struct")
+		return nil, nil, nil, fmt.Errorf("typedb: model must be a pointer to struct")
 	}
 
 	var columns []string
 	var values []any
+	var autoUpdateColumns []string
 
 	modelType := modelValue.Type()
 	var processFields func(reflect.Type, reflect.Value)
@@ -180,12 +216,27 @@ func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName str
 				continue
 			}
 
+			// Check for dbUpdate tag
+			dbUpdateTag := field.Tag.Get("dbUpdate")
+			
 			// Skip fields with dbUpdate:"false" tag
-			if field.Tag.Get("dbUpdate") == "false" {
+			if dbUpdateTag == "false" {
 				continue
 			}
 
-			// Skip nil/zero values
+			// Handle fields with dbUpdate:"auto" tag - use database function
+			if dbUpdateTag == "auto" {
+				// Extract column name (handle dot notation - use last part)
+				columnName := dbTag
+				if strings.Contains(dbTag, ".") {
+					parts := strings.Split(dbTag, ".")
+					columnName = parts[len(parts)-1]
+				}
+				autoUpdateColumns = append(autoUpdateColumns, columnName)
+				continue
+			}
+
+			// Skip nil/zero values for regular fields
 			if isZeroOrNil(fieldValue) {
 				continue
 			}
@@ -204,5 +255,5 @@ func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName str
 
 	processFields(modelType, modelValue)
 
-	return columns, values, nil
+	return columns, values, autoUpdateColumns, nil
 }
