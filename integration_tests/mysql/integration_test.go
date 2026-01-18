@@ -865,3 +865,68 @@ func TestMySQL_Negative_ConstraintViolation(t *testing.T) {
 		t.Errorf("Expected constraint violation error, got: %v", err)
 	}
 }
+
+// TestMySQL_Update_AutoTimestamp tests auto-updated timestamp functionality
+func TestMySQL_Update_AutoTimestamp(t *testing.T) {
+	ctx := context.Background()
+	db, err := typedb.Open("mysql", getTestDSN())
+	if err != nil {
+		t.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	if err := db.Ping(ctx); err != nil {
+		t.Fatalf("Database ping failed: %v", err)
+	}
+
+	// Get first user
+	firstUser, err := typedb.QueryFirst[*User](ctx, db, "SELECT id, name, email, created_at, updated_at FROM users ORDER BY id LIMIT 1")
+	if err != nil || firstUser == nil {
+		t.Fatal("Need at least one user in database")
+	}
+
+	originalUpdatedAt := firstUser.UpdatedAt
+	originalName := firstUser.Name
+
+	// Register cleanup to restore original values
+	t.Cleanup(func() {
+		if firstUser.ID != 0 {
+			restoreUser := &User{
+				ID:   firstUser.ID,
+				Name: originalName,
+			}
+			typedb.Update(ctx, db, restoreUser)
+		}
+	})
+
+	// Update user - UpdatedAt should be auto-populated
+	userToUpdate := &User{
+		ID:   firstUser.ID,
+		Name: "Updated Name for Timestamp Test",
+		// UpdatedAt is not set - should be auto-populated with database timestamp
+	}
+	if err := typedb.Update(ctx, db, userToUpdate); err != nil {
+		t.Fatalf("Update failed: %v", err)
+	}
+
+	// Verify update and check updated_at was populated
+	updatedUser := &User{ID: firstUser.ID}
+	if err := typedb.Load(ctx, db, updatedUser); err != nil {
+		t.Fatalf("Failed to load updated user: %v", err)
+	}
+
+	if updatedUser.Name != "Updated Name for Timestamp Test" {
+		t.Errorf("Expected name 'Updated Name for Timestamp Test', got '%s'", updatedUser.Name)
+	}
+
+	// Verify updated_at was set (should be populated after update)
+	if updatedUser.UpdatedAt == "" {
+		t.Error("UpdatedAt should be populated after update")
+	}
+	// Verify UpdatedAt changed from the original value
+	// If original was empty/NULL, it should now be set (different)
+	// If original had a value, it should have changed
+	if updatedUser.UpdatedAt == originalUpdatedAt {
+		t.Errorf("UpdatedAt should have changed after update. Original: %q, New: %q", originalUpdatedAt, updatedUser.UpdatedAt)
+	}
+}

@@ -19,7 +19,7 @@ func (u *User) TableName() string {
 }
 
 func (u *User) QueryByID() string {
-	return "SELECT id, name, email, created_at FROM users WHERE id = @p1"
+	return "SELECT id, name, email, created_at, updated_at FROM users WHERE id = @p1"
 }
 
 func (u *User) QueryByEmail() string {
