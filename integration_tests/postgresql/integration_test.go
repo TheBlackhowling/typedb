@@ -834,10 +834,11 @@ func TestPostgreSQL_Update_AutoTimestamp(t *testing.T) {
 	if updatedUser.UpdatedAt == "" {
 		t.Error("UpdatedAt should be populated after update")
 	}
-	// If original was empty/NULL, that's fine - just verify it's now set
-	// If original had a value, verify it changed
-	if originalUpdatedAt != "" && updatedUser.UpdatedAt == originalUpdatedAt {
-		t.Error("UpdatedAt should change after update")
+	// Verify UpdatedAt changed from the original value
+	// If original was empty/NULL, it should now be set (different)
+	// If original had a value, it should have changed
+	if updatedUser.UpdatedAt == originalUpdatedAt {
+		t.Errorf("UpdatedAt should have changed after update. Original: %q, New: %q", originalUpdatedAt, updatedUser.UpdatedAt)
 	}
 }
 
