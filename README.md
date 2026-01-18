@@ -2,6 +2,27 @@
 
 A type-safe, generic database query library for Go that prioritizes SQL-first development with minimal abstraction.
 
+## What is typedb?
+
+**typedb is NOT an ORM**, but it provides some ORM-like convenience features while maintaining SQL-first development. typedb is a lightweight library that adds type safety and convenient deserialization to your SQL queries without hiding SQL behind abstractions.
+
+### When to Use typedb
+
+**typedb works well for production use cases** where you want:
+
+- **Type Safety Without ORM Overhead** - Get compile-time type safety with Go generics without the complexity and abstraction layers of a full ORM
+- **SQL-First Development** - Write and control your own SQL queries for maximum flexibility and database-specific optimizations
+- **Minimal Abstraction** - Stay close to SQL while getting convenient deserialization and type safety
+- **Database Portability** - Work with any `database/sql` driver (PostgreSQL, MySQL, SQLite, MSSQL, Oracle) without vendor lock-in
+- **Performance Control** - Understand exactly what SQL is being executed without ORM query generation surprises
+- **Testing ORM Applications** - When testing applications that use ORMs, typedb provides a lightweight alternative without building a second ORM application. This is particularly useful for integration tests where you need to verify database state without coupling to the application's ORM layer.
+
+### When NOT to Use typedb
+
+- You need automatic SQL generation for complex queries
+- You want full ORM features like migrations, relationships, and query builders
+- You prefer maximum abstraction over SQL control
+
 ## Features
 
 - ✅ **Type-Safe Generic Queries** - Uses Go 1.18+ generics for compile-time type safety
@@ -441,13 +462,32 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 🚧 **Early Development** - This project is in active development. API may change before v1.0.0.
 
-## Why typedb?
+## Why typedb Instead of an ORM?
 
-The Go ecosystem has many database libraries, but typedb fills a specific gap:
+The Go ecosystem has many database libraries. Here's why you might choose typedb over a full ORM:
 
-- **sqlx** - Great, but doesn't use generics
-- **pgx** - PostgreSQL-specific, not database-agnostic
-- **GORM/Bun** - Full ORMs with heavy abstractions
+### typedb vs ORMs (GORM, Bun, Ent, etc.)
+
+**Advantages of typedb:**
+- ✅ **SQL Transparency** - You write SQL, so you know exactly what queries are executed
+- ✅ **No Query Generation Surprises** - No hidden N+1 queries or unexpected JOINs
+- ✅ **Database-Specific Features** - Use PostgreSQL arrays, MySQL JSON functions, SQL Server window functions, etc. without ORM limitations
+- ✅ **Performance Control** - Optimize queries yourself rather than fighting with ORM query builders
+- ✅ **Minimal Learning Curve** - If you know SQL, you can use typedb immediately
+- ✅ **Lightweight** - Small dependency footprint, no code generation, no migrations framework
+- ✅ **Testing Flexibility** - Test ORM-based applications without coupling to the ORM layer
+
+**When to Choose an ORM Instead:**
+- You need automatic migrations and schema management
+- You want relationship management (has-many, belongs-to, etc.) handled automatically
+- You prefer query builders over writing SQL
+- Your team is more comfortable with ORM abstractions
+
+### typedb vs Other Libraries
+
+- **sqlx** - Great library, but doesn't use Go generics for type safety
+- **pgx** - Excellent PostgreSQL library, but PostgreSQL-specific and not database-agnostic
+- **database/sql** - Standard library is powerful but lacks type safety and convenient deserialization
 - **typedb** - Type-safe generics, SQL-first, database-agnostic, minimal abstraction
 
-If you want type-safe queries without ORM overhead, typedb is for you.
+**If you want type-safe queries without ORM overhead, typedb is for you.**
