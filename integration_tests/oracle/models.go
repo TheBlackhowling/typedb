@@ -11,7 +11,7 @@ type User struct {
 	Name      string `db:"name"`
 	Email     string `db:"email" load:"unique"`
 	CreatedAt string `db:"created_at"`
-	UpdatedAt string `db:"updated_at" dbUpdate:"auto"`
+	UpdatedAt string `db:"updated_at" dbUpdate:"auto-timestamp"`
 }
 
 func (u *User) TableName() string {
@@ -40,7 +40,7 @@ type Post struct {
 	Tags      string `db:"tags"`      // JSON stored as CLOB
 	Metadata  string `db:"metadata"`   // JSON stored as CLOB
 	CreatedAt string `db:"created_at"`
-	UpdatedAt string `db:"updated_at" dbUpdate:"auto"`
+	UpdatedAt string `db:"updated_at" dbUpdate:"auto-timestamp"`
 }
 
 func (p *Post) TableName() string {
@@ -131,7 +131,7 @@ type LongRawExample struct {
 	ID        int    `db:"id" load:"primary"`
 	LongRawCol string `db:"long_raw_col"`
 	CreatedAt string `db:"created_at"`
-	UpdatedAt string `db:"updated_at" dbUpdate:"auto"`
+	UpdatedAt string `db:"updated_at" dbUpdate:"auto-timestamp"`
 }
 
 func (l *LongRawExample) TableName() string {

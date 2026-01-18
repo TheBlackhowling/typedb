@@ -29,7 +29,7 @@ func Example9_Update(ctx context.Context, db *typedb.DB, firstUser *User) {
 // Example10_Update_AutoTimestamp demonstrates Update with auto-populated timestamp
 func Example10_Update_AutoTimestamp(ctx context.Context, db *typedb.DB, firstUser *User) {
 	fmt.Println("\n--- Example 10: Update - Auto-Timestamp ---")
-	// Note: This example requires the User model to have an UpdatedAt field with dbUpdate:"auto" tag
+	// Note: This example requires the User model to have an UpdatedAt field with dbUpdate:"auto-timestamp" tag
 	// and the database table to have an updated_at column
 	
 	// Update user - UpdatedAt will be automatically populated with CURRENT_TIMESTAMP

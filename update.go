@@ -17,7 +17,7 @@ import (
 // Nil/zero value fields are excluded from the UPDATE.
 // Only fields that are set (non-zero/non-nil) will be updated.
 //
-// Fields with dbUpdate:"auto" tag are automatically populated with database timestamp functions
+// Fields with dbUpdate:"auto-timestamp" tag are automatically populated with database timestamp functions
 // (e.g., CURRENT_TIMESTAMP, NOW(), GETDATE()) and do not need to be set in the model.
 //
 // Example:
@@ -27,7 +27,7 @@ import (
 //	    ID        int    `db:"id" load:"primary"`
 //	    Name      string `db:"name"`
 //	    Email     string `db:"email"`
-//	    UpdatedAt string `db:"updated_at" dbUpdate:"auto"`
+//	    UpdatedAt string `db:"updated_at" dbUpdate:"auto-timestamp"`
 //	}
 //
 //	func (u *User) TableName() string {
@@ -157,7 +157,7 @@ func getTimestampFunction(driverName string) string {
 // Excludes primary key field, fields with db:"-" tag, and fields with dbUpdate:"false" tag.
 // Fields with db:"-" are excluded from all database operations (INSERT, UPDATE, SELECT).
 // Fields with dbUpdate:"false" are excluded from UPDATE but can still be used in INSERT and SELECT.
-// Fields with dbUpdate:"auto" are automatically populated with database timestamp functions.
+// Fields with dbUpdate:"auto-timestamp" are automatically populated with database timestamp functions.
 // Returns: column names, field values for serialization, and auto-update column names.
 func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName string, driverName string) ([]string, []any, []string, error) {
 	modelValue := reflect.ValueOf(model)
@@ -224,8 +224,8 @@ func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName str
 				continue
 			}
 
-			// Handle fields with dbUpdate:"auto" tag - use database function
-			if dbUpdateTag == "auto" {
+			// Handle fields with dbUpdate:"auto-timestamp" tag - use database function
+			if dbUpdateTag == "auto-timestamp" {
 				// Extract column name (handle dot notation - use last part)
 				columnName := dbTag
 				if strings.Contains(dbTag, ".") {

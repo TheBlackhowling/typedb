@@ -814,7 +814,7 @@ func TestPostgreSQL_Update_AutoTimestamp(t *testing.T) {
 	userToUpdate := &User{
 		ID:   firstUser.ID,
 		Name: "Updated Name for Timestamp Test",
-		// UpdatedAt is not set - should be auto-populated
+		// UpdatedAt is not set - should be auto-populated with database timestamp
 	}
 	if err := typedb.Update(ctx, db, userToUpdate); err != nil {
 		t.Fatalf("Update failed: %v", err)
