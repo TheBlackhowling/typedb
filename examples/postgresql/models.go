@@ -27,6 +27,8 @@ func (u *User) QueryByEmail() string {
 
 func init() {
 	typedb.RegisterModel[*User]()
+	// Register User with partial update enabled for examples
+	typedb.RegisterModelWithOptions[*User](typedb.ModelOptions{PartialUpdate: true})
 }
 
 // Profile represents a user profile (one-to-one with User)

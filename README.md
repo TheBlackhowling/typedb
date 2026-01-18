@@ -344,6 +344,63 @@ err = typedb.Update(ctx, db, user2)
 // Generates: UPDATE users SET name = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2
 ```
 
+**Partial Update (Change Tracking):**
+
+When partial update is enabled for a model, `Update` will only modify fields that have changed since the model was last loaded from the database. This is useful for:
+- Optimizing UPDATE queries to only include changed fields
+- Preventing accidental overwrites of unchanged fields
+- Reducing database load by updating only what changed
+
+To enable partial update for a model, register it with `RegisterModelWithOptions`:
+
+```go
+func init() {
+    typedb.RegisterModel[*User]()
+    // Enable partial update for User model
+    typedb.RegisterModelWithOptions[*User](typedb.ModelOptions{PartialUpdate: true})
+}
+```
+
+**How Partial Update Works:**
+
+1. When a model is deserialized (via `Load`, `QueryFirst`, `QueryOne`, `QueryAll`), a deep copy of the model is saved internally
+2. When `Update` is called, the current model state is compared with the saved copy
+3. Only fields that have changed are included in the UPDATE statement
+4. After a successful update, the saved copy is refreshed with the new state
+
+**Example:**
+
+```go
+// Load user - this saves the original state internally
+user := &User{ID: 123}
+err := typedb.Load(ctx, db, user)
+// user.Name = "John", user.Email = "john@example.com"
+
+// Modify only the name
+user.Name = "John Updated"
+// user.Email remains "john@example.com"
+
+// Update - only name will be updated, email remains unchanged
+err = typedb.Update(ctx, db, user)
+// Generates: UPDATE users SET name = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2
+// Email is NOT included because it hasn't changed
+
+// If you modify both fields, both will be updated
+user.Name = "John Updated Again"
+user.Email = "john.new@example.com"
+err = typedb.Update(ctx, db, user)
+// Generates: UPDATE users SET name = $1, email = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3
+```
+
+**Important Notes:**
+
+- Partial update requires the model to be loaded from the database first (via `Load`, `QueryFirst`, `QueryOne`, or `QueryAll`) before calling `Update`
+- If a model hasn't been loaded, `Update` will behave as if partial update is disabled (all non-null fields will be updated)
+- **Memory Overhead**: Partial update stores a deep copy of the model internally, effectively doubling memory usage for the duration the model object is in memory. Consider this when enabling partial update for large models or high-volume scenarios
+- Partial update works with all field types including strings, numbers, booleans, slices, maps, and nested structs
+- The comparison uses `reflect.DeepEqual`, so be aware that JSON round-trip conversions (e.g., `int` to `float64`) may be detected as changes for map/slice fields
+- Partial update is optional and disabled by default - models registered with `RegisterModel` will use full updates
+
 **Field Exclusion Tags:**
 - `db:"-"` - Excludes field from all database operations (INSERT, UPDATE, SELECT)
 - `dbInsert:"false"` - Excludes field from INSERT operations only

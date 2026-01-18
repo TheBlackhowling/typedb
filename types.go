@@ -62,7 +62,12 @@ type ModelInterface interface {
 // Model is the base struct that models should embed.
 // It provides common functionality for model types.
 // Models that embed Model automatically satisfy ModelInterface through Model.deserialize().
-type Model struct{}
+type Model struct {
+	// originalCopy stores a deep copy of the model after deserialization.
+	// Used for partial update tracking when enabled via RegisterModelWithOptions.
+	// This field is only populated when PartialUpdate is enabled for the model.
+	originalCopy interface{} `db:"-"` // Excluded from all database operations
+}
 
 // Option configures DB connection settings.
 // Used with Open() and OpenWithoutValidation() functions.
