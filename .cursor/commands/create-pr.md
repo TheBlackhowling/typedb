@@ -126,7 +126,7 @@ The GitHub Action (`pr-summary-and-description.yml`) will:
 
 ## Repository
 
-- **Repository**: `Blackhowling-Dev/NewRepoTemplate`
+- **Repository**: `TheBlackhowling/typedb`
 - **Base Branch**: `main`
 - **Workflow**: `.github/workflows/pr-summary-and-description.yml`
 - **Action Source**: Uses `Blackhowling-Dev/TechnicalDocumentation/.github/actions/pr-summary-and-description` action

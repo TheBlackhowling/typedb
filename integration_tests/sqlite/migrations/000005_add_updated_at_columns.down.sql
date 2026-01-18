@@ -1,0 +1,2 @@
+-- SQLite doesn't support DROP COLUMN easily, so we'll recreate the tables
+-- This is a simplified down migration - in practice you'd need to recreate tables

@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/TheBlackHowling/typedb"
 	_ "github.com/go-sql-driver/mysql" // MySQL driver
@@ -318,53 +319,53 @@ func TestMySQL_ComprehensiveTypesRoundTrip(t *testing.T) {
 
 	// Insert test data
 	_, err = db.Exec(ctx, insertSQL,
-		testID,                      // id
-		100,                         // tiny_int
-		200,                         // tiny_int_unsigned
-		12345,                       // small_int
-		54321,                       // small_int_unsigned
-		8388600,                     // medium_int
-		16777200,                    // medium_int_unsigned
-		987654321,                   // integer_col
-		4294967290,                  // integer_col_unsigned
-		9223372036854775800,         // big_int
-		"18446744073709551600",      // big_int_unsigned (MySQL returns as string)
-		"1234.567890",               // decimal_col
-		"9876.543210",               // decimal_col_unsigned
-		"1111.222222",                // numeric_col
-		"2222.333333",                // numeric_col_unsigned
-		3.14159,                     // float_col
-		123.4567,                    // float_col_precision
-		2.71828,                     // double_col
-		12345.67890123,              // double_col_precision
-		[]byte{0xAA},                // bit_col
+		testID,                 // id
+		100,                    // tiny_int
+		200,                    // tiny_int_unsigned
+		12345,                  // small_int
+		54321,                  // small_int_unsigned
+		8388600,                // medium_int
+		16777200,               // medium_int_unsigned
+		987654321,              // integer_col
+		4294967290,             // integer_col_unsigned
+		9223372036854775800,    // big_int
+		"18446744073709551600", // big_int_unsigned (MySQL returns as string)
+		"1234.567890",          // decimal_col
+		"9876.543210",          // decimal_col_unsigned
+		"1111.222222",          // numeric_col
+		"2222.333333",          // numeric_col_unsigned
+		3.14159,                // float_col
+		123.4567,               // float_col_precision
+		2.71828,                // double_col
+		12345.67890123,         // double_col_precision
+		[]byte{0xAA},           // bit_col
 		[]byte{0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0}, // bit_col_64
-		"test_char  ",               // char_col (padded)
-		"test_varchar",              // varchar_col
-		[]byte{0xDE, 0xAD, 0xBE, 0xEF}, // binary_col
-		[]byte{0xCA, 0xFE, 0xBA, 0xBE}, // varbinary_col
-		"tinytext test",             // tinytext_col
-		"text test content",         // text_col
-		"mediumtext test content",  // mediumtext_col
+		"test_char  ",                                    // char_col (padded)
+		"test_varchar",                                   // varchar_col
+		[]byte{0xDE, 0xAD, 0xBE, 0xEF},                   // binary_col
+		[]byte{0xCA, 0xFE, 0xBA, 0xBE},                   // varbinary_col
+		"tinytext test",                                  // tinytext_col
+		"text test content",                              // text_col
+		"mediumtext test content",                        // mediumtext_col
 		"longtext test content with much longer content", // longtext_col
-		[]byte{0x01, 0x02, 0x03},    // tinyblob_col
-		[]byte{0x04, 0x05, 0x06, 0x07}, // blob_col
-		[]byte{0x08, 0x09, 0x0A, 0x0B, 0x0C}, // mediumblob_col
-		[]byte{0x10, 0x11, 0x12, 0x13, 0x14, 0x15}, // longblob_col
-		"value1",                    // enum_col
-		"option1,option2",           // set_col
-		"2024-12-25",                // date_col
-		"15:30:45",                  // time_col
-		"2024-12-25 15:30:45",       // datetime_col
-		"2024-12-25 15:30:45",       // timestamp_col
-		2024,                        // year_col
-		`{"test": "json_value", "number": 42}`, // json_col
+		[]byte{0x01, 0x02, 0x03},                         // tinyblob_col
+		[]byte{0x04, 0x05, 0x06, 0x07},                   // blob_col
+		[]byte{0x08, 0x09, 0x0A, 0x0B, 0x0C},             // mediumblob_col
+		[]byte{0x10, 0x11, 0x12, 0x13, 0x14, 0x15},       // longblob_col
+		"value1",                                // enum_col
+		"option1,option2",                       // set_col
+		"2024-12-25",                            // date_col
+		"15:30:45",                              // time_col
+		"2024-12-25 15:30:45",                   // datetime_col
+		"2024-12-25 15:30:45",                   // timestamp_col
+		2024,                                    // year_col
+		`{"test": "json_value", "number": 42}`,  // json_col
 		"POINT(5 10)",                           // geometry_col
 		"POINT(10 20)",                          // point_col
 		"LINESTRING(0 0,1 1,2 2)",               // linestring_col
-		"POLYGON((0 0,1 0,1 1,0 1,0 0))",       // polygon_col
+		"POLYGON((0 0,1 0,1 1,0 1,0 0))",        // polygon_col
 		"MULTIPOINT((0 0),(1 1))",               // multipoint_col
-		"MULTILINESTRING((0 0,1 1),(2 2,3 3))", // multilinestring_col
+		"MULTILINESTRING((0 0,1 1),(2 2,3 3))",  // multilinestring_col
 		"MULTIPOLYGON(((0 0,1 0,1 1,0 1,0 0)))", // multipolygon_col
 		"GEOMETRYCOLLECTION(POINT(0 0))",        // geometrycollection_col
 	)
@@ -863,5 +864,81 @@ func TestMySQL_Negative_ConstraintViolation(t *testing.T) {
 	// Verify error indicates constraint violation
 	if !strings.Contains(err.Error(), "unique") && !strings.Contains(err.Error(), "duplicate") && !strings.Contains(err.Error(), "Duplicate") {
 		t.Errorf("Expected constraint violation error, got: %v", err)
+	}
+}
+
+// TestMySQL_Update_AutoTimestamp tests auto-updated timestamp functionality
+func TestMySQL_Update_AutoTimestamp(t *testing.T) {
+	ctx := context.Background()
+	db, err := typedb.Open("mysql", getTestDSN())
+	if err != nil {
+		t.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	if err := db.Ping(ctx); err != nil {
+		t.Fatalf("Database ping failed: %v", err)
+	}
+
+	// Get first user
+	firstUser, err := typedb.QueryFirst[*User](ctx, db, "SELECT id, name, email, created_at, updated_at FROM users ORDER BY id LIMIT 1")
+	if err != nil || firstUser == nil {
+		t.Fatal("Need at least one user in database")
+	}
+
+	originalUpdatedAt := firstUser.UpdatedAt
+	originalName := firstUser.Name
+
+	// Register cleanup to restore original values
+	t.Cleanup(func() {
+		if firstUser.ID != 0 {
+			restoreUser := &User{
+				ID:   firstUser.ID,
+				Name: originalName,
+			}
+			typedb.Update(ctx, db, restoreUser)
+		}
+	})
+
+	// Wait a moment before update to ensure timestamp will be different
+	time.Sleep(2 * time.Second)
+
+	// Update user - UpdatedAt should be auto-populated
+	userToUpdate := &User{
+		ID:   firstUser.ID,
+		Name: "Updated Name for Timestamp Test",
+		// UpdatedAt is not set - should be auto-populated with database timestamp
+	}
+	if err := typedb.Update(ctx, db, userToUpdate); err != nil {
+		t.Fatalf("Update failed: %v", err)
+	}
+
+	// Verify update and check updated_at was populated
+	updatedUser := &User{ID: firstUser.ID}
+	if err := typedb.Load(ctx, db, updatedUser); err != nil {
+		t.Fatalf("Failed to load updated user: %v", err)
+	}
+
+	if updatedUser.Name != "Updated Name for Timestamp Test" {
+		t.Errorf("Expected name 'Updated Name for Timestamp Test', got '%s'", updatedUser.Name)
+	}
+
+	// Verify updated_at was set (should be populated after update)
+	if updatedUser.UpdatedAt == "" {
+		t.Error("UpdatedAt should be populated after update")
+	}
+	// Verify UpdatedAt changed from the original value
+	// If original was empty/NULL, it should now be set (different)
+	// If original had a value, it should have changed (new >= original after delay)
+	if originalUpdatedAt == "" {
+		// Original was empty, verify it's now set
+		if updatedUser.UpdatedAt == "" {
+			t.Error("UpdatedAt should be populated after update")
+		}
+	} else {
+		// Original had a value, verify it changed
+		if updatedUser.UpdatedAt == originalUpdatedAt {
+			t.Errorf("UpdatedAt should have changed after update. Original: %q, New: %q", originalUpdatedAt, updatedUser.UpdatedAt)
+		}
 	}
 }
