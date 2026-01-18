@@ -294,12 +294,12 @@ func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName str
 				if !changedFields[columnName] {
 					continue
 				}
-				// Skip nil/zero values when partial update is enabled
-				if isZeroOrNil(fieldValue) {
-					continue
-				}
 			}
-			// When partial update is disabled, include ALL fields (including zero values)
+
+			// Skip nil/zero values for regular fields (always exclude zero values)
+			if isZeroOrNil(fieldValue) {
+				continue
+			}
 
 			columns = append(columns, columnName)
 			values = append(values, fieldValue.Interface())
