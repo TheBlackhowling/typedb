@@ -942,3 +942,97 @@ func TestMySQL_Update_AutoTimestamp(t *testing.T) {
 		}
 	}
 }
+
+// TestMySQL_Update_PartialUpdate tests partial update functionality
+func TestMySQL_Update_PartialUpdate(t *testing.T) {
+	ctx := context.Background()
+	db, err := typedb.Open("mysql", getTestDSN())
+	if err != nil {
+		t.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	if err := db.Ping(ctx); err != nil {
+		t.Fatalf("Database ping failed: %v", err)
+	}
+
+	// Get first user
+	firstUser, err := typedb.QueryFirst[*User](ctx, db, "SELECT id, name, email, created_at, updated_at FROM users ORDER BY id LIMIT 1")
+	if err != nil || firstUser == nil {
+		t.Fatal("Need at least one user in database")
+	}
+
+	originalName := firstUser.Name
+	originalEmail := firstUser.Email
+
+	// Register cleanup to restore original values
+	t.Cleanup(func() {
+		if firstUser.ID != 0 {
+			restoreUser := &User{
+				ID:    firstUser.ID,
+				Name:  originalName,
+				Email: originalEmail,
+			}
+			typedb.Update(ctx, db, restoreUser)
+		}
+	})
+
+	// Load user to save original copy (required for partial update)
+	userToUpdate := &User{ID: firstUser.ID}
+	if err := typedb.Load(ctx, db, userToUpdate); err != nil {
+		t.Fatalf("Failed to load user: %v", err)
+	}
+
+	originalLoadedName := userToUpdate.Name
+	originalLoadedEmail := userToUpdate.Email
+
+	// Modify only name, keep email unchanged
+	userToUpdate.Name = "Partial Update Test Name"
+	// Email remains unchanged - should not be included in UPDATE
+
+	if err := typedb.Update(ctx, db, userToUpdate); err != nil {
+		t.Fatalf("Update failed: %v", err)
+	}
+
+	// Reload user to verify only name was updated
+	updatedUser := &User{ID: firstUser.ID}
+	if err := typedb.Load(ctx, db, updatedUser); err != nil {
+		t.Fatalf("Failed to load updated user: %v", err)
+	}
+
+	// Verify name was updated
+	if updatedUser.Name != "Partial Update Test Name" {
+		t.Errorf("Expected name 'Partial Update Test Name', got '%s'", updatedUser.Name)
+	}
+
+	// Verify email was NOT changed (should remain the same)
+	if updatedUser.Email != originalLoadedEmail {
+		t.Errorf("Expected email to remain unchanged '%s', got '%s'", originalLoadedEmail, updatedUser.Email)
+	}
+
+	// Test 2: Update multiple fields
+	userToUpdate2 := &User{ID: firstUser.ID}
+	if err := typedb.Load(ctx, db, userToUpdate2); err != nil {
+		t.Fatalf("Failed to load user for second test: %v", err)
+	}
+
+	userToUpdate2.Name = "Updated Name Again"
+	userToUpdate2.Email = "updated.email@example.com"
+
+	if err := typedb.Update(ctx, db, userToUpdate2); err != nil {
+		t.Fatalf("Update failed: %v", err)
+	}
+
+	// Reload to verify both fields were updated
+	updatedUser2 := &User{ID: firstUser.ID}
+	if err := typedb.Load(ctx, db, updatedUser2); err != nil {
+		t.Fatalf("Failed to load updated user: %v", err)
+	}
+
+	if updatedUser2.Name != "Updated Name Again" {
+		t.Errorf("Expected name 'Updated Name Again', got '%s'", updatedUser2.Name)
+	}
+	if updatedUser2.Email != "updated.email@example.com" {
+		t.Errorf("Expected email 'updated.email@example.com', got '%s'", updatedUser2.Email)
+	}
+}
