@@ -11,7 +11,7 @@ type User struct {
 	Name      string `db:"name"`
 	Email     string `db:"email" load:"unique"`
 	CreatedAt string `db:"created_at"`
-	UpdatedAt string `db:"updated_at" dbUpdate:"auto"`
+	UpdatedAt string `db:"updated_at" dbUpdate:"auto-timestamp"`
 }
 
 func (u *User) TableName() string {
@@ -40,7 +40,7 @@ type Post struct {
 	Tags      string `db:"tags"`     // JSON stored as NVARCHAR(MAX)
 	Metadata  string `db:"metadata"` // JSON stored as NVARCHAR(MAX)
 	CreatedAt string `db:"created_at"`
-	UpdatedAt string `db:"updated_at" dbUpdate:"auto"`
+	UpdatedAt string `db:"updated_at" dbUpdate:"auto-timestamp"`
 }
 
 func (p *Post) TableName() string {

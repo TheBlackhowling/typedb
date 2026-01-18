@@ -308,7 +308,7 @@ Automatically build UPDATE queries from your model struct. Requires:
 
 **Auto-Updated Timestamp Fields:**
 
-Fields with `dbUpdate:"auto"` tag are automatically populated with database timestamp functions (e.g., `CURRENT_TIMESTAMP`, `NOW()`, `GETDATE()`) and do not need to be set in the model. The appropriate database function is used based on the driver:
+Fields with `dbUpdate:"auto-timestamp"` tag are automatically populated with database timestamp functions (e.g., `CURRENT_TIMESTAMP`, `NOW()`, `GETDATE()`) and do not need to be set in the model. The appropriate database function is used based on the driver:
 
 - PostgreSQL/SQLite/Oracle: `CURRENT_TIMESTAMP`
 - MySQL: `NOW()`
@@ -321,7 +321,7 @@ type User struct {
     Name      string `db:"name"`
     Email     string `db:"email"`
     CreatedAt string `db:"created_at" dbUpdate:"false"` // Excluded from UPDATE
-    UpdatedAt string `db:"updated_at" dbUpdate:"auto"`  // Auto-populated with database timestamp
+    UpdatedAt string `db:"updated_at" dbUpdate:"auto-timestamp"`  // Auto-populated with database timestamp
 }
 
 func (u *User) TableName() string {
@@ -346,7 +346,7 @@ err = typedb.Update(ctx, db, user2)
 - `dbUpdate:"false"` - Excludes field from UPDATE operations only
 - `dbUpdate:"auto"` - Automatically populates field with database timestamp function (e.g., `CURRENT_TIMESTAMP`, `NOW()`, `GETDATE()`) during UPDATE
 - Fields with `dbUpdate:"false"` can still be read via SELECT queries
-- Fields with `dbUpdate:"auto"` are automatically included in UPDATE queries using database functions, even if not set in the model
+- Fields with `dbUpdate:"auto-timestamp"` are automatically included in UPDATE queries using database functions, even if not set in the model
 
 **Database Support:**
 - All supported databases (PostgreSQL, MySQL, SQLite, SQL Server, Oracle)

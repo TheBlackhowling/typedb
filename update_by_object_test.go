@@ -84,7 +84,7 @@ type UpdateModelWithAutoTimestamp struct {
 	ID        int64  `db:"id" load:"primary"`
 	Name      string `db:"name"`
 	Email     string `db:"email"`
-	UpdatedAt string `db:"updated_at" dbUpdate:"auto"` // Should be auto-populated with database timestamp function
+	UpdatedAt string `db:"updated_at" dbUpdate:"auto-timestamp"` // Should be auto-populated with database timestamp function
 }
 
 func (m *UpdateModelWithAutoTimestamp) TableName() string {
@@ -765,7 +765,7 @@ func TestUpdate_AutoTimestamp_OnlyAutoField(t *testing.T) {
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
 
-	// Only UpdatedAt field with dbUpdate:"auto", no other fields set
+	// Only UpdatedAt field with dbUpdate:"auto-timestamp", no other fields set
 	user := &UpdateModelWithAutoTimestamp{
 		ID: 123,
 		// Name and Email are zero values, UpdatedAt is auto
