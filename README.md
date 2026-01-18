@@ -311,8 +311,12 @@ Automatically build UPDATE queries from your model struct. Requires:
 Fields with `dbUpdate:"auto-timestamp"` tag are automatically populated with database timestamp functions (e.g., `CURRENT_TIMESTAMP`, `NOW()`, `GETDATE()`) and do not need to be set in the model. The appropriate database function is used based on the driver:
 
 - PostgreSQL/SQLite/Oracle: `CURRENT_TIMESTAMP`
-- MySQL: `NOW()`
+- MySQL: `NOW()` (uses standard `TIMESTAMP` column type)
 - SQL Server: `GETDATE()`
+
+**MySQL Timestamp Precision:**
+
+MySQL uses `NOW()` with standard `TIMESTAMP` columns by default, which provides second-level precision. This is sufficient for most use cases. If you need microsecond precision, you can use `TIMESTAMP(6)` columns in your schema, but you'll need to manually specify `NOW(6)` in your UPDATE queries. Custom timestamp precision configuration may be added in the future if there's sufficient demand.
 
 ```go
 type User struct {
@@ -344,7 +348,7 @@ err = typedb.Update(ctx, db, user2)
 - `db:"-"` - Excludes field from all database operations (INSERT, UPDATE, SELECT)
 - `dbInsert:"false"` - Excludes field from INSERT operations only
 - `dbUpdate:"false"` - Excludes field from UPDATE operations only
-- `dbUpdate:"auto"` - Automatically populates field with database timestamp function (e.g., `CURRENT_TIMESTAMP`, `NOW()`, `GETDATE()`) during UPDATE
+- `dbUpdate:"auto-timestamp"` - Automatically populates field with database timestamp function (e.g., `CURRENT_TIMESTAMP`, `NOW()`, `GETDATE()`) during UPDATE
 - Fields with `dbUpdate:"false"` can still be read via SELECT queries
 - Fields with `dbUpdate:"auto-timestamp"` are automatically included in UPDATE queries using database functions, even if not set in the model
 
