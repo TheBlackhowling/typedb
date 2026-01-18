@@ -940,6 +940,126 @@ func TestPostgreSQL_Update_PartialUpdate(t *testing.T) {
 	}
 }
 
+// TestPostgreSQL_Update_NonPartialUpdate tests that Update without partial update enabled updates all fields
+func TestPostgreSQL_Update_NonPartialUpdate(t *testing.T) {
+	ctx := context.Background()
+	db, err := typedb.Open("postgres", getTestDSN())
+	if err != nil {
+		t.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	if err := db.Ping(ctx); err != nil {
+		t.Fatalf("Database ping failed: %v", err)
+	}
+
+	// Get first user
+	firstUser, err := typedb.QueryFirst[*User](ctx, db, "SELECT id, name, email, created_at, updated_at FROM users ORDER BY id LIMIT 1")
+	if err != nil || firstUser == nil {
+		t.Fatal("Need at least one user in database")
+	}
+
+	originalName := firstUser.Name
+	originalEmail := firstUser.Email
+
+	// Register cleanup to restore original values
+	t.Cleanup(func() {
+		if firstUser.ID != 0 {
+			restoreUser := &User{
+				ID:    firstUser.ID,
+				Name:  originalName,
+				Email: originalEmail,
+			}
+			typedb.Update(ctx, db, restoreUser)
+		}
+	})
+
+	// Load user to get all current values
+	userBeforeUpdate := &User{ID: firstUser.ID}
+	if err := typedb.Load(ctx, db, userBeforeUpdate); err != nil {
+		t.Fatalf("Failed to load user: %v", err)
+	}
+
+	originalLoadedName := userBeforeUpdate.Name
+	originalLoadedEmail := userBeforeUpdate.Email
+
+	// Create a new User instance with only ID and Name set (Email not set = zero value)
+	// Since User model has partial update enabled, we need to test with a model that doesn't
+	// But wait - User has partial update enabled. We need to test the default behavior.
+	// Actually, the test should verify that when partial update is NOT enabled (default),
+	// all fields are updated. But User has partial update enabled.
+	// Let's test with Post model which doesn't have partial update enabled
+	firstPost, err := typedb.QueryFirst[*Post](ctx, db, "SELECT id, user_id, title, content, tags, metadata, created_at, updated_at FROM posts ORDER BY id LIMIT 1")
+	if err != nil || firstPost == nil {
+		t.Skip("Need at least one post in database for non-partial update test")
+	}
+
+	originalPostTitle := firstPost.Title
+	originalPostContent := firstPost.Content
+
+	t.Cleanup(func() {
+		if firstPost.ID != 0 {
+			restorePost := &Post{
+				ID:      firstPost.ID,
+				UserID:  firstPost.UserID,
+				Title:   originalPostTitle,
+				Content: originalPostContent,
+			}
+			typedb.Update(ctx, db, restorePost)
+		}
+	})
+
+	// Load post to get all current values
+	postBeforeUpdate := &Post{ID: firstPost.ID}
+	if err := typedb.Load(ctx, db, postBeforeUpdate); err != nil {
+		t.Fatalf("Failed to load post: %v", err)
+	}
+
+	originalLoadedTitle := postBeforeUpdate.Title
+	originalLoadedContent := postBeforeUpdate.Content
+
+	// Update post with only Title set (Content not set = zero value)
+	// Since Post doesn't have partial update enabled, ALL fields should be included in UPDATE
+	postToUpdate := &Post{
+		ID:     firstPost.ID,
+		UserID: firstPost.UserID,
+		Title:  "Updated Title Only",
+		// Content is not set - should be updated to empty string when partial update is disabled
+	}
+
+	if err := typedb.Update(ctx, db, postToUpdate); err != nil {
+		t.Fatalf("Update failed: %v", err)
+	}
+
+	// Reload post to verify update
+	updatedPost := &Post{ID: firstPost.ID}
+	if err := typedb.Load(ctx, db, updatedPost); err != nil {
+		t.Fatalf("Failed to load updated post: %v", err)
+	}
+
+	// Verify title was updated
+	if updatedPost.Title != "Updated Title Only" {
+		t.Errorf("Expected title 'Updated Title Only', got '%s'", updatedPost.Title)
+	}
+
+	// Verify content was also updated (to empty string, since it wasn't set)
+	// This demonstrates that non-partial update includes ALL fields
+	if updatedPost.Content != "" {
+		t.Errorf("Expected content to be empty (zero value) when not set in non-partial update, got '%s'", updatedPost.Content)
+	}
+
+	// Restore original content
+	restorePost := &Post{
+		ID:      firstPost.ID,
+		UserID:  firstPost.UserID,
+		Title:   originalLoadedTitle,
+		Content: originalLoadedContent,
+	}
+	if err := typedb.Update(ctx, db, restorePost); err != nil {
+		t.Fatalf("Failed to restore original post: %v", err)
+	}
+}
+
 // TestPostgreSQL_QueryFirst_NoRows tests QueryFirst with no rows (should return nil, no error)
 func TestPostgreSQL_QueryFirst_NoRows(t *testing.T) {
 	ctx := context.Background()

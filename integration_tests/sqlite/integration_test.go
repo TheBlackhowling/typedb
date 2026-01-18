@@ -775,3 +775,83 @@ func TestSQLite_Update_PartialUpdate(t *testing.T) {
 		t.Errorf("Expected email 'updated.email@example.com', got '%s'", updatedUser2.Email)
 	}
 }
+
+// TestSQLite_Update_NonPartialUpdate tests that Update without partial update enabled updates all fields
+func TestSQLite_Update_NonPartialUpdate(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+	defer os.Remove(getTestDSN())
+
+	ctx := context.Background()
+
+	// Use Post model which doesn't have partial update enabled
+	firstPost, err := typedb.QueryFirst[*Post](ctx, db, "SELECT id, user_id, title, content, tags, metadata, created_at, updated_at FROM posts ORDER BY id LIMIT 1")
+	if err != nil || firstPost == nil {
+		t.Skip("Need at least one post in database for non-partial update test")
+	}
+
+	originalPostTitle := firstPost.Title
+	originalPostContent := firstPost.Content
+
+	t.Cleanup(func() {
+		if firstPost.ID != 0 {
+			restorePost := &Post{
+				ID:      firstPost.ID,
+				UserID:  firstPost.UserID,
+				Title:   originalPostTitle,
+				Content: originalPostContent,
+			}
+			typedb.Update(ctx, db, restorePost)
+		}
+	})
+
+	// Load post to get all current values
+	postBeforeUpdate := &Post{ID: firstPost.ID}
+	if err := typedb.Load(ctx, db, postBeforeUpdate); err != nil {
+		t.Fatalf("Failed to load post: %v", err)
+	}
+
+	originalLoadedTitle := postBeforeUpdate.Title
+	originalLoadedContent := postBeforeUpdate.Content
+
+	// Update post with only Title set (Content not set = zero value)
+	// Since Post doesn't have partial update enabled, ALL fields should be included in UPDATE
+	postToUpdate := &Post{
+		ID:     firstPost.ID,
+		UserID: firstPost.UserID,
+		Title:  "Updated Title Only",
+		// Content is not set - should be updated to empty string when partial update is disabled
+	}
+
+	if err := typedb.Update(ctx, db, postToUpdate); err != nil {
+		t.Fatalf("Update failed: %v", err)
+	}
+
+	// Reload post to verify update
+	updatedPost := &Post{ID: firstPost.ID}
+	if err := typedb.Load(ctx, db, updatedPost); err != nil {
+		t.Fatalf("Failed to load updated post: %v", err)
+	}
+
+	// Verify title was updated
+	if updatedPost.Title != "Updated Title Only" {
+		t.Errorf("Expected title 'Updated Title Only', got '%s'", updatedPost.Title)
+	}
+
+	// Verify content was also updated (to empty string, since it wasn't set)
+	// This demonstrates that non-partial update includes ALL fields
+	if updatedPost.Content != "" {
+		t.Errorf("Expected content to be empty (zero value) when not set in non-partial update, got '%s'", updatedPost.Content)
+	}
+
+	// Restore original content
+	restorePost := &Post{
+		ID:      firstPost.ID,
+		UserID:  firstPost.UserID,
+		Title:   originalLoadedTitle,
+		Content: originalLoadedContent,
+	}
+	if err := typedb.Update(ctx, db, restorePost); err != nil {
+		t.Fatalf("Failed to restore original post: %v", err)
+	}
+}
