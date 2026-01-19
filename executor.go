@@ -568,3 +568,10 @@ func WithTimeout(d time.Duration) Option {
 		cfg.OpTimeout = d
 	}
 }
+
+// WithLogger sets the logger for the database connection.
+func WithLogger(logger Logger) Option {
+	return func(cfg *Config) {
+		cfg.Logger = logger
+	}
+}
