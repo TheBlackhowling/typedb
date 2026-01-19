@@ -31,6 +31,7 @@ type DB struct {
 	db         *sql.DB
 	driverName string
 	timeout    time.Duration // default timeout for operations
+	logger     Logger        // logger for this DB instance
 }
 
 // Tx wraps *sql.Tx and provides transaction-scoped query execution.
@@ -39,6 +40,7 @@ type Tx struct {
 	tx         *sql.Tx
 	driverName string
 	timeout    time.Duration
+	logger     Logger // logger for this transaction (inherited from DB)
 }
 
 // Config holds database connection and pool configuration.
@@ -49,6 +51,7 @@ type Config struct {
 	ConnMaxLifetime time.Duration // Default: 30m
 	ConnMaxIdleTime time.Duration // Default: 5m
 	OpTimeout       time.Duration // Default: 5s
+	Logger          Logger        // Logger instance (defaults to no-op logger)
 }
 
 // ModelInterface defines the contract for model types that can be deserialized.
