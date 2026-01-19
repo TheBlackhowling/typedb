@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.21] - 2026-01-19
+
+**Commit:** [`382f6c9`](https://github.com/TheBlackhowling/typedb/commit/382f6c9e95d284d25596ca5c0f1709ce680c593b)
+**Pull Request:** [#28](https://github.com/TheBlackhowling/typedb/pull/28)
+
+**Summary:** Fix PostgreSQL examples by adding missing updated_at column migration
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.21.md](versions/0.1.21.md)
+
+
 ## [0.1.20] - 2026-01-18
 
 **Commit:** [`ff13db2`](https://github.com/TheBlackhowling/typedb/commit/ff13db22a6a507e730be6860a3c011020b8ca8aa)
