@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.22] - 2026-01-19
+
+**Commit:** [`2a49cca`](https://github.com/TheBlackhowling/typedb/commit/2a49cca2eaa21d2df3fc6b89516381063e313372)
+**Pull Request:** [#29](https://github.com/TheBlackhowling/typedb/pull/29)
+
+**Summary:** Enhance README with better structure, clearer value proposition, and improved navigation
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.22.md](versions/0.1.22.md)
+
+
 ## [0.1.21] - 2026-01-19
 
 **Commit:** [`382f6c9`](https://github.com/TheBlackhowling/typedb/commit/382f6c9e95d284d25596ca5c0f1709ce680c593b)
