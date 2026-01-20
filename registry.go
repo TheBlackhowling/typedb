@@ -1,6 +1,7 @@
 package typedb
 
 import (
+	"fmt"
 	"reflect"
 	"sync"
 )
@@ -28,6 +29,7 @@ func init() {
 // RegisterModel registers a model type for validation.
 // Requires a pointer type (e.g., RegisterModel[*User]()).
 // Models should call this function in their init() functions.
+// Panics if validation fails, as init() functions cannot return errors.
 //
 // Example:
 //
@@ -43,9 +45,17 @@ func RegisterModel[T ModelInterface]() {
 	var model T
 	t := reflect.TypeOf(model)
 	if t.Kind() != reflect.Ptr {
-		panic("typedb: RegisterModel requires a pointer type (e.g., RegisterModel[*User]())")
+		panic(fmt.Errorf("typedb: RegisterModel requires a pointer type (e.g., RegisterModel[*User]())"))
 	}
 	t = t.Elem()
+
+	// Validate the model BEFORE adding to registry to prevent invalid models from being registered
+	// Use the zero value instance created at the start of the function
+	if err := ValidateModel(model); err != nil {
+		// Log the error for visibility before panicking
+		defaultLogger.Error("Model registration validation failed", "model", t.Name(), "error", err)
+		panic(fmt.Errorf("typedb: validation failed for model %s during registration: %w", t.Name(), err))
+	}
 
 	registerMutex.Lock()
 	defer registerMutex.Unlock()
@@ -63,6 +73,7 @@ func RegisterModel[T ModelInterface]() {
 // RegisterModelWithOptions registers a model type with options for validation and behavior configuration.
 // Requires a pointer type (e.g., RegisterModelWithOptions[*User](ModelOptions{PartialUpdate: true})).
 // Models should call this function in their init() functions when they need custom behavior.
+// Panics if validation fails, as init() functions cannot return errors.
 //
 // Example:
 //
@@ -78,9 +89,17 @@ func RegisterModelWithOptions[T ModelInterface](opts ModelOptions) {
 	var model T
 	t := reflect.TypeOf(model)
 	if t.Kind() != reflect.Ptr {
-		panic("typedb: RegisterModelWithOptions requires a pointer type (e.g., RegisterModelWithOptions[*User](...))")
+		panic(fmt.Errorf("typedb: RegisterModelWithOptions requires a pointer type (e.g., RegisterModelWithOptions[*User](...))"))
 	}
 	t = t.Elem()
+
+	// Validate the model BEFORE adding to registry to prevent invalid models from being registered
+	// Use the zero value instance created at the start of the function
+	if err := ValidateModel(model); err != nil {
+		// Log the error for visibility before panicking
+		defaultLogger.Error("Model registration validation failed", "model", t.Name(), "error", err)
+		panic(fmt.Errorf("typedb: validation failed for model %s during registration: %w", t.Name(), err))
+	}
 
 	registerMutex.Lock()
 	defer registerMutex.Unlock()
@@ -124,4 +143,15 @@ func GetRegisteredModels() []reflect.Type {
 	result := make([]reflect.Type, len(registeredModels))
 	copy(result, registeredModels)
 	return result
+}
+
+// ClearRegisteredModels clears all registered models.
+// This is intended for testing purposes only and should not be used in production code.
+// Models should be registered in init() functions and remain registered for the lifetime of the program.
+func ClearRegisteredModels() {
+	registerMutex.Lock()
+	defer registerMutex.Unlock()
+
+	registeredModels = nil
+	modelOptions = make(map[reflect.Type]ModelOptions)
 }
