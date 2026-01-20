@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.27] - 2026-01-20
+
+**Commit:** [`c03da1d`](https://github.com/TheBlackhowling/typedb/commit/c03da1d630f126ab94eb8c3a1f2de8a74f787edf)
+**Pull Request:** [#34](https://github.com/TheBlackhowling/typedb/pull/34)
+
+**Summary:** Extract shared field iteration logic from serializeModelFields, serializeModelFieldsForUpdate, and buildFieldMapForComparison into a reusable helper function
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.27.md](versions/0.1.27.md)
+
+
 ## [0.1.26] - 2026-01-20
 
 **Commit:** [`4c45cf3`](https://github.com/TheBlackhowling/typedb/commit/4c45cf34187c575b96d5de7655d538dbf63f694e)
