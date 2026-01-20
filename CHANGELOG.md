@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.28] - 2026-01-20
+
+**Commit:** [`fc769f3`](https://github.com/TheBlackhowling/typedb/commit/fc769f3ef5bf04b64ffc5fc7cbd072fd2cea1fae)
+**Pull Request:** [#35](https://github.com/TheBlackhowling/typedb/pull/35)
+
+**Summary:** Improve error message when LoadByComposite is called but required QueryBy method is missing to provide better developer experience
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.28.md](versions/0.1.28.md)
+
+
 ## [0.1.27] - 2026-01-20
 
 **Commit:** [`c03da1d`](https://github.com/TheBlackhowling/typedb/commit/c03da1d630f126ab94eb8c3a1f2de8a74f787edf)
