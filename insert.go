@@ -108,9 +108,38 @@ func InsertAndReturn[T ModelInterface](ctx context.Context, exec Executor, inser
 			returningCols[i] = strings.TrimSpace(returningCols[i])
 		}
 		
-		// Validate and quote all returning columns to prevent SQL injection
-		quotedReturningCols := make([]string, len(returningCols))
+		// Strip quotes and extract column names from qualified names
+		// Handle: "user_id", user_id, posts.id, "posts"."id", etc.
+		normalizedCols := make([]string, len(returningCols))
 		for i, col := range returningCols {
+			col = strings.TrimSpace(col)
+			
+			// Strip surrounding quotes if present (handle all quote styles)
+			if len(col) >= 2 {
+				if (col[0] == '"' && col[len(col)-1] == '"') ||
+					(col[0] == '`' && col[len(col)-1] == '`') ||
+					(col[0] == '[' && col[len(col)-1] == ']') {
+					col = col[1 : len(col)-1]
+				}
+			}
+			
+			// For qualified names (table.column), extract just the column name
+			// Oracle doesn't support qualified names in RETURNING clauses the same way
+			if dotIdx := strings.LastIndex(col, "."); dotIdx != -1 && dotIdx < len(col)-1 {
+				col = col[dotIdx+1:]
+			}
+			
+			col = strings.TrimSpace(col)
+			if col == "" {
+				return zero, fmt.Errorf("typedb: InsertAndReturn empty column name in RETURNING clause")
+			}
+			
+			normalizedCols[i] = col
+		}
+		
+		// Validate and quote all returning columns to prevent SQL injection
+		quotedReturningCols := make([]string, len(normalizedCols))
+		for i, col := range normalizedCols {
 			if err := validateIdentifier(col); err != nil {
 				return zero, fmt.Errorf("typedb: InsertAndReturn invalid column name '%s': %w", col, err)
 			}
@@ -120,17 +149,17 @@ func InsertAndReturn[T ModelInterface](ctx context.Context, exec Executor, inser
 		// Find ID column (usually first or named 'id')
 		var idCol string
 		var quotedIdCol string
-		for i, col := range returningCols {
+		for i, col := range normalizedCols {
 			colUpper := strings.ToUpper(strings.TrimSpace(col))
-			if colUpper == "ID" || strings.HasSuffix(colUpper, ".ID") {
+			if colUpper == "ID" {
 				idCol = strings.TrimSpace(col)
 				quotedIdCol = quotedReturningCols[i]
 				break
 			}
 		}
-		if idCol == "" && len(returningCols) > 0 {
+		if idCol == "" && len(normalizedCols) > 0 {
 			// Use first column as ID
-			idCol = returningCols[0]
+			idCol = normalizedCols[0]
 			quotedIdCol = quotedReturningCols[0]
 		}
 		

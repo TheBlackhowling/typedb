@@ -150,7 +150,7 @@ func TestOracle_InsertAndReturn_Security_SQLInjection(t *testing.T) {
 			name:        "quote injection attempt",
 			insertQuery: `INSERT INTO posts (user_id, title) VALUES (:1, :2) RETURNING id, "user_id"`,
 			args:        []any{firstUser.ID, "Test"},
-			expectError: false, // Quotes in identifiers are allowed and will be escaped
+			expectError: false, // Quotes are stripped before validation/quoting, so this should work
 		},
 	}
 
@@ -200,10 +200,10 @@ func TestOracle_InsertAndReturn_Security_IdentifierValidation(t *testing.T) {
 		errorMsg    string
 	}{
 		{
-			name:        "identifier with quote character (should be escaped)",
+			name:        "identifier with quote character (should be stripped)",
 			insertQuery: `INSERT INTO posts (user_id, title) VALUES (:1, :2) RETURNING id, "user_id"`,
 			args:        []any{firstUser.ID, "Test"},
-			expectError: false, // Quotes are allowed and escaped
+			expectError: false, // Quotes are stripped before validation/quoting
 		},
 		{
 			name:        "multiple RETURNING columns",
@@ -215,7 +215,7 @@ func TestOracle_InsertAndReturn_Security_IdentifierValidation(t *testing.T) {
 			name:        "qualified column name in RETURNING",
 			insertQuery: "INSERT INTO posts (user_id, title) VALUES (:1, :2) RETURNING posts.id, posts.user_id",
 			args:        []any{firstUser.ID, "Test"},
-			expectError: false, // Qualified names with dots are allowed
+			expectError: false, // Qualified names are normalized to extract just column name
 		},
 	}
 
