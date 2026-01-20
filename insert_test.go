@@ -609,3 +609,272 @@ func TestDeserialize_NonAddressableValue(t *testing.T) {
 		t.Errorf("Expected Name 'Non-Addressable Test', got '%s'", model.Name)
 	}
 }
+
+// TestValidateIdentifier tests the validateIdentifier function
+func TestValidateIdentifier(t *testing.T) {
+	tests := []struct {
+		name      string
+		identifier string
+		wantErr   bool
+		errMsg    string
+	}{
+		{
+			name:      "valid simple identifier",
+			identifier: "users",
+			wantErr:   false,
+		},
+		{
+			name:      "valid identifier with underscore",
+			identifier: "user_table",
+			wantErr:   false,
+		},
+		{
+			name:      "valid identifier with numbers",
+			identifier: "user123",
+			wantErr:   false,
+		},
+		{
+			name:      "valid qualified identifier",
+			identifier: "schema.table",
+			wantErr:   false,
+		},
+		{
+			name:      "valid identifier with multiple dots",
+			identifier: "schema.table.column",
+			wantErr:   false,
+		},
+		{
+			name:      "empty identifier",
+			identifier: "",
+			wantErr:   true,
+			errMsg:    "cannot be empty",
+		},
+		{
+			name:      "identifier with space",
+			identifier: "user table",
+			wantErr:   true,
+			errMsg:    "invalid identifier",
+		},
+		{
+			name:      "identifier with quote (allowed, will be escaped)",
+			identifier: `user"table`,
+			wantErr:   false,
+		},
+		{
+			name:      "identifier with semicolon",
+			identifier: "user;table",
+			wantErr:   true,
+			errMsg:    "invalid identifier",
+		},
+		{
+			name:      "identifier with dash",
+			identifier: "user-table",
+			wantErr:   true,
+			errMsg:    "invalid identifier",
+		},
+		{
+			name:      "identifier with SQL injection attempt (semicolon)",
+			identifier: "users; DROP TABLE users; --",
+			wantErr:   true,
+			errMsg:    "invalid identifier",
+		},
+		{
+			name:      "identifier with SQL injection attempt (DROP)",
+			identifier: "users DROP TABLE",
+			wantErr:   true,
+			errMsg:    "invalid identifier",
+		},
+		{
+			name:      "identifier with SQL comment pattern",
+			identifier: "users--comment",
+			wantErr:   true,
+			errMsg:    "invalid identifier",
+		},
+		{
+			name:      "identifier with SQL keyword (allowed - might be legitimate)",
+			identifier: "DROP",
+			wantErr:   false,
+		},
+		{
+			name:      "identifier starting with number",
+			identifier: "123users",
+			wantErr:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateIdentifier(tt.identifier)
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("validateIdentifier() expected error but got nil")
+				} else if tt.errMsg != "" && !strings.Contains(err.Error(), tt.errMsg) {
+					t.Errorf("validateIdentifier() error = %v, want error containing %q", err, tt.errMsg)
+				}
+			} else {
+				if err != nil {
+					t.Errorf("validateIdentifier() unexpected error = %v", err)
+				}
+			}
+		})
+	}
+}
+
+// TestQuoteIdentifierEscaping tests the quoteIdentifier function with quote escaping and security
+func TestQuoteIdentifierEscaping(t *testing.T) {
+	tests := []struct {
+		name       string
+		driverName string
+		identifier string
+		want       string
+		wantPanic  bool
+	}{
+		// PostgreSQL tests
+		{
+			name:       "PostgreSQL simple identifier",
+			driverName: "postgres",
+			identifier: "users",
+			want:       `"users"`,
+			wantPanic:  false,
+		},
+		{
+			name:       "PostgreSQL identifier with underscore",
+			driverName: "postgres",
+			identifier: "user_table",
+			want:       `"user_table"`,
+			wantPanic:  false,
+		},
+		{
+			name:       "PostgreSQL identifier with quote (escaped)",
+			driverName: "postgres",
+			identifier: `user"table`,
+			want:       `"user""table"`,
+			wantPanic:  false,
+		},
+		{
+			name:       "PostgreSQL qualified identifier",
+			driverName: "postgres",
+			identifier: "schema.table",
+			want:       `"schema.table"`,
+			wantPanic:  false,
+		},
+		// SQLite tests (same as PostgreSQL)
+		{
+			name:       "SQLite simple identifier",
+			driverName: "sqlite3",
+			identifier: "users",
+			want:       `"users"`,
+			wantPanic:  false,
+		},
+		// MySQL tests
+		{
+			name:       "MySQL simple identifier",
+			driverName: "mysql",
+			identifier: "users",
+			want:       "`users`",
+			wantPanic:  false,
+		},
+		{
+			name:       "MySQL identifier with backtick (escaped)",
+			driverName: "mysql",
+			identifier: "user`table",
+			want:       "`user``table`",
+			wantPanic:  false,
+		},
+		// SQL Server tests
+		{
+			name:       "SQL Server simple identifier",
+			driverName: "sqlserver",
+			identifier: "users",
+			want:       "[users]",
+			wantPanic:  false,
+		},
+		{
+			name:       "SQL Server identifier with underscore",
+			driverName: "mssql",
+			identifier: "user_table",
+			want:       "[user_table]",
+			wantPanic:  false,
+		},
+		// Oracle tests
+		{
+			name:       "Oracle simple identifier",
+			driverName: "oracle",
+			identifier: "users",
+			want:       `"USERS"`,
+			wantPanic:  false,
+		},
+		{
+			name:       "Oracle identifier with quote (escaped and uppercased)",
+			driverName: "oracle",
+			identifier: `user"table`,
+			want:       `"USER""TABLE"`,
+			wantPanic:  false,
+		},
+		{
+			name:       "Oracle lowercase identifier",
+			driverName: "oracle",
+			identifier: "users",
+			want:       `"USERS"`,
+			wantPanic:  false,
+		},
+		// Invalid identifier tests (should panic)
+		{
+			name:       "PostgreSQL invalid identifier with space",
+			driverName: "postgres",
+			identifier: "user table",
+			wantPanic:  true,
+		},
+		{
+			name:       "PostgreSQL invalid identifier with semicolon",
+			driverName: "postgres",
+			identifier: "users; DROP TABLE users; --",
+			wantPanic:  true,
+		},
+		{
+			name:       "SQL Server invalid identifier with closing bracket",
+			driverName: "sqlserver",
+			identifier: "user]table",
+			wantPanic:  true,
+		},
+		{
+			name:       "PostgreSQL valid identifier that needs no escaping",
+			driverName: "postgres",
+			identifier: "users",
+			want:       `"users"`,
+			wantPanic:  false,
+		},
+		{
+			name:       "MySQL valid identifier that needs no escaping",
+			driverName: "mysql",
+			identifier: "users",
+			want:       "`users`",
+			wantPanic:  false,
+		},
+		{
+			name:       "Oracle valid identifier (uppercased)",
+			driverName: "oracle",
+			identifier: "users",
+			want:       `"USERS"`,
+			wantPanic:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.wantPanic {
+				defer func() {
+					if r := recover(); r == nil {
+						t.Errorf("quoteIdentifier() expected panic but did not panic")
+					}
+				}()
+				quoteIdentifier(tt.driverName, tt.identifier)
+			} else {
+				got := quoteIdentifier(tt.driverName, tt.identifier)
+				if got != tt.want {
+					t.Errorf("quoteIdentifier() = %v, want %v", got, tt.want)
+				}
+			}
+		})
+	}
+}
