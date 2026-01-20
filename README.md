@@ -728,13 +728,60 @@ typedb prioritizes developer productivity and type safety over raw performance. 
 - **Partial Update Overhead**: ~150-700μs per load when enabled (JSON marshaling/unmarshaling for deep copy)
 - **Memory Overhead**: Partial update doubles memory usage for loaded models
 
-**Typical Request Breakdown:**
+**Typical Request Breakdown (Single Row):**
 - Database query: 10-50ms
 - Network overhead: 5-20ms
 - typedb overhead: 0.1-0.5ms (without partial update)
 - **Total**: 15-70ms
 
-**typedb overhead is typically 0.1-1% of total request time** - negligible for most applications.
+**Bulk Query Considerations (Many Rows):**
+- Reflection overhead scales linearly with row count: ~50-200μs per row
+- A query returning 1,000 rows adds ~50-200ms of reflection overhead
+- A query returning 10,000 rows adds ~500ms-2s of reflection overhead
+- **Example**: Exporting 50,000 records could add 2.5-10 seconds of reflection overhead
+
+**For single-row or small result sets (<100 rows):**
+- typedb overhead is typically 0.1-1% of total request time - negligible for most applications
+
+**For bulk operations (100+ rows):**
+- Reflection overhead becomes more significant relative to database query time
+- Consider using `QueryDo` for streaming large result sets to reduce memory usage
+- For very large exports (10K+ rows), consider using `database/sql` directly or pagination
+
+### When Bulk Queries (10K+ Rows) Are Reasonable
+
+Even with 50K+ rows, typedb can be a good choice when:
+
+**✅ Background Jobs & Batch Processing**
+- Latency isn't critical (runs overnight, weekly reports)
+- Correctness and maintainability matter more than speed
+- Example: Monthly financial reports, data warehouse ETL jobs
+
+**✅ Admin & Reporting Tools**
+- Human-facing interfaces where 2-10 seconds is acceptable
+- Type safety prevents bugs that could corrupt reports
+- Example: Admin dashboards, analytics exports, audit logs
+
+**✅ One-Time Operations**
+- Migrations, data exports, or one-off scripts
+- Developer productivity > performance optimization
+- Example: Database migrations, data exports for compliance
+
+**✅ When Database Query Time Dominates**
+- If the database query takes 30+ seconds, 2-10s overhead is acceptable
+- Complex joins, aggregations, or slow queries make reflection overhead negligible
+- Example: Complex analytics queries, multi-table joins with aggregations
+
+**✅ Type Safety Prevents Costly Bugs**
+- When manual scanning errors could cause data corruption or compliance issues
+- The overhead cost is less than the cost of bugs
+- Example: Financial transactions, medical records, legal compliance data
+
+**❌ Avoid typedb for bulk queries when:**
+- Real-time user-facing endpoints (API responses, web pages)
+- High-frequency bulk operations (100K+ queries/hour)
+- Memory-constrained environments
+- When every millisecond matters for user experience
 
 ### When Performance Matters
 
@@ -767,6 +814,12 @@ typedb prioritizes developer productivity and type safety over raw performance. 
 4. **Consider Alternatives for Hot Paths**
    - Use `database/sql` directly for ultra-high-performance endpoints
    - Use typedb for convenience in less critical paths
+
+5. **Handle Bulk Queries Efficiently**
+   - For queries returning 100+ rows, reflection overhead becomes noticeable
+   - Use `QueryDo` for streaming large result sets to reduce memory usage
+   - For exports/reports with 10K+ rows, consider pagination or direct `database/sql` usage
+   - Example: Exporting 50K records with typedb adds ~2.5-10s overhead; direct SQL adds ~0.1s
 
 ### Comparison with Alternatives
 
