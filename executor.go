@@ -415,9 +415,9 @@ func scanRowToMap(rows *sql.Rows) (map[string]any, error) {
 	return scanRowToMapWithCols(rows, cols)
 }
 
-// Open opens a database connection with validation.
-// Calls MustValidateAllRegistered() to ensure all registered models are valid.
-func Open(driverName, dsn string, opts ...Option) (*DB, error) {
+// openHelper contains the shared logic for opening database connections.
+// The validate parameter controls whether model validation is performed.
+func openHelper(driverName, dsn string, validate bool, opts ...Option) (*DB, error) {
 	logger := defaultLogger
 	cfg := &Config{
 		MaxOpenConns:    10,
@@ -434,7 +434,13 @@ func Open(driverName, dsn string, opts ...Option) (*DB, error) {
 		}
 	}
 
-	logger.Info("Opening database connection", "driver", driverName)
+	// Log opening message
+	if validate {
+		logger.Info("Opening database connection", "driver", driverName)
+	} else {
+		logger.Info("Opening database connection without validation", "driver", driverName)
+	}
+
 	db, err := sql.Open(driverName, dsn)
 	if err != nil {
 		logger.Error("Failed to open database connection", "driver", driverName, "error", err)
@@ -446,47 +452,28 @@ func Open(driverName, dsn string, opts ...Option) (*DB, error) {
 	db.SetConnMaxLifetime(cfg.ConnMaxLifetime)
 	db.SetConnMaxIdleTime(cfg.ConnMaxIdleTime)
 
-	logger.Info("Validating registered models")
-	// Validate all registered models before returning
-	MustValidateAllRegistered()
+	// Perform validation if requested
+	if validate {
+		logger.Info("Validating registered models")
+		MustValidateAllRegistered()
+		logger.Info("Database connection opened successfully", "driver", driverName, "maxOpenConns", cfg.MaxOpenConns, "maxIdleConns", cfg.MaxIdleConns)
+	} else {
+		logger.Info("Database connection opened successfully (without validation)", "driver", driverName)
+	}
 
-	logger.Info("Database connection opened successfully", "driver", driverName, "maxOpenConns", cfg.MaxOpenConns, "maxIdleConns", cfg.MaxIdleConns)
 	return NewDBWithLogger(db, driverName, cfg.OpTimeout, logger), nil
+}
+
+// Open opens a database connection with validation.
+// Calls MustValidateAllRegistered() to ensure all registered models are valid.
+func Open(driverName, dsn string, opts ...Option) (*DB, error) {
+	return openHelper(driverName, dsn, true, opts...)
 }
 
 // OpenWithoutValidation opens a database connection without validation.
 // Useful for testing or when you want to defer validation.
 func OpenWithoutValidation(driverName, dsn string, opts ...Option) (*DB, error) {
-	logger := defaultLogger
-	cfg := &Config{
-		MaxOpenConns:    10,
-		MaxIdleConns:    5,
-		ConnMaxLifetime: 30 * time.Minute,
-		ConnMaxIdleTime: 5 * time.Minute,
-		OpTimeout:       5 * time.Second,
-	}
-
-	for _, opt := range opts {
-		opt(cfg)
-		if cfg.Logger != nil {
-			logger = cfg.Logger
-		}
-	}
-
-	logger.Info("Opening database connection without validation", "driver", driverName)
-	db, err := sql.Open(driverName, dsn)
-	if err != nil {
-		logger.Error("Failed to open database connection", "driver", driverName, "error", err)
-		return nil, err
-	}
-
-	db.SetMaxOpenConns(cfg.MaxOpenConns)
-	db.SetMaxIdleConns(cfg.MaxIdleConns)
-	db.SetConnMaxLifetime(cfg.ConnMaxLifetime)
-	db.SetConnMaxIdleTime(cfg.ConnMaxIdleTime)
-
-	logger.Info("Database connection opened successfully (without validation)", "driver", driverName)
-	return NewDBWithLogger(db, driverName, cfg.OpTimeout, logger), nil
+	return openHelper(driverName, dsn, false, opts...)
 }
 
 // Option functions for configuring database connections
