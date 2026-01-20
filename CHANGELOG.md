@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.26] - 2026-01-20
+
+**Commit:** [`4c45cf3`](https://github.com/TheBlackhowling/typedb/commit/4c45cf34187c575b96d5de7655d538dbf63f694e)
+**Pull Request:** [#33](https://github.com/TheBlackhowling/typedb/pull/33)
+
+**Summary:** Refactor Open() and OpenWithoutValidation() to eliminate code duplication by extracting shared connection setup logic
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.26.md](versions/0.1.26.md)
+
+
 ## [0.1.25] - 2026-01-20
 
 **Commit:** [`2dd2464`](https://github.com/TheBlackhowling/typedb/commit/2dd2464772f5c6176eb66aee1d5d3176bb4b1b7b)
