@@ -150,6 +150,7 @@ typedb shines in these common scenarios:
 - ✅ **Auto-Timestamp Fields** - Automatic `updated_at` timestamp management with database-specific functions
 - ✅ **Composite Key Support** - Full support for multi-column primary keys
 - ✅ **Object-Based CRUD** - Insert and update by object with automatic query generation
+- ✅ **Structured Logging** - Pluggable logging interface for debugging and monitoring (optional, zero overhead when disabled)
 
 ## Design Principles
 
@@ -585,6 +586,136 @@ err = typedb.Update(ctx, db, user)
 
 - `Open(driverName, dsn, opts...)` - Opens database connection with validation
 - `NewDB(db *sql.DB, timeout)` - Creates DB instance from existing connection
+
+## Logging
+
+typedb provides a pluggable logging interface that allows you to integrate with your preferred logging library. Logging is completely optional and has zero overhead when disabled (uses a no-op logger by default).
+
+### Logger Interface
+
+The `Logger` interface provides four log levels:
+
+```go
+type Logger interface {
+    Debug(msg string, keyvals ...any)
+    Info(msg string, keyvals ...any)
+    Warn(msg string, keyvals ...any)
+    Error(msg string, keyvals ...any)
+}
+```
+
+### Setting a Logger
+
+**Global Logger** (applies to all DB instances):
+
+```go
+import (
+    "github.com/TheBlackHowling/typedb"
+    "github.com/your-logger/logger"
+)
+
+// Set global logger
+typedb.SetLogger(yourLogger)
+
+// Open database - will use global logger
+db, err := typedb.Open("postgres", dsn)
+```
+
+**Per-Instance Logger** (overrides global logger for specific DB instance):
+
+```go
+import (
+    "github.com/TheBlackHowling/typedb"
+    "github.com/your-logger/logger"
+)
+
+// Open with specific logger
+db, err := typedb.Open("postgres", dsn, 
+    typedb.WithLogger(yourLogger))
+```
+
+### Log Levels
+
+**Debug Logs** (detailed operation tracking):
+- Query execution (SQL and arguments)
+- Transaction begin
+- Row scanning operations
+- "No rows found" cases
+
+**Info Logs** (important lifecycle events):
+- Connection opened/closed
+- Transaction commit/rollback
+- Model validation (during `Open()`)
+
+**Error Logs** (all failures):
+- Query execution failures
+- Connection failures
+- Transaction failures
+- Scan/deserialization errors
+
+### Example: Integrating with a Logging Library
+
+```go
+package main
+
+import (
+    "github.com/TheBlackHowling/typedb"
+    "github.com/rs/zerolog"
+)
+
+// Implement typedb.Logger interface
+type ZerologAdapter struct {
+    logger zerolog.Logger
+}
+
+func (z *ZerologAdapter) Debug(msg string, keyvals ...any) {
+    z.logger.Debug().Fields(keyvalsToMap(keyvals)).Msg(msg)
+}
+
+func (z *ZerologAdapter) Info(msg string, keyvals ...any) {
+    z.logger.Info().Fields(keyvalsToMap(keyvals)).Msg(msg)
+}
+
+func (z *ZerologAdapter) Warn(msg string, keyvals ...any) {
+    z.logger.Warn().Fields(keyvalsToMap(keyvals)).Msg(msg)
+}
+
+func (z *ZerologAdapter) Error(msg string, keyvals ...any) {
+    z.logger.Error().Fields(keyvalsToMap(keyvals)).Msg(msg)
+}
+
+func keyvalsToMap(keyvals []any) map[string]any {
+    m := make(map[string]any)
+    for i := 0; i < len(keyvals)-1; i += 2 {
+        key := keyvals[i].(string)
+        m[key] = keyvals[i+1]
+    }
+    return m
+}
+
+func main() {
+    // Create logger adapter
+    logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
+    adapter := &ZerologAdapter{logger: logger}
+    
+    // Set global logger
+    typedb.SetLogger(adapter)
+    
+    // Use typedb - all operations will be logged
+    db, err := typedb.Open("postgres", dsn)
+    // ...
+}
+```
+
+### Zero Overhead
+
+When no logger is set, typedb uses a no-op logger that discards all log messages. This ensures zero performance overhead when logging is not needed:
+
+```go
+// No logger set - zero overhead
+db, err := typedb.Open("postgres", dsn)
+// All log calls are no-ops, no performance impact
+```
 
 ## Performance
 

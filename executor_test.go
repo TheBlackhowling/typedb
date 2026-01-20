@@ -202,6 +202,7 @@ func TestTx_WithTimeout(t *testing.T) {
 	typedbTx := &Tx{
 		tx:      nil, // Not needed for timeout test
 		timeout: 5 * time.Second,
+		logger:  GetLogger(),
 	}
 
 	// Test with context that has no deadline
@@ -272,6 +273,7 @@ func TestTx_Rollback(t *testing.T) {
 	typedbTx := &Tx{
 		tx:      tx,
 		timeout: 5 * time.Second,
+		logger:  GetLogger(),
 	}
 
 	err = typedbTx.Rollback()
@@ -658,6 +660,7 @@ func TestTx_Exec_Sqlmock(t *testing.T) {
 	typedbTx := &Tx{
 		tx:      mockTx,
 		timeout: 5 * time.Second,
+		logger:  GetLogger(),
 	}
 	ctx := context.Background()
 
@@ -717,6 +720,7 @@ func TestTx_QueryAll_Sqlmock(t *testing.T) {
 	typedbTx := &Tx{
 		tx:      mockTx,
 		timeout: 5 * time.Second,
+		logger:  GetLogger(),
 	}
 	ctx := context.Background()
 
@@ -774,6 +778,7 @@ func TestTx_QueryRowMap_Sqlmock(t *testing.T) {
 	typedbTx := &Tx{
 		tx:      mockTx,
 		timeout: 5 * time.Second,
+		logger:  GetLogger(),
 	}
 	ctx := context.Background()
 
@@ -855,6 +860,7 @@ func TestTx_GetInto_Sqlmock(t *testing.T) {
 	typedbTx := &Tx{
 		tx:      mockTx,
 		timeout: 5 * time.Second,
+		logger:  GetLogger(),
 	}
 	ctx := context.Background()
 
@@ -918,6 +924,7 @@ func TestTx_QueryDo_Sqlmock(t *testing.T) {
 	typedbTx := &Tx{
 		tx:      mockTx,
 		timeout: 5 * time.Second,
+		logger:  GetLogger(),
 	}
 	ctx := context.Background()
 
