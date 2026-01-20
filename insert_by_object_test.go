@@ -46,6 +46,10 @@ func (m *InsertModel) TableName() string {
 	return "users"
 }
 
+func (m *InsertModel) QueryByID() string {
+	return "SELECT id, name, email FROM users WHERE id = $1"
+}
+
 func init() {
 	RegisterModel[*InsertModel]()
 }
@@ -65,6 +69,10 @@ func (m *JoinedModel) TableName() string {
 type NoTableNameModel struct {
 	Model
 	ID int `db:"id" load:"primary"`
+}
+
+func (m *NoTableNameModel) QueryByID() string {
+	return "SELECT id FROM notablenamemodel WHERE id = $1"
 }
 
 func init() {
@@ -1445,6 +1453,10 @@ func (m *InsertModelWithDbInsertFalse) TableName() string {
 	return "users"
 }
 
+func (m *InsertModelWithDbInsertFalse) QueryByID() string {
+	return "SELECT id, name, email, updated_at FROM users WHERE id = $1"
+}
+
 func init() {
 	RegisterModel[*InsertModelWithDbInsertFalse]()
 }
@@ -1462,6 +1474,10 @@ func (m *InsertModelWithDbUpdateFalse) TableName() string {
 	return "users"
 }
 
+func (m *InsertModelWithDbUpdateFalse) QueryByID() string {
+	return "SELECT id, name, email, updated_at FROM users WHERE id = $1"
+}
+
 func init() {
 	RegisterModel[*InsertModelWithDbUpdateFalse]()
 }
@@ -1477,6 +1493,10 @@ type InsertModelWithBothTags struct {
 
 func (m *InsertModelWithBothTags) TableName() string {
 	return "users"
+}
+
+func (m *InsertModelWithBothTags) QueryByID() string {
+	return "SELECT id, name, email, created_at FROM users WHERE id = $1"
 }
 
 func init() {

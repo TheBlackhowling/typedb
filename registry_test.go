@@ -11,15 +11,39 @@ type TestUser struct {
 	ID int `db:"id" load:"primary"`
 }
 
+func (m *TestUser) TableName() string {
+	return "users"
+}
+
+func (m *TestUser) QueryByID() string {
+	return "SELECT id FROM users WHERE id = $1"
+}
+
 type TestPost struct {
 	Model
 	ID     int `db:"id" load:"primary"`
 	UserID int `db:"user_id"`
 }
 
+func (m *TestPost) TableName() string {
+	return "posts"
+}
+
+func (m *TestPost) QueryByID() string {
+	return "SELECT id, user_id FROM posts WHERE id = $1"
+}
+
 type TestModel struct {
 	Model
 	ID int `db:"id" load:"primary"`
+}
+
+func (m *TestModel) TableName() string {
+	return "testmodels"
+}
+
+func (m *TestModel) QueryByID() string {
+	return "SELECT id FROM testmodels WHERE id = $1"
 }
 
 func init() {
@@ -138,6 +162,14 @@ func TestGetRegisteredModels_ReturnsCopy(t *testing.T) {
 type ValueModel struct {
 	Model
 	ID int `db:"id" load:"primary"`
+}
+
+func (m *ValueModel) TableName() string {
+	return "valuemodels"
+}
+
+func (m *ValueModel) QueryByID() string {
+	return "SELECT id FROM valuemodels WHERE id = $1"
 }
 
 func TestRegisterModel_NonPointerTypePanics(t *testing.T) {
