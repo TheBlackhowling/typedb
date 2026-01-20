@@ -49,6 +49,14 @@ func RegisterModel[T ModelInterface]() {
 	}
 	t = t.Elem()
 
+	// Validate the model BEFORE adding to registry to prevent invalid models from being registered
+	// Use the zero value instance created at the start of the function
+	if err := ValidateModel(model); err != nil {
+		// Log the error for visibility before panicking
+		defaultLogger.Error("Model registration validation failed", "model", t.Name(), "error", err)
+		panic(fmt.Errorf("typedb: validation failed for model %s during registration: %w", t.Name(), err))
+	}
+
 	registerMutex.Lock()
 	defer registerMutex.Unlock()
 
@@ -60,14 +68,6 @@ func RegisterModel[T ModelInterface]() {
 	}
 
 	registeredModels = append(registeredModels, t)
-
-	// Validate the model immediately to catch missing QueryBy methods early
-	// Use the zero value instance created at the start of the function
-	if err := ValidateModel(model); err != nil {
-		// Log the error for visibility before panicking
-		defaultLogger.Error("Model registration validation failed", "model", t.Name(), "error", err)
-		panic(fmt.Errorf("typedb: validation failed for model %s during registration: %w", t.Name(), err))
-	}
 }
 
 // RegisterModelWithOptions registers a model type with options for validation and behavior configuration.
@@ -93,6 +93,14 @@ func RegisterModelWithOptions[T ModelInterface](opts ModelOptions) {
 	}
 	t = t.Elem()
 
+	// Validate the model BEFORE adding to registry to prevent invalid models from being registered
+	// Use the zero value instance created at the start of the function
+	if err := ValidateModel(model); err != nil {
+		// Log the error for visibility before panicking
+		defaultLogger.Error("Model registration validation failed", "model", t.Name(), "error", err)
+		panic(fmt.Errorf("typedb: validation failed for model %s during registration: %w", t.Name(), err))
+	}
+
 	registerMutex.Lock()
 	defer registerMutex.Unlock()
 
@@ -110,14 +118,6 @@ func RegisterModelWithOptions[T ModelInterface](opts ModelOptions) {
 
 	// Store options for this model type
 	modelOptions[t] = opts
-
-	// Validate the model immediately to catch missing QueryBy methods early
-	// Use the zero value instance created at the start of the function
-	if err := ValidateModel(model); err != nil {
-		// Log the error for visibility before panicking
-		defaultLogger.Error("Model registration validation failed", "model", t.Name(), "error", err)
-		panic(fmt.Errorf("typedb: validation failed for model %s during registration: %w", t.Name(), err))
-	}
 }
 
 // GetModelOptions returns the options for a registered model type.
@@ -143,4 +143,15 @@ func GetRegisteredModels() []reflect.Type {
 	result := make([]reflect.Type, len(registeredModels))
 	copy(result, registeredModels)
 	return result
+}
+
+// ClearRegisteredModels clears all registered models.
+// This is intended for testing purposes only and should not be used in production code.
+// Models should be registered in init() functions and remain registered for the lifetime of the program.
+func ClearRegisteredModels() {
+	registerMutex.Lock()
+	defer registerMutex.Unlock()
+
+	registeredModels = nil
+	modelOptions = make(map[reflect.Type]ModelOptions)
 }
