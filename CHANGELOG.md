@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.23] - 2026-01-20
+
+**Commit:** [`9e29b69`](https://github.com/TheBlackhowling/typedb/commit/9e29b69c62fc6f26dddd5f9d166d5fde083e0404)
+**Pull Request:** [#30](https://github.com/TheBlackhowling/typedb/pull/30)
+
+**Summary:** Add pluggable logging interface to typedb for debugging and monitoring
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.23.md](versions/0.1.23.md)
+
+
 ## [0.1.22] - 2026-01-19
 
 **Commit:** [`2a49cca`](https://github.com/TheBlackhowling/typedb/commit/2a49cca2eaa21d2df3fc6b89516381063e313372)
