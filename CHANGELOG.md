@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.25] - 2026-01-20
+
+**Commit:** [`2dd2464`](https://github.com/TheBlackhowling/typedb/commit/2dd2464772f5c6176eb66aee1d5d3176bb4b1b7b)
+**Pull Request:** [#32](https://github.com/TheBlackhowling/typedb/pull/32)
+
+**Summary:** Refactor executor.go to eliminate code duplication between DB and Tx methods by extracting shared helper functions
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.25.md](versions/0.1.25.md)
+
+
 ## [0.1.24] - 2026-01-20
 
 **Commit:** [`052a9c7`](https://github.com/TheBlackhowling/typedb/commit/052a9c769eb7c370f723042bd4188a802ea93674)
