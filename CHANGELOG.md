@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.29] - 2026-01-20
+
+**Commit:** [`d1a287d`](https://github.com/TheBlackhowling/typedb/commit/d1a287de5533c1a1b9fb99c16721514f1db7ee24)
+**Pull Request:** [#36](https://github.com/TheBlackhowling/typedb/pull/36)
+
+**Summary:** Add validation during RegisterModel and RegisterModelWithOptions to catch missing QueryBy methods early and fail fast at registration time
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.29.md](versions/0.1.29.md)
+
+
 ## [0.1.28] - 2026-01-20
 
 **Commit:** [`fc769f3`](https://github.com/TheBlackhowling/typedb/commit/fc769f3ef5bf04b64ffc5fc7cbd072fd2cea1fae)
