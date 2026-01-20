@@ -374,26 +374,22 @@ func buildReturningClause(driverName, primaryKeyColumn string) string {
 	}
 }
 
-// serializeModelFields collects non-nil/non-zero fields from a model and returns columns and values.
-// Excludes primary key field, fields with db:"-" tag, and fields with dbInsert:"false" tag.
-// Fields with db:"-" are excluded from all database operations (INSERT, UPDATE, SELECT).
-// Fields with dbInsert:"false" are excluded from INSERT but can still be used in UPDATE and SELECT.
-// Returns: column names and field values for serialization.
-func serializeModelFields(model ModelInterface, primaryKeyFieldName string) ([]string, []any, error) {
-	modelValue := reflect.ValueOf(model)
-	if modelValue.Kind() != reflect.Ptr || modelValue.IsNil() {
-		return nil, nil, fmt.Errorf("typedb: model must be a non-nil pointer")
+// fieldVisitor is a callback function that processes each field during struct iteration.
+// Parameters:
+//   - field: the struct field metadata
+//   - fieldValue: the field's reflect.Value
+//   - columnName: the extracted column name (handles dot notation)
+// Returns: true if iteration should continue, false to stop
+type fieldVisitor func(field reflect.StructField, fieldValue reflect.Value, columnName string) bool
+
+// iterateStructFields iterates over struct fields, handling embedded structs and extracting db tags.
+// It calls the visitor function for each valid field (exported, has db tag, not primary key).
+// The visitor receives the field metadata, field value, and extracted column name.
+func iterateStructFields(structType reflect.Type, structValue reflect.Value, primaryKeyFieldName string, visitor fieldVisitor) {
+	if structType.Kind() != reflect.Struct {
+		return
 	}
 
-	modelValue = modelValue.Elem()
-	if modelValue.Kind() != reflect.Struct {
-		return nil, nil, fmt.Errorf("typedb: model must be a pointer to struct")
-	}
-
-	var columns []string
-	var values []any
-
-	modelType := modelValue.Type()
 	var processFields func(reflect.Type, reflect.Value)
 	processFields = func(t reflect.Type, v reflect.Value) {
 		if t.Kind() != reflect.Struct {
@@ -430,18 +426,8 @@ func serializeModelFields(model ModelInterface, primaryKeyFieldName string) ([]s
 				continue
 			}
 
-			// Skip if this is the primary key field (we'll get it from RETURNING)
+			// Skip if this is the primary key field
 			if field.Name == primaryKeyFieldName {
-				continue
-			}
-
-			// Skip fields with dbInsert:"false" tag
-			if field.Tag.Get("dbInsert") == "false" {
-				continue
-			}
-
-			// Skip nil/zero values
-			if isZeroOrNil(fieldValue) {
 				continue
 			}
 
@@ -452,12 +438,50 @@ func serializeModelFields(model ModelInterface, primaryKeyFieldName string) ([]s
 				columnName = parts[len(parts)-1]
 			}
 
-			columns = append(columns, columnName)
-			values = append(values, fieldValue.Interface())
+			// Call visitor - if it returns false, stop iteration
+			if !visitor(field, fieldValue, columnName) {
+				return
+			}
 		}
 	}
 
-	processFields(modelType, modelValue)
+	processFields(structType, structValue)
+}
+
+// serializeModelFields collects non-nil/non-zero fields from a model and returns columns and values.
+// Excludes primary key field, fields with db:"-" tag, and fields with dbInsert:"false" tag.
+// Fields with db:"-" are excluded from all database operations (INSERT, UPDATE, SELECT).
+// Fields with dbInsert:"false" are excluded from INSERT but can still be used in UPDATE and SELECT.
+// Returns: column names and field values for serialization.
+func serializeModelFields(model ModelInterface, primaryKeyFieldName string) ([]string, []any, error) {
+	modelValue := reflect.ValueOf(model)
+	if modelValue.Kind() != reflect.Ptr || modelValue.IsNil() {
+		return nil, nil, fmt.Errorf("typedb: model must be a non-nil pointer")
+	}
+
+	modelValue = modelValue.Elem()
+	if modelValue.Kind() != reflect.Struct {
+		return nil, nil, fmt.Errorf("typedb: model must be a pointer to struct")
+	}
+
+	var columns []string
+	var values []any
+
+	iterateStructFields(modelValue.Type(), modelValue, primaryKeyFieldName, func(field reflect.StructField, fieldValue reflect.Value, columnName string) bool {
+		// Skip fields with dbInsert:"false" tag
+		if field.Tag.Get("dbInsert") == "false" {
+			return true
+		}
+
+		// Skip nil/zero values
+		if isZeroOrNil(fieldValue) {
+			return true
+		}
+
+		columns = append(columns, columnName)
+		values = append(values, fieldValue.Interface())
+		return true
+	})
 
 	return columns, values, nil
 }
