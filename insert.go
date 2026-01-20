@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 )
 
@@ -331,22 +332,78 @@ func generatePlaceholder(driverName string, position int) string {
 	}
 }
 
+// validateIdentifier validates that an identifier contains only allowed characters.
+// Identifiers can contain alphanumeric characters, underscores, dots (for qualified names),
+// and quote characters (which will be escaped). Dangerous characters like semicolons,
+// SQL keywords, etc. are rejected to prevent SQL injection.
+// Returns an error if the identifier is invalid.
+func validateIdentifier(identifier string) error {
+	if identifier == "" {
+		return fmt.Errorf("typedb: identifier cannot be empty")
+	}
+	
+	// Allow alphanumeric, underscore, dot, and quote characters
+	// Reject dangerous characters: semicolon, dash, parentheses, etc.
+	// This regex matches: letters, digits, underscore, dot, and quote characters
+	validPattern := regexp.MustCompile(`^[a-zA-Z0-9_\.\"` + "`" + `]+$`)
+	if !validPattern.MatchString(identifier) {
+		return fmt.Errorf("typedb: invalid identifier '%s': identifiers can only contain alphanumeric characters, underscores, dots, and quote characters", identifier)
+	}
+	
+	// Additional check: reject identifiers that contain SQL injection patterns
+	// Note: We don't reject SQL keywords as they might be legitimate identifier names
+	// The regex above already rejects semicolons, spaces, and other dangerous characters
+	dangerousPatterns := []string{
+		";",
+		"--",
+		"/*",
+		"*/",
+	}
+	for _, pattern := range dangerousPatterns {
+		if strings.Contains(identifier, pattern) {
+			return fmt.Errorf("typedb: invalid identifier '%s': contains potentially dangerous SQL pattern", identifier)
+		}
+	}
+	
+	return nil
+}
+
 // quoteIdentifier quotes an identifier based on driver name.
+// Validates the identifier and escapes quote characters to prevent SQL injection.
+// Panics if identifier is invalid (since identifiers come from struct tags at compile time).
 func quoteIdentifier(driverName, identifier string) string {
+	// Validate identifier first
+	if err := validateIdentifier(identifier); err != nil {
+		// Panic is acceptable here since identifiers come from struct tags (compile-time constants)
+		// If this panics, it indicates a programming error, not a runtime security issue
+		panic(err.Error())
+	}
+	
 	driverName = strings.ToLower(driverName)
 	switch driverName {
 	case "postgres", "sqlite3":
-		return `"` + identifier + `"`
+		// Escape double quotes by doubling them
+		escaped := strings.ReplaceAll(identifier, `"`, `""`)
+		return `"` + escaped + `"`
 	case "mysql":
-		return "`" + identifier + "`"
+		// Escape backticks by doubling them
+		escaped := strings.ReplaceAll(identifier, "`", "``")
+		return "`" + escaped + "`"
 	case "sqlserver", "mssql":
+		// Square brackets don't need escaping, but validate no closing bracket
+		if strings.Contains(identifier, "]") {
+			panic(fmt.Sprintf("typedb: SQL Server identifier cannot contain ']': %s", identifier))
+		}
 		return "[" + identifier + "]"
 	case "oracle":
+		// Escape double quotes by doubling them
+		escaped := strings.ReplaceAll(identifier, `"`, `""`)
 		// Oracle defaults to uppercase, but we'll preserve what's provided
-		return `"` + strings.ToUpper(identifier) + `"`
+		return `"` + strings.ToUpper(escaped) + `"`
 	default:
 		// Default to PostgreSQL style
-		return `"` + identifier + `"`
+		escaped := strings.ReplaceAll(identifier, `"`, `""`)
+		return `"` + escaped + `"`
 	}
 }
 
