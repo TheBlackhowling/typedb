@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.24] - 2026-01-20
+
+**Commit:** [`052a9c7`](https://github.com/TheBlackhowling/typedb/commit/052a9c769eb7c370f723042bd4188a802ea93674)
+**Pull Request:** [#31](https://github.com/TheBlackhowling/typedb/pull/31)
+
+**Summary:** Document when bulk queries (including 50K+ rows) are reasonable to use typedb, explaining that reflection overhead scales linearly with row count
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.24.md](versions/0.1.24.md)
+
+
 ## [0.1.23] - 2026-01-20
 
 **Commit:** [`9e29b69`](https://github.com/TheBlackhowling/typedb/commit/9e29b69c62fc6f26dddd5f9d166d5fde083e0404)
