@@ -29,6 +29,7 @@ func init() {
 // RegisterModel registers a model type for validation.
 // Requires a pointer type (e.g., RegisterModel[*User]()).
 // Models should call this function in their init() functions.
+// Panics if validation fails, as init() functions cannot return errors.
 //
 // Example:
 //
@@ -44,7 +45,7 @@ func RegisterModel[T ModelInterface]() {
 	var model T
 	t := reflect.TypeOf(model)
 	if t.Kind() != reflect.Ptr {
-		panic("typedb: RegisterModel requires a pointer type (e.g., RegisterModel[*User]())")
+		panic(fmt.Errorf("typedb: RegisterModel requires a pointer type (e.g., RegisterModel[*User]())"))
 	}
 	t = t.Elem()
 
@@ -63,13 +64,16 @@ func RegisterModel[T ModelInterface]() {
 	// Validate the model immediately to catch missing QueryBy methods early
 	// Use the zero value instance created at the start of the function
 	if err := ValidateModel(model); err != nil {
-		panic(fmt.Sprintf("typedb: validation failed for model %s during registration: %v", t.Name(), err))
+		// Log the error for visibility before panicking
+		defaultLogger.Error("Model registration validation failed", "model", t.Name(), "error", err)
+		panic(fmt.Errorf("typedb: validation failed for model %s during registration: %w", t.Name(), err))
 	}
 }
 
 // RegisterModelWithOptions registers a model type with options for validation and behavior configuration.
 // Requires a pointer type (e.g., RegisterModelWithOptions[*User](ModelOptions{PartialUpdate: true})).
 // Models should call this function in their init() functions when they need custom behavior.
+// Panics if validation fails, as init() functions cannot return errors.
 //
 // Example:
 //
@@ -85,7 +89,7 @@ func RegisterModelWithOptions[T ModelInterface](opts ModelOptions) {
 	var model T
 	t := reflect.TypeOf(model)
 	if t.Kind() != reflect.Ptr {
-		panic("typedb: RegisterModelWithOptions requires a pointer type (e.g., RegisterModelWithOptions[*User](...))")
+		panic(fmt.Errorf("typedb: RegisterModelWithOptions requires a pointer type (e.g., RegisterModelWithOptions[*User](...))"))
 	}
 	t = t.Elem()
 
@@ -110,7 +114,9 @@ func RegisterModelWithOptions[T ModelInterface](opts ModelOptions) {
 	// Validate the model immediately to catch missing QueryBy methods early
 	// Use the zero value instance created at the start of the function
 	if err := ValidateModel(model); err != nil {
-		panic(fmt.Sprintf("typedb: validation failed for model %s during registration: %v", t.Name(), err))
+		// Log the error for visibility before panicking
+		defaultLogger.Error("Model registration validation failed", "model", t.Name(), "error", err)
+		panic(fmt.Errorf("typedb: validation failed for model %s during registration: %w", t.Name(), err))
 	}
 }
 
