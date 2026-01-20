@@ -3,26 +3,21 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/TheBlackHowling/typedb"
-	_ "github.com/mattn/go-sqlite3" // SQLite driver
 )
 
 // TestSQLite_InsertAndReturn_Security_ValidIdentifiers tests InsertAndReturn with various valid identifier formats
 func TestSQLite_InsertAndReturn_Security_ValidIdentifiers(t *testing.T) {
-	ctx := context.Background()
-	db, err := typedb.Open("sqlite3", getTestDSN())
-	if err != nil {
-		t.Fatalf("Failed to connect to database: %v", err)
-	}
+	db := setupTestDB(t)
 	defer db.Close()
+	defer os.Remove(getTestDSN())
 
-	if err := db.Ping(ctx); err != nil {
-		t.Fatalf("Database ping failed: %v", err)
-	}
+	ctx := context.Background()
 
 	// Get first user for foreign key
 	firstUser, err := typedb.QueryFirst[*User](ctx, db, "SELECT id, name, email, created_at FROM users ORDER BY id LIMIT 1")
@@ -89,16 +84,11 @@ func TestSQLite_InsertAndReturn_Security_ValidIdentifiers(t *testing.T) {
 
 // TestSQLite_InsertAndReturn_Security_QuoteHandling tests that identifiers with quotes are handled correctly
 func TestSQLite_InsertAndReturn_Security_QuoteHandling(t *testing.T) {
-	ctx := context.Background()
-	db, err := typedb.Open("sqlite3", getTestDSN())
-	if err != nil {
-		t.Fatalf("Failed to connect to database: %v", err)
-	}
+	db := setupTestDB(t)
 	defer db.Close()
+	defer os.Remove(getTestDSN())
 
-	if err := db.Ping(ctx); err != nil {
-		t.Fatalf("Database ping failed: %v", err)
-	}
+	ctx := context.Background()
 
 	firstUser, err := typedb.QueryFirst[*User](ctx, db, "SELECT id, name, email, created_at FROM users ORDER BY id LIMIT 1")
 	if err != nil || firstUser == nil {
