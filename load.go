@@ -161,7 +161,9 @@ func LoadByComposite[T ModelInterface](ctx context.Context, exec Executor, model
 	// Find and call QueryBy{Field1}{Field2}...() method
 	_, methodFound := findMethod(model, methodName)
 	if !methodFound {
-		return fmt.Errorf("typedb: %s() method not found", methodName)
+		// Build helpful error message with expected method name, field names, and signature guidance
+		fieldNamesStr := strings.Join(fieldNames, ", ")
+		return fmt.Errorf("typedb: %s() method not found. Composite key %q requires a method named %s() that returns a SQL query string. Fields are sorted alphabetically: %s.", methodName, compositeName, methodName, fieldNamesStr)
 	}
 
 	// Call method to get query string
