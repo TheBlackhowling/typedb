@@ -12,6 +12,7 @@ func TestDBStruct(t *testing.T) {
 	db := &DB{
 		db:      nil, // Will be set in executor.go
 		timeout: 5 * time.Second,
+		logger:  GetLogger(),
 	}
 
 	if db.timeout != 5*time.Second {
@@ -24,6 +25,7 @@ func TestTxStruct(t *testing.T) {
 	tx := &Tx{
 		tx:      nil, // Will be set in executor.go
 		timeout: 5 * time.Second,
+		logger:  GetLogger(),
 	}
 
 	if tx.timeout != 5*time.Second {
