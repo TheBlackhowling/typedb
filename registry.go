@@ -1,6 +1,7 @@
 package typedb
 
 import (
+	"fmt"
 	"reflect"
 	"sync"
 )
@@ -58,6 +59,12 @@ func RegisterModel[T ModelInterface]() {
 	}
 
 	registeredModels = append(registeredModels, t)
+
+	// Validate the model immediately to catch missing QueryBy methods early
+	// Use the zero value instance created at the start of the function
+	if err := ValidateModel(model); err != nil {
+		panic(fmt.Sprintf("typedb: validation failed for model %s during registration: %v", t.Name(), err))
+	}
 }
 
 // RegisterModelWithOptions registers a model type with options for validation and behavior configuration.
@@ -99,6 +106,12 @@ func RegisterModelWithOptions[T ModelInterface](opts ModelOptions) {
 
 	// Store options for this model type
 	modelOptions[t] = opts
+
+	// Validate the model immediately to catch missing QueryBy methods early
+	// Use the zero value instance created at the start of the function
+	if err := ValidateModel(model); err != nil {
+		panic(fmt.Sprintf("typedb: validation failed for model %s during registration: %v", t.Name(), err))
+	}
 }
 
 // GetModelOptions returns the options for a registered model type.

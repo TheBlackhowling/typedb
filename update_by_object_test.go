@@ -32,6 +32,10 @@ func (m *UpdateModelWithDbInsertFalse) TableName() string {
 	return "users"
 }
 
+func (m *UpdateModelWithDbInsertFalse) QueryByID() string {
+	return "SELECT id, name, email, updated_at FROM users WHERE id = $1"
+}
+
 func init() {
 	RegisterModel[*UpdateModelWithDbInsertFalse]()
 }
@@ -49,12 +53,20 @@ func (m *UpdateModelWithBothTags) TableName() string {
 	return "users"
 }
 
+func (m *UpdateModelWithBothTags) QueryByID() string {
+	return "SELECT id, name, email, created_at FROM users WHERE id = $1"
+}
+
 func init() {
 	RegisterModel[*UpdateModelWithBothTags]()
 }
 
 func (m *UpdateModelWithSkipTag) TableName() string {
 	return "users"
+}
+
+func (m *UpdateModelWithSkipTag) QueryByID() string {
+	return "SELECT id, name, email, created_at FROM users WHERE id = $1"
 }
 
 func init() {
@@ -74,6 +86,10 @@ func (m *UpdateModelWithSkipTagValue) TableName() string {
 	return "users"
 }
 
+func (m *UpdateModelWithSkipTagValue) QueryByID() string {
+	return "SELECT id, name, email, updated_at FROM users WHERE id = $1"
+}
+
 func init() {
 	RegisterModel[*UpdateModelWithSkipTagValue]()
 }
@@ -91,6 +107,10 @@ func (m *UpdateModelWithAutoTimestamp) TableName() string {
 	return "users"
 }
 
+func (m *UpdateModelWithAutoTimestamp) QueryByID() string {
+	return "SELECT id, name, email, updated_at FROM users WHERE id = $1"
+}
+
 func init() {
 	RegisterModel[*UpdateModelWithAutoTimestamp]()
 }
@@ -105,6 +125,10 @@ type UpdateModelWithPartialUpdate struct {
 
 func (m *UpdateModelWithPartialUpdate) TableName() string {
 	return "users"
+}
+
+func (m *UpdateModelWithPartialUpdate) QueryByID() string {
+	return "SELECT id, name, email FROM users WHERE id = $1"
 }
 
 func init() {
