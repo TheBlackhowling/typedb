@@ -9,6 +9,14 @@ import (
 	"time"
 )
 
+// sqlQueryExecutor is an internal interface for SQL query operations.
+// Both *sql.DB and *sql.Tx implement these methods.
+type sqlQueryExecutor interface {
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
+	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
+}
+
 // NewDB creates a DB instance from an existing *sql.DB connection.
 // The timeout parameter sets the default timeout for operations.
 // The driverName parameter specifies the database driver name (e.g., "postgres", "mysql").
@@ -32,38 +40,79 @@ func NewDBWithLogger(db *sql.DB, driverName string, timeout time.Duration, logge
 	}
 }
 
+// getLoggerHelper returns the logger, defaulting to no-op if nil.
+// This provides defensive programming against manually constructed instances.
+func getLoggerHelper(logger Logger) Logger {
+	if logger == nil {
+		return defaultLogger
+	}
+	return logger
+}
+
 // getLogger returns the logger for this DB instance, defaulting to no-op if nil.
 // This provides defensive programming against manually constructed DB instances.
 func (d *DB) getLogger() Logger {
-	if d.logger == nil {
-		return defaultLogger
-	}
-	return d.logger
+	return getLoggerHelper(d.logger)
 }
 
-// withTimeout ensures we always have a bounded context per DB operation.
+// withTimeoutHelper ensures we always have a bounded context per operation.
 // If the context already has a deadline, it returns the context as-is.
-// Otherwise, it creates a new context with the DB's default timeout.
-func (d *DB) withTimeout(ctx context.Context) (context.Context, context.CancelFunc) {
+// Otherwise, it creates a new context with the provided timeout.
+func withTimeoutHelper(ctx context.Context, timeout time.Duration) (context.Context, context.CancelFunc) {
 	if _, has := ctx.Deadline(); has {
 		return ctx, func() {}
 	}
-	to := d.timeout
+	to := timeout
 	if to <= 0 {
 		to = 5 * time.Second
 	}
 	return context.WithTimeout(ctx, to)
 }
 
+// withTimeout ensures we always have a bounded context per DB operation.
+// If the context already has a deadline, it returns the context as-is.
+// Otherwise, it creates a new context with the DB's default timeout.
+func (d *DB) withTimeout(ctx context.Context) (context.Context, context.CancelFunc) {
+	return withTimeoutHelper(ctx, d.timeout)
+}
+
+// execHelper executes a query that doesn't return rows, with logging and timeout handling.
+func execHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger, timeout time.Duration, query string, args ...any) (sql.Result, error) {
+	logger = getLoggerHelper(logger)
+	logger.Debug("Executing query", "query", query, "args", args)
+	ctx, cancel := withTimeoutHelper(ctx, timeout)
+	defer cancel()
+	result, err := exec.ExecContext(ctx, query, args...)
+	if err != nil {
+		logger.Error("Query execution failed", "query", query, "args", args, "error", err)
+		return nil, err
+	}
+	return result, nil
+}
+
 // Exec implements Executor.Exec
 // Executes a query that doesn't return rows (INSERT/UPDATE/DELETE/DDL).
 func (d *DB) Exec(ctx context.Context, query string, args ...any) (sql.Result, error) {
-	d.getLogger().Debug("Executing query", "query", query, "args", args)
-	ctx, cancel := d.withTimeout(ctx)
+	return execHelper(ctx, d.db, d.logger, d.timeout, query, args...)
+}
+
+// queryAllHelper executes a query and returns all rows as []map[string]any, with logging and timeout handling.
+func queryAllHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger, timeout time.Duration, query string, args ...any) ([]map[string]any, error) {
+	logger = getLoggerHelper(logger)
+	logger.Debug("Querying all rows", "query", query, "args", args)
+	ctx, cancel := withTimeoutHelper(ctx, timeout)
 	defer cancel()
-	result, err := d.db.ExecContext(ctx, query, args...)
+
+	rows, err := exec.QueryContext(ctx, query, args...)
 	if err != nil {
-		d.getLogger().Error("Query execution failed", "query", query, "args", args, "error", err)
+		logger.Error("Query failed", "query", query, "args", args, "error", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	result, err := scanRowsToMaps(rows)
+	if err != nil {
+		logger.Error("Failed to scan rows", "query", query, "error", err)
 		return nil, err
 	}
 	return result, nil
@@ -72,42 +121,25 @@ func (d *DB) Exec(ctx context.Context, query string, args ...any) (sql.Result, e
 // QueryAll implements Executor.QueryAll
 // Returns all rows as []map[string]any.
 func (d *DB) QueryAll(ctx context.Context, query string, args ...any) ([]map[string]any, error) {
-	d.getLogger().Debug("Querying all rows", "query", query, "args", args)
-	ctx, cancel := d.withTimeout(ctx)
-	defer cancel()
-
-	rows, err := d.db.QueryContext(ctx, query, args...)
-	if err != nil {
-		d.getLogger().Error("Query failed", "query", query, "args", args, "error", err)
-		return nil, err
-	}
-	defer rows.Close()
-
-	result, err := scanRowsToMaps(rows)
-	if err != nil {
-		d.getLogger().Error("Failed to scan rows", "query", query, "error", err)
-		return nil, err
-	}
-	return result, nil
+	return queryAllHelper(ctx, d.db, d.logger, d.timeout, query, args...)
 }
 
-// QueryRowMap implements Executor.QueryRowMap
-// Returns the first row as map[string]any.
-// Returns ErrNotFound if no rows are returned.
-func (d *DB) QueryRowMap(ctx context.Context, query string, args ...any) (map[string]any, error) {
-	ctx, cancel := d.withTimeout(ctx)
+// queryRowMapHelper executes a query and returns the first row as map[string]any, with logging and timeout handling.
+func queryRowMapHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger, timeout time.Duration, query string, args ...any) (map[string]any, error) {
+	logger = getLoggerHelper(logger)
+	ctx, cancel := withTimeoutHelper(ctx, timeout)
 	defer cancel()
 
-	rows, err := d.db.QueryContext(ctx, query, args...)
+	rows, err := exec.QueryContext(ctx, query, args...)
 	if err != nil {
-		d.getLogger().Error("Query failed", "query", query, "args", args, "error", err)
+		logger.Error("Query failed", "query", query, "args", args, "error", err)
 		return nil, err
 	}
 	defer rows.Close()
 
 	if !rows.Next() {
 		if err := rows.Err(); err != nil {
-			d.getLogger().Error("Row iteration error", "query", query, "error", err)
+			logger.Error("Row iteration error", "query", query, "error", err)
 			return nil, err
 		}
 		return nil, ErrNotFound
@@ -115,35 +147,76 @@ func (d *DB) QueryRowMap(ctx context.Context, query string, args ...any) (map[st
 
 	row, err := scanRowToMap(rows)
 	if err != nil {
-		d.getLogger().Error("Failed to scan row", "query", query, "error", err)
+		logger.Error("Failed to scan row", "query", query, "error", err)
 		return nil, err
 	}
 
 	// Ensure no more rows (shouldn't happen for single row queries, but check anyway)
 	if rows.Next() {
 		err := fmt.Errorf("typedb: QueryRowMap returned multiple rows")
-		d.getLogger().Error("Multiple rows returned", "query", query, "error", err)
+		logger.Error("Multiple rows returned", "query", query, "error", err)
 		return nil, err
 	}
 
 	return row, nil
 }
 
+// QueryRowMap implements Executor.QueryRowMap
+// Returns the first row as map[string]any.
+// Returns ErrNotFound if no rows are returned.
+func (d *DB) QueryRowMap(ctx context.Context, query string, args ...any) (map[string]any, error) {
+	return queryRowMapHelper(ctx, d.db, d.logger, d.timeout, query, args...)
+}
+
+// getIntoHelper scans a single row into dest pointers, with logging and timeout handling.
+func getIntoHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger, timeout time.Duration, query string, args []any, dest ...any) error {
+	logger = getLoggerHelper(logger)
+	logger.Debug("Scanning row into destination", "query", query, "args", args)
+	ctx, cancel := withTimeoutHelper(ctx, timeout)
+	defer cancel()
+
+	err := exec.QueryRowContext(ctx, query, args...).Scan(dest...)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			logger.Debug("No rows found", "query", query)
+			return ErrNotFound
+		}
+		logger.Error("Failed to scan row", "query", query, "args", args, "error", err)
+		return err
+	}
+	return nil
+}
+
 // GetInto implements Executor.GetInto
 // Scans a single row into dest pointers.
 // Returns ErrNotFound if no rows are returned.
 func (d *DB) GetInto(ctx context.Context, query string, args []any, dest ...any) error {
-	d.getLogger().Debug("Scanning row into destination", "query", query, "args", args)
-	ctx, cancel := d.withTimeout(ctx)
+	return getIntoHelper(ctx, d.db, d.logger, d.timeout, query, args, dest...)
+}
+
+// queryDoHelper executes a query and calls scan for each row (streaming), with logging and timeout handling.
+func queryDoHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger, timeout time.Duration, query string, args []any, scan func(rows *sql.Rows) error) error {
+	logger = getLoggerHelper(logger)
+	logger.Debug("Executing streaming query", "query", query, "args", args)
+	ctx, cancel := withTimeoutHelper(ctx, timeout)
 	defer cancel()
 
-	err := d.db.QueryRowContext(ctx, query, args...).Scan(dest...)
+	rows, err := exec.QueryContext(ctx, query, args...)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			d.getLogger().Debug("No rows found", "query", query)
-			return ErrNotFound
+		logger.Error("Query failed", "query", query, "args", args, "error", err)
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		if err := scan(rows); err != nil {
+			logger.Error("Scan callback failed", "query", query, "error", err)
+			return err
 		}
-		d.getLogger().Error("Failed to scan row", "query", query, "args", args, "error", err)
+	}
+
+	if err := rows.Err(); err != nil {
+		logger.Error("Row iteration error", "query", query, "error", err)
 		return err
 	}
 	return nil
@@ -152,29 +225,7 @@ func (d *DB) GetInto(ctx context.Context, query string, args []any, dest ...any)
 // QueryDo implements Executor.QueryDo
 // Executes a query and calls scan for each row (streaming).
 func (d *DB) QueryDo(ctx context.Context, query string, args []any, scan func(rows *sql.Rows) error) error {
-	d.getLogger().Debug("Executing streaming query", "query", query, "args", args)
-	ctx, cancel := d.withTimeout(ctx)
-	defer cancel()
-
-	rows, err := d.db.QueryContext(ctx, query, args...)
-	if err != nil {
-		d.getLogger().Error("Query failed", "query", query, "args", args, "error", err)
-		return err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		if err := scan(rows); err != nil {
-			d.getLogger().Error("Scan callback failed", "query", query, "error", err)
-			return err
-		}
-	}
-
-	if err := rows.Err(); err != nil {
-		d.getLogger().Error("Row iteration error", "query", query, "error", err)
-		return err
-	}
-	return nil
+	return queryDoHelper(ctx, d.db, d.logger, d.timeout, query, args, scan)
 }
 
 // Close closes the database connection.
@@ -246,111 +297,27 @@ func (d *DB) WithTx(ctx context.Context, fn func(*Tx) error, opts *sql.TxOptions
 
 // Exec implements Executor.Exec for transactions
 func (t *Tx) Exec(ctx context.Context, query string, args ...any) (sql.Result, error) {
-	ctx, cancel := t.withTimeout(ctx)
-	defer cancel()
-	result, err := t.tx.ExecContext(ctx, query, args...)
-	if err != nil {
-		t.logger.Error("Query execution failed in transaction", "query", query, "args", args, "error", err)
-		return nil, err
-	}
-	return result, nil
+	return execHelper(ctx, t.tx, t.logger, t.timeout, query, args...)
 }
 
 // QueryAll implements Executor.QueryAll for transactions
 func (t *Tx) QueryAll(ctx context.Context, query string, args ...any) ([]map[string]any, error) {
-	t.getLogger().Debug("Querying all rows in transaction", "query", query, "args", args)
-	ctx, cancel := t.withTimeout(ctx)
-	defer cancel()
-
-	rows, err := t.tx.QueryContext(ctx, query, args...)
-	if err != nil {
-		t.logger.Error("Query failed in transaction", "query", query, "args", args, "error", err)
-		return nil, err
-	}
-	defer rows.Close()
-
-	result, err := scanRowsToMaps(rows)
-	if err != nil {
-		t.logger.Error("Failed to scan rows in transaction", "query", query, "error", err)
-		return nil, err
-	}
-	return result, nil
+	return queryAllHelper(ctx, t.tx, t.logger, t.timeout, query, args...)
 }
 
 // QueryRowMap implements Executor.QueryRowMap for transactions
 func (t *Tx) QueryRowMap(ctx context.Context, query string, args ...any) (map[string]any, error) {
-	ctx, cancel := t.withTimeout(ctx)
-	defer cancel()
-
-	rows, err := t.tx.QueryContext(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	if !rows.Next() {
-		if err := rows.Err(); err != nil {
-			return nil, err
-		}
-		return nil, ErrNotFound
-	}
-
-	row, err := scanRowToMap(rows)
-	if err != nil {
-		return nil, err
-	}
-
-	// Ensure no more rows
-	if rows.Next() {
-		return nil, fmt.Errorf("typedb: QueryRowMap returned multiple rows")
-	}
-
-	return row, nil
+	return queryRowMapHelper(ctx, t.tx, t.logger, t.timeout, query, args...)
 }
 
 // GetInto implements Executor.GetInto for transactions
 func (t *Tx) GetInto(ctx context.Context, query string, args []any, dest ...any) error {
-	t.getLogger().Debug("Scanning row into destination in transaction", "query", query, "args", args)
-	ctx, cancel := t.withTimeout(ctx)
-	defer cancel()
-
-	err := t.tx.QueryRowContext(ctx, query, args...).Scan(dest...)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			t.getLogger().Debug("No rows found in transaction", "query", query)
-			return ErrNotFound
-		}
-		t.logger.Error("Failed to scan row in transaction", "query", query, "args", args, "error", err)
-		return err
-	}
-	return nil
+	return getIntoHelper(ctx, t.tx, t.logger, t.timeout, query, args, dest...)
 }
 
 // QueryDo implements Executor.QueryDo for transactions
 func (t *Tx) QueryDo(ctx context.Context, query string, args []any, scan func(rows *sql.Rows) error) error {
-	t.getLogger().Debug("Executing streaming query in transaction", "query", query, "args", args)
-	ctx, cancel := t.withTimeout(ctx)
-	defer cancel()
-
-	rows, err := t.tx.QueryContext(ctx, query, args...)
-	if err != nil {
-		t.logger.Error("Query failed in transaction", "query", query, "args", args, "error", err)
-		return err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		if err := scan(rows); err != nil {
-			t.logger.Error("Scan callback failed in transaction", "query", query, "error", err)
-			return err
-		}
-	}
-
-	if err := rows.Err(); err != nil {
-		t.logger.Error("Row iteration error in transaction", "query", query, "error", err)
-		return err
-	}
-	return nil
+	return queryDoHelper(ctx, t.tx, t.logger, t.timeout, query, args, scan)
 }
 
 // Commit commits the transaction.
@@ -378,22 +345,12 @@ func (t *Tx) Rollback() error {
 // getLogger returns the logger for this Tx instance, defaulting to no-op if nil.
 // This provides defensive programming against manually constructed Tx instances.
 func (t *Tx) getLogger() Logger {
-	if t.logger == nil {
-		return defaultLogger
-	}
-	return t.logger
+	return getLoggerHelper(t.logger)
 }
 
 // withTimeout ensures we always have a bounded context per Tx operation.
 func (t *Tx) withTimeout(ctx context.Context) (context.Context, context.CancelFunc) {
-	if _, has := ctx.Deadline(); has {
-		return ctx, func() {}
-	}
-	to := t.timeout
-	if to <= 0 {
-		to = 5 * time.Second
-	}
-	return context.WithTimeout(ctx, to)
+	return withTimeoutHelper(ctx, t.timeout)
 }
 
 // scanRowsToMaps scans all rows into a slice of maps.
