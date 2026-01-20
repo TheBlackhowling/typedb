@@ -217,96 +217,40 @@ func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName str
 	var values []any
 	var autoUpdateColumns []string
 
-	modelType := modelValue.Type()
-	var processFields func(reflect.Type, reflect.Value)
-	processFields = func(t reflect.Type, v reflect.Value) {
-		if t.Kind() != reflect.Struct {
-			return
+	iterateStructFields(modelValue.Type(), modelValue, primaryKeyFieldName, func(field reflect.StructField, fieldValue reflect.Value, columnName string) bool {
+		// Check for dbUpdate tag
+		dbUpdateTag := field.Tag.Get("dbUpdate")
+		
+		// Skip fields with dbUpdate:"false" tag
+		if dbUpdateTag == "false" {
+			return true
 		}
 
-		for i := 0; i < t.NumField(); i++ {
-			field := t.Field(i)
-			if !field.IsExported() {
-				continue
+		// Handle fields with dbUpdate:"auto-timestamp" tag - use database function
+		if dbUpdateTag == "auto-timestamp" {
+			// Include auto-timestamp fields if partial update is disabled, or if field has changed
+			if changedFields == nil || changedFields[columnName] {
+				autoUpdateColumns = append(autoUpdateColumns, columnName)
 			}
-
-			fieldValue := v.Field(i)
-
-			// Handle embedded structs
-			if field.Anonymous {
-				embeddedType := field.Type
-				if embeddedType.Kind() == reflect.Ptr {
-					if fieldValue.IsNil() {
-						continue
-					}
-					embeddedType = embeddedType.Elem()
-					fieldValue = fieldValue.Elem()
-				}
-				if embeddedType.Kind() == reflect.Struct {
-					processFields(embeddedType, fieldValue)
-					continue
-				}
-			}
-
-			// Get db tag
-			dbTag := field.Tag.Get("db")
-			if dbTag == "" || dbTag == "-" {
-				continue
-			}
-
-			// Skip if this is the primary key field
-			if field.Name == primaryKeyFieldName {
-				continue
-			}
-
-			// Check for dbUpdate tag
-			dbUpdateTag := field.Tag.Get("dbUpdate")
-			
-			// Skip fields with dbUpdate:"false" tag
-			if dbUpdateTag == "false" {
-				continue
-			}
-
-			// Handle fields with dbUpdate:"auto-timestamp" tag - use database function
-			if dbUpdateTag == "auto-timestamp" {
-				// Extract column name (handle dot notation - use last part)
-				columnName := dbTag
-				if strings.Contains(dbTag, ".") {
-					parts := strings.Split(dbTag, ".")
-					columnName = parts[len(parts)-1]
-				}
-				// Include auto-timestamp fields if partial update is disabled, or if field has changed
-				if changedFields == nil || changedFields[columnName] {
-					autoUpdateColumns = append(autoUpdateColumns, columnName)
-				}
-				continue
-			}
-
-			// Extract column name (handle dot notation - use last part)
-			columnName := dbTag
-			if strings.Contains(dbTag, ".") {
-				parts := strings.Split(dbTag, ".")
-				columnName = parts[len(parts)-1]
-			}
-
-			// If partial update is enabled, only include changed fields
-			if changedFields != nil {
-				if !changedFields[columnName] {
-					continue
-				}
-			}
-
-			// Skip nil/zero values for regular fields (always exclude zero values)
-			if isZeroOrNil(fieldValue) {
-				continue
-			}
-
-			columns = append(columns, columnName)
-			values = append(values, fieldValue.Interface())
+			return true
 		}
-	}
 
-	processFields(modelType, modelValue)
+		// If partial update is enabled, only include changed fields
+		if changedFields != nil {
+			if !changedFields[columnName] {
+				return true
+			}
+		}
+
+		// Skip nil/zero values for regular fields (always exclude zero values)
+		if isZeroOrNil(fieldValue) {
+			return true
+		}
+
+		columns = append(columns, columnName)
+		values = append(values, fieldValue.Interface())
+		return true
+	})
 
 	return columns, values, autoUpdateColumns, nil
 }
@@ -395,60 +339,11 @@ func getChangedFields(model ModelInterface, primaryKeyFieldName string) (map[str
 // Excludes primary key and fields with db:"-" tag.
 func buildFieldMapForComparison(structValue reflect.Value, primaryKeyFieldName string) map[string]reflect.Value {
 	fieldMap := make(map[string]reflect.Value)
-	structType := structValue.Type()
 
-	var processFields func(reflect.Type, reflect.Value)
-	processFields = func(t reflect.Type, v reflect.Value) {
-		if t.Kind() != reflect.Struct {
-			return
-		}
+	iterateStructFields(structValue.Type(), structValue, primaryKeyFieldName, func(field reflect.StructField, fieldValue reflect.Value, columnName string) bool {
+		fieldMap[columnName] = fieldValue
+		return true
+	})
 
-		for i := 0; i < t.NumField(); i++ {
-			field := t.Field(i)
-			if !field.IsExported() {
-				continue
-			}
-
-			fieldValue := v.Field(i)
-
-			// Handle embedded structs
-			if field.Anonymous {
-				embeddedType := field.Type
-				if embeddedType.Kind() == reflect.Ptr {
-					if fieldValue.IsNil() {
-						continue
-					}
-					embeddedType = embeddedType.Elem()
-					fieldValue = fieldValue.Elem()
-				}
-				if embeddedType.Kind() == reflect.Struct {
-					processFields(embeddedType, fieldValue)
-					continue
-				}
-			}
-
-			// Get db tag
-			dbTag := field.Tag.Get("db")
-			if dbTag == "" || dbTag == "-" {
-				continue
-			}
-
-			// Skip primary key field
-			if field.Name == primaryKeyFieldName {
-				continue
-			}
-
-			// Extract column name (handle dot notation - use last part)
-			columnName := dbTag
-			if strings.Contains(dbTag, ".") {
-				parts := strings.Split(dbTag, ".")
-				columnName = parts[len(parts)-1]
-			}
-
-			fieldMap[columnName] = fieldValue
-		}
-	}
-
-	processFields(structType, structValue)
 	return fieldMap
 }
