@@ -69,19 +69,8 @@ func InsertAndReturn[T ModelInterface](ctx context.Context, exec Executor, inser
 		returningPart := insertQuery[returningIdx+9:] // Skip "RETURNING "
 		returningPart = strings.TrimSpace(returningPart)
 		
-		// Execute INSERT without RETURNING
-		_, err := exec.Exec(ctx, insertPart, args...)
-		if err != nil {
-			return zero, fmt.Errorf("typedb: InsertAndReturn failed to execute INSERT: %w", err)
-		}
-		
-		// Parse table name from INSERT query to build SELECT
+		// Parse table name from INSERT query BEFORE executing to validate it
 		// INSERT INTO table_name ... -> SELECT ... FROM table_name WHERE ...
-		// For Oracle, we'll use MAX(id) approach since we can't easily build WHERE clause
-		// But we need to return the columns specified in RETURNING
-		// Actually, we can query back using MAX(id) and then SELECT those columns
-		
-		// Extract table name from INSERT query
 		insertUpper := strings.ToUpper(insertPart)
 		tableStart := strings.Index(insertUpper, "INTO ")
 		if tableStart == -1 {
@@ -95,11 +84,17 @@ func InsertAndReturn[T ModelInterface](ctx context.Context, exec Executor, inser
 		tableName := insertPart[tableStart : tableStart+tableEnd]
 		tableName = strings.TrimSpace(tableName)
 		
-		// Validate and quote table name to prevent SQL injection
+		// Validate table name BEFORE executing INSERT to catch injection attempts early
 		if err := validateIdentifier(tableName); err != nil {
 			return zero, fmt.Errorf("typedb: InsertAndReturn invalid table name: %w", err)
 		}
 		quotedTableName := quoteIdentifier(driverName, tableName)
+		
+		// Execute INSERT without RETURNING
+		_, err := exec.Exec(ctx, insertPart, args...)
+		if err != nil {
+			return zero, fmt.Errorf("typedb: InsertAndReturn failed to execute INSERT: %w", err)
+		}
 		
 		// Build SELECT query using RETURNING columns and MAX(id) to get the last inserted row
 		// Parse RETURNING columns (handle "RETURNING col1, col2, ...")
