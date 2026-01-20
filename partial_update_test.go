@@ -24,6 +24,10 @@ func (m *PartialUpdateModelWithComplexTypes) TableName() string {
 	return "users"
 }
 
+func (m *PartialUpdateModelWithComplexTypes) QueryByID() string {
+	return "SELECT id, name, email, age, metadata, tags, settings, is_active, score, preferences FROM users WHERE id = $1"
+}
+
 func init() {
 	RegisterModelWithOptions[*PartialUpdateModelWithComplexTypes](ModelOptions{PartialUpdate: true})
 }

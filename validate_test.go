@@ -1,6 +1,7 @@
 package typedb
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -300,38 +301,29 @@ func TestValidateAllRegistered_InvalidModels(t *testing.T) {
 	registeredModels = nil
 
 	RegisterModel[*ValidUser]()
-	RegisterModel[*MissingPrimaryMethod]()
-
-	err := ValidateAllRegistered()
-	if err == nil {
-		t.Error("Expected error for invalid models")
-	}
-
-	validationErrors, ok := err.(*ValidationErrors)
-	if !ok {
-		t.Fatalf("Expected ValidationErrors, got %T", err)
-	}
-
-	if len(validationErrors.Errors) == 0 {
-		t.Error("Expected at least one validation error")
-	}
-
-	// Check that MissingPrimaryMethod has errors (ValidUser should not appear since it passed)
-	foundInvalidModel := false
-	for _, ve := range validationErrors.Errors {
-		if ve.ModelName == "ValidUser" {
-			t.Error("ValidUser should not appear in errors since it passed validation")
-		}
-		if ve.ModelName == "MissingPrimaryMethod" {
-			foundInvalidModel = true
-			if len(ve.Errors) == 0 {
-				t.Error("MissingPrimaryMethod should have errors")
+	
+	// Registration-time validation should panic for invalid models
+	panicked := false
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				panicked = true
+				// Verify the panic message contains validation error
+				panicMsg := fmt.Sprintf("%v", r)
+				if !strings.Contains(panicMsg, "validation failed") {
+					t.Errorf("Expected panic message to contain 'validation failed', got: %s", panicMsg)
+				}
+				if !strings.Contains(panicMsg, "MissingPrimaryMethod") {
+					t.Errorf("Expected panic message to contain 'MissingPrimaryMethod', got: %s", panicMsg)
+				}
 			}
-		}
-	}
-
-	if !foundInvalidModel {
-		t.Error("Expected to find MissingPrimaryMethod in validation results")
+		}()
+		
+		RegisterModel[*MissingPrimaryMethod]()
+	}()
+	
+	if !panicked {
+		t.Error("Expected panic when registering invalid model MissingPrimaryMethod")
 	}
 }
 
@@ -356,15 +348,33 @@ func TestMustValidateAllRegistered_Panic(t *testing.T) {
 	registeredModels = nil
 	ResetValidation()
 
-	RegisterModel[*MissingPrimaryMethod]()
-
-	// Should panic
+	// Registration-time validation should panic for invalid models
+	panicked := false
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				panicked = true
+			}
+		}()
+		
+		RegisterModel[*MissingPrimaryMethod]()
+	}()
+	
+	if !panicked {
+		t.Error("Expected panic when registering invalid model MissingPrimaryMethod")
+	}
+	
+	// Since registration panics, MustValidateAllRegistered should not be called
+	// But if it were called with valid models, it should not panic
+	registeredModels = nil
+	RegisterModel[*ValidUser]()
+	
 	defer func() {
-		if r := recover(); r == nil {
-			t.Error("MustValidateAllRegistered should panic for invalid models")
+		if r := recover(); r != nil {
+			t.Errorf("MustValidateAllRegistered should not panic for valid models, panicked with: %v", r)
 		}
 	}()
-
+	
 	MustValidateAllRegistered()
 }
 
