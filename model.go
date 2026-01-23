@@ -18,7 +18,7 @@ func newAtUnsafe(typ reflect.Type, ptr unsafe.Pointer) reflect.Value {
 // deserialize deserializes a row into the model.
 // Delegates to the internal deserialize function.
 // When called on an embedded Model, it converts the *Model receiver to the outer struct pointer.
-// This method is unexported - users should use QueryAll, QueryFirst, QueryOne, InsertAndReturn, Load, etc. instead.
+// This method is unexported - users should use QueryAll, QueryFirst, QueryOne, InsertAndLoad, Load, etc. instead.
 //
 // Example (internal usage - users should use QueryAll instead):
 //

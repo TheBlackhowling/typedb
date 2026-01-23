@@ -53,7 +53,7 @@ func TestPostgreSQL_Insert(t *testing.T) {
 	}
 }
 
-func TestPostgreSQL_InsertAndReturn(t *testing.T) {
+func TestPostgreSQL_InsertAndLoad(t *testing.T) {
 	ctx := context.Background()
 	db, err := typedb.Open("postgres", getTestDSN())
 	if err != nil {
@@ -71,28 +71,36 @@ func TestPostgreSQL_InsertAndReturn(t *testing.T) {
 		t.Fatal("Need at least one user in database for foreign key")
 	}
 
-	// Insert post with RETURNING clause
-	insertedPost, err := typedb.InsertAndReturn[*Post](ctx, db,
-		"INSERT INTO posts (user_id, title, content, tags, metadata, created_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, user_id, title, content, tags, metadata, created_at",
-		firstUser.ID, "Test Post", "Test content", "{\"go\",\"database\"}", "{\"test\":true}", "2024-01-01T00:00:00Z")
+	// Insert post using InsertAndLoad
+	newPost := &Post{
+		UserID:   firstUser.ID,
+		Title:    "Test Post",
+		Content:  "Test content",
+		Tags:     `{"go","database"}`,
+		Metadata: `{"test":true}`,
+	}
+	returnedPost, err := typedb.InsertAndLoad[*Post](ctx, db, newPost)
 	if err != nil {
-		t.Fatalf("InsertAndReturn failed: %v", err)
+		t.Fatalf("InsertAndLoad failed: %v", err)
 	}
 
 	// Clean up
 	defer func() {
-		db.Exec(ctx, "DELETE FROM posts WHERE id = $1", insertedPost.ID)
+		db.Exec(ctx, "DELETE FROM posts WHERE id = $1", returnedPost.ID)
 	}()
 
-	// Verify returned post
-	if insertedPost.ID == 0 {
+	// Verify returned post is fully populated
+	if returnedPost.ID == 0 {
 		t.Error("Post ID should be set")
 	}
-	if insertedPost.Title != "Test Post" {
-		t.Errorf("Expected title 'Test Post', got '%s'", insertedPost.Title)
+	if returnedPost.Title != "Test Post" {
+		t.Errorf("Expected title 'Test Post', got '%s'", returnedPost.Title)
 	}
-	if insertedPost.UserID != firstUser.ID {
-		t.Errorf("Expected UserID %d, got %d", firstUser.ID, insertedPost.UserID)
+	if returnedPost.UserID != firstUser.ID {
+		t.Errorf("Expected UserID %d, got %d", firstUser.ID, returnedPost.UserID)
+	}
+	if returnedPost.CreatedAt == "" {
+		t.Error("CreatedAt should be populated from database")
 	}
 }
 

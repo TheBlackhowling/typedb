@@ -22,23 +22,20 @@ func Example6_Insert(ctx context.Context, db *typedb.DB) {
 	fmt.Printf("  ✓ Inserted new user: %s\n", newUser.Email)
 }
 
-// Example7_InsertAndReturn demonstrates InsertAndReturn - Insert and get the full record
-func Example7_InsertAndReturn(ctx context.Context, db *typedb.DB, firstUser *User) {
-	fmt.Println("\n--- Example 7: InsertAndReturn - Insert and Get Full Record ---")
+// Example7_InsertAndLoad demonstrates InsertAndLoad - Insert and get the full record
+func Example7_InsertAndLoad(ctx context.Context, db *typedb.DB, firstUser *User) {
+	fmt.Println("\n--- Example 7: InsertAndLoad - Insert and Get Full Record ---")
 	newPost := &Post{
 		UserID:    firstUser.ID,
 		Title:     "Example Post",
-		Content:   "This is an example post created with InsertAndReturn",
+		Content:   "This is an example post created with InsertAndLoad",
 		Published: true,
-		CreatedAt: "2024-01-01T00:00:00Z",
 	}
-	insertedPost, err := typedb.InsertAndReturn[*Post](ctx, db,
-		"INSERT INTO posts (user_id, title, content, published, created_at) OUTPUT INSERTED.id, INSERTED.user_id, INSERTED.title, INSERTED.content, INSERTED.published, INSERTED.created_at VALUES (@p1, @p2, @p3, @p4, @p5)",
-		newPost.UserID, newPost.Title, newPost.Content, newPost.Published, newPost.CreatedAt)
+	returnedPost, err := typedb.InsertAndLoad[*Post](ctx, db, newPost)
 	if err != nil {
-		log.Fatalf("Failed to insert and return post: %v", err)
+		log.Fatalf("Failed to insert and load post: %v", err)
 	}
-	fmt.Printf("  ✓ Inserted post: %s (ID: %d)\n", insertedPost.Title, insertedPost.ID)
+	fmt.Printf("  ✓ Inserted post: %s (ID: %d, CreatedAt: %s)\n", returnedPost.Title, returnedPost.ID, returnedPost.CreatedAt)
 }
 
 // Example8_InsertAndGetId demonstrates InsertAndGetId - Insert and get just the ID
@@ -61,10 +58,10 @@ func Example8_InsertAndGetId(ctx context.Context, db *typedb.DB, firstUser *User
 	return postID
 }
 
-// runInsertExamples demonstrates Insert, InsertAndReturn, and InsertAndGetId operations.
+// runInsertExamples demonstrates Insert, InsertAndLoad, and InsertAndGetId operations.
 // Returns the post ID for use in subsequent examples.
 func runInsertExamples(ctx context.Context, db *typedb.DB, firstUser *User) int64 {
 	Example6_Insert(ctx, db)
-	Example7_InsertAndReturn(ctx, db, firstUser)
+	Example7_InsertAndLoad(ctx, db, firstUser)
 	return Example8_InsertAndGetId(ctx, db, firstUser)
 }
