@@ -63,7 +63,7 @@ type Config struct {
 // ModelInterface defines the contract for model types that can be deserialized.
 // Models satisfy this interface by embedding Model, which provides deserialize().
 // The deserialize() method is unexported - users should use the public API functions
-// (QueryAll, QueryFirst, QueryOne, InsertAndReturn, Load, etc.) instead of calling deserialize() directly.
+// (QueryAll, QueryFirst, QueryOne, InsertAndLoad, Load, etc.) instead of calling deserialize() directly.
 type ModelInterface interface {
 	deserialize(row map[string]any) error
 }

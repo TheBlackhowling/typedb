@@ -386,47 +386,15 @@ Load models by primary key, unique field, or composite key:
 
 Insert data with multiple options:
 
-- `InsertAndReturn[T](ctx, exec, query, args...)` - Inserts with RETURNING/OUTPUT clause, returns full model
-- `InsertAndGetId(ctx, exec, query, args...)` - Inserts and returns inserted ID as int64
-- `Insert(ctx, exec, model)` - Inserts model by object, automatically builds INSERT query from struct fields
+- `Insert(ctx, exec, model)` - Inserts model by object, automatically builds INSERT query from struct fields, sets ID on model
+- `InsertAndLoad(ctx, exec, model)` - Inserts model by object, then loads full object from database, returns fully populated model
+- `InsertAndGetId(ctx, exec, query, args...)` - Inserts with raw SQL and returns inserted ID as int64 (convenience for raw SQL)
 
 ### Update Functions
 
 Update models with automatic query generation:
 
 - `Update(ctx, exec, model)` - Updates model by object, automatically builds UPDATE query from struct fields
-
-#### Insert with RETURNING Clause
-
-For databases that support `RETURNING` (PostgreSQL, SQLite) or `OUTPUT` (SQL Server), use `InsertAndReturn` to get the full model back:
-
-```go
-// PostgreSQL/SQLite
-user, err := typedb.InsertAndReturn[*User](ctx, db,
-    "INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id, name, email, created_at",
-    "John", "john@example.com")
-
-// SQL Server
-user, err := typedb.InsertAndReturn[*User](ctx, db,
-    "INSERT INTO users (name, email) OUTPUT INSERTED.id, INSERTED.name, INSERTED.email, INSERTED.created_at VALUES (@p1, @p2)",
-    "John", "john@example.com")
-```
-
-#### Insert and Get ID
-
-For a simpler API that just returns the inserted ID:
-
-```go
-// PostgreSQL/SQLite/SQL Server/Oracle (with RETURNING/OUTPUT)
-id, err := typedb.InsertAndGetId(ctx, db,
-    "INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id",
-    "John", "john@example.com")
-
-// MySQL (uses LastInsertId)
-id, err := typedb.InsertAndGetId(ctx, db,
-    "INSERT INTO users (name, email) VALUES (?, ?)",
-    "John", "john@example.com")
-```
 
 #### Insert by Object
 
@@ -438,34 +406,60 @@ Automatically build INSERT queries from your model struct. Requires:
 ```go
 type User struct {
     typedb.Model
-    ID    int64  `db:"id" load:"primary"`
-    Name  string `db:"name"`
-    Email string `db:"email"`
+    ID        int64  `db:"id" load:"primary"`
+    Name      string `db:"name"`
+    Email     string `db:"email"`
+    CreatedAt string `db:"created_at"`
 }
 
 func (u *User) TableName() string {
     return "users"
 }
 
-// Note: Models that embed typedb.Model automatically get Deserialize() functionality
-// You only need to override Deserialize() if you have custom deserialization logic
+func (u *User) QueryByID() string {
+    return "SELECT id, name, email, created_at FROM users WHERE id = $1"
+}
 
-// Usage - automatically builds INSERT query
+// Insert only - sets ID on model
 user := &User{Name: "John", Email: "john@example.com"}
 err := typedb.Insert(ctx, db, user)
 // user.ID is now set with the inserted ID
+// user.CreatedAt is NOT populated (still zero value)
 
-// Zero/nil fields are automatically excluded
-user2 := &User{Name: "Jane"} // Email is empty, will be skipped
-err = typedb.Insert(ctx, db, user2)
+// Insert and Load - returns fully populated model
+user2 := &User{Name: "Jane", Email: "jane@example.com"}
+returnedUser, err := typedb.InsertAndLoad[*User](ctx, db, user2)
+// returnedUser.ID, returnedUser.CreatedAt, etc. are all populated
+
+// Zero/nil fields are automatically excluded from INSERT
+user3 := &User{Name: "Bob"} // Email is empty, will be skipped
+err = typedb.Insert(ctx, db, user3)
 ```
 
 **Database Support:**
 - **PostgreSQL/SQLite**: Uses `RETURNING` clause
 - **SQL Server/MSSQL**: Uses `OUTPUT INSERTED.id` clause
-- **Oracle**: Uses `RETURNING` clause (handled via InsertAndReturn)
 - **MySQL**: Uses `LastInsertId()` (no RETURNING support)
+- **Oracle**: Uses `RETURNING INTO` with `sql.Out` parameter
 - **Unknown drivers**: Defaults to PostgreSQL-style `RETURNING`
+
+#### Insert and Get ID (Raw SQL)
+
+For raw SQL queries where you only need the inserted ID:
+
+```go
+// PostgreSQL/SQLite/SQL Server/Oracle (with RETURNING/OUTPUT)
+id, err := typedb.InsertAndGetId(ctx, db,
+    "INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id",
+    "John", "john@example.com")
+
+// MySQL (uses LastInsertId - no RETURNING needed)
+id, err := typedb.InsertAndGetId(ctx, db,
+    "INSERT INTO users (name, email) VALUES (?, ?)",
+    "John", "john@example.com")
+```
+
+**Note:** For raw SQL with full model return, write your own SQL and use `QueryRowMap()` or `QueryFirst()` to deserialize the result.
 
 #### Update by Object
 

@@ -13,7 +13,7 @@ import (
 // deserializeForType creates a new instance of T and deserializes the row into it.
 // Returns a pointer to the deserialized model.
 // T must be a pointer type (e.g., *User).
-// This is an internal function - users should deserialize via Query, InsertAndReturn, etc.
+// This is an internal function - users should deserialize via Query, InsertAndLoad, etc.
 func deserializeForType[T ModelInterface](row map[string]any) (T, error) {
 	var model T
 	modelType := reflect.TypeOf(model)
@@ -37,7 +37,7 @@ func deserializeForType[T ModelInterface](row map[string]any) (T, error) {
 
 // deserialize deserializes a row into an existing model.
 // Uses reflection to map database column names (from db tags) to struct fields.
-// This is an internal function - users should deserialize via Query, InsertAndReturn, etc.
+// This is an internal function - users should deserialize via Query, InsertAndLoad, etc.
 func deserialize(row map[string]any, dest ModelInterface) error {
 	destValue := reflect.ValueOf(dest)
 	if destValue.Kind() != reflect.Ptr {
