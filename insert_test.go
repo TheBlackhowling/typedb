@@ -10,123 +10,24 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 )
 
-// InsertTestModel is a simple model for testing InsertAndReturn
+// InsertTestModel is a simple model for testing Insert functions
 type InsertTestModel struct {
 	Model
-	ID        int64  `db:"id"`
+	ID        int64  `db:"id" load:"primary"`
 	Name      string `db:"name"`
 	CreatedAt string `db:"created_at"`
 }
 
+func (m *InsertTestModel) TableName() string {
+	return "users"
+}
+
+func (m *InsertTestModel) QueryByID() string {
+	return "SELECT id, name, created_at FROM users WHERE id = $1"
+}
+
 func init() {
 	RegisterModel[*InsertTestModel]()
-}
-
-func TestInsertAndReturn_Success(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("Failed to create mock: %v", err)
-	}
-	defer db.Close()
-
-	typedbDB := NewDB(db, "postgres", 5*time.Second)
-	ctx := context.Background()
-
-	// Mock QueryRowMap to return a row
-	rows := sqlmock.NewRows([]string{"id", "name", "created_at"}).
-		AddRow(123, "John Doe", "2024-01-15 10:00:00")
-
-	mock.ExpectQuery("INSERT INTO users").
-		WithArgs("John Doe", "john@example.com").
-		WillReturnRows(rows)
-
-	result, err := InsertAndReturn[*InsertTestModel](ctx, typedbDB,
-		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id, name, created_at",
-		"John Doe", "john@example.com")
-
-	if err != nil {
-		t.Fatalf("InsertAndReturn failed: %v", err)
-	}
-
-	if result.ID != 123 {
-		t.Errorf("Expected ID 123, got %d", result.ID)
-	}
-
-	if result.Name != "John Doe" {
-		t.Errorf("Expected name 'John Doe', got %q", result.Name)
-	}
-
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("Unmet mock expectations: %v", err)
-	}
-}
-
-func TestInsertAndReturn_QueryRowMapError(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("Failed to create mock: %v", err)
-	}
-	defer db.Close()
-
-	typedbDB := NewDB(db, "postgres", 5*time.Second)
-	ctx := context.Background()
-
-	mock.ExpectQuery("INSERT INTO users").
-		WithArgs("John Doe", "john@example.com").
-		WillReturnError(errors.New("database error"))
-
-	result, err := InsertAndReturn[*InsertTestModel](ctx, typedbDB,
-		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id, name, created_at",
-		"John Doe", "john@example.com")
-
-	if err == nil {
-		t.Fatal("Expected error from InsertAndReturn")
-	}
-
-	var zero *InsertTestModel
-	if result != zero {
-		t.Errorf("Expected zero value, got %+v", result)
-	}
-
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("Unmet mock expectations: %v", err)
-	}
-}
-
-func TestInsertAndReturn_DeserializationError(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("Failed to create mock: %v", err)
-	}
-	defer db.Close()
-
-	typedbDB := NewDB(db, "postgres", 5*time.Second)
-	ctx := context.Background()
-
-	// Return invalid data type (string for int64 ID)
-	rows := sqlmock.NewRows([]string{"id", "name", "created_at"}).
-		AddRow("invalid", "John Doe", "2024-01-15 10:00:00")
-
-	mock.ExpectQuery("INSERT INTO users").
-		WithArgs("John Doe", "john@example.com").
-		WillReturnRows(rows)
-
-	result, err := InsertAndReturn[*InsertTestModel](ctx, typedbDB,
-		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id, name, created_at",
-		"John Doe", "john@example.com")
-
-	if err == nil {
-		t.Fatal("Expected deserialization error")
-	}
-
-	var zero *InsertTestModel
-	if result != zero {
-		t.Errorf("Expected zero value, got %+v", result)
-	}
-
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("Unmet mock expectations: %v", err)
-	}
 }
 
 func TestInsertAndGetId_WithReturning_Success(t *testing.T) {
@@ -403,7 +304,7 @@ func TestInsertAndGetId_WithReturning_InsertAndReturnError(t *testing.T) {
 		"John Doe", "john@example.com")
 
 	if err == nil {
-		t.Fatal("Expected error from InsertAndReturn")
+		t.Fatal("Expected error from InsertAndGetId")
 	}
 
 	if id != 0 {
@@ -486,6 +387,131 @@ func TestInsertAndGetId_Transaction_Success(t *testing.T) {
 	}
 }
 
+func TestInsertAndLoad_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// Mock INSERT with RETURNING id
+	insertRows := sqlmock.NewRows([]string{"id"}).AddRow(123)
+	mock.ExpectQuery("INSERT INTO \"users\"").
+		WithArgs("John Doe").
+		WillReturnRows(insertRows)
+
+	// Mock Load query
+	loadRows := sqlmock.NewRows([]string{"id", "name", "created_at"}).
+		AddRow(123, "John Doe", "2024-01-15 10:00:00")
+	mock.ExpectQuery("SELECT id, name, created_at FROM users WHERE id = \\$1").
+		WithArgs(123).
+		WillReturnRows(loadRows)
+
+	model := &InsertTestModel{Name: "John Doe"}
+	returnedModel, err := InsertAndLoad[*InsertTestModel](ctx, typedbDB, model)
+
+	if err != nil {
+		t.Fatalf("InsertAndLoad failed: %v", err)
+	}
+
+	if returnedModel.ID != 123 {
+		t.Errorf("Expected ID 123, got %d", returnedModel.ID)
+	}
+
+	if returnedModel.Name != "John Doe" {
+		t.Errorf("Expected name 'John Doe', got %q", returnedModel.Name)
+	}
+
+	if returnedModel.CreatedAt != "2024-01-15 10:00:00" {
+		t.Errorf("Expected CreatedAt '2024-01-15 10:00:00', got %q", returnedModel.CreatedAt)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestInsertAndLoad_InsertError(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// Mock INSERT failure
+	mock.ExpectQuery("INSERT INTO \"users\"").
+		WithArgs("John Doe").
+		WillReturnError(errors.New("database error"))
+
+	model := &InsertTestModel{Name: "John Doe"}
+	returnedModel, err := InsertAndLoad[*InsertTestModel](ctx, typedbDB, model)
+
+	if err == nil {
+		t.Fatal("Expected error from InsertAndLoad")
+	}
+
+	var zero *InsertTestModel
+	if returnedModel != zero {
+		t.Errorf("Expected zero value, got %+v", returnedModel)
+	}
+
+	if !strings.Contains(err.Error(), "insert") {
+		t.Errorf("Expected error message to contain 'insert', got: %v", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestInsertAndLoad_LoadError(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// Mock INSERT with RETURNING id (succeeds)
+	insertRows := sqlmock.NewRows([]string{"id"}).AddRow(123)
+	mock.ExpectQuery("INSERT INTO \"users\"").
+		WithArgs("John Doe").
+		WillReturnRows(insertRows)
+
+	// Mock Load query failure
+	mock.ExpectQuery("SELECT id, name, created_at FROM users WHERE id = \\$1").
+		WithArgs(123).
+		WillReturnError(errors.New("load error"))
+
+	model := &InsertTestModel{Name: "John Doe"}
+	returnedModel, err := InsertAndLoad[*InsertTestModel](ctx, typedbDB, model)
+
+	if err == nil {
+		t.Fatal("Expected error from InsertAndLoad")
+	}
+
+	var zero *InsertTestModel
+	if returnedModel != zero {
+		t.Errorf("Expected zero value, got %+v", returnedModel)
+	}
+
+	if !strings.Contains(err.Error(), "load") {
+		t.Errorf("Expected error message to contain 'load', got: %v", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
 func TestGetDriverName(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -523,22 +549,6 @@ func TestGetDriverName(t *testing.T) {
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("Unmet mock expectations: %v", err)
-	}
-}
-
-func TestInsertedId_Deserialize(t *testing.T) {
-	insertedId := &insertedId{}
-	row := map[string]any{
-		"id": int64(123),
-	}
-
-	err := insertedId.deserialize(row)
-	if err != nil {
-		t.Fatalf("insertedId.deserialize failed: %v", err)
-	}
-
-	if insertedId.ID != 123 {
-		t.Errorf("Expected ID 123, got %d", insertedId.ID)
 	}
 }
 
@@ -835,6 +845,17 @@ func TestQuoteIdentifierEscaping(t *testing.T) {
 			name:       "SQL Server invalid identifier with closing bracket",
 			driverName: "sqlserver",
 			identifier: "user]table",
+		// Empty identifier test (should panic)
+		{
+			name:       "PostgreSQL empty identifier",
+			driverName: "postgres",
+			identifier: "",
+			wantPanic:  true,
+		},
+		{
+			name:       "SQL Server empty identifier",
+			driverName: "sqlserver",
+			identifier: "",
 			wantPanic:  true,
 		},
 		{
