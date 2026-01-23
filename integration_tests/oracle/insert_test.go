@@ -132,7 +132,7 @@ func TestOracle_InsertAndGetId(t *testing.T) {
 	// Insert post and get ID (Oracle uses RETURNING) with unique title
 	uniqueTitle := fmt.Sprintf("Test Post ID %d", time.Now().UnixNano())
 	postID, err := typedb.InsertAndGetId(ctx, db,
-		"INSERT INTO posts (user_id, title, content, tags, metadata, created_at) VALUES (:1, :2, :3, :4, :5, TO_TIMESTAMP(:6, 'YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"')) RETURNING id",
+		"INSERT INTO posts (user_id, title, content, tags, metadata, created_at) VALUES (:1, :2, :3, TO_CLOB(:4), TO_CLOB(:5), TO_TIMESTAMP(:6, 'YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"')) RETURNING id",
 		firstUser.ID, uniqueTitle, "Test content", `["go","database"]`, `{"test":true}`, "2024-01-01T00:00:00Z")
 	if err != nil {
 		t.Fatalf("InsertAndGetId failed: %v", err)
