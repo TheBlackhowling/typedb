@@ -90,26 +90,16 @@ func InsertAndGetId(ctx context.Context, exec Executor, insertQuery string, args
 	driverNameLower := strings.ToLower(driverName)
 	if driverNameLower == "oracle" {
 		// Oracle requires RETURNING ... INTO :bindvar syntax
-		// Find RETURNING clause (case-insensitive) in original query
-		originalReturningIdx := -1
-		for i := 0; i <= len(insertQuery)-8; i++ {
-			if len(insertQuery) >= i+9 && strings.EqualFold(insertQuery[i:i+9], "RETURNING ") {
-				originalReturningIdx = i
-				break
-			} else if len(insertQuery) >= i+8 && strings.EqualFold(insertQuery[i:i+8], "RETURNING") {
-				// Check if next char is space or end of string
-				if i+8 >= len(insertQuery) || insertQuery[i+8] == ' ' {
-					originalReturningIdx = i
-					break
-				}
-			}
-		}
-		if originalReturningIdx == -1 {
+		// Find RETURNING clause using the already-computed uppercase query
+		returningIdx := strings.Index(queryUpper, "RETURNING")
+		if returningIdx == -1 {
 			return 0, fmt.Errorf("typedb: InsertAndGetId Oracle query must contain RETURNING clause")
 		}
 
 		// Extract the RETURNING part (everything after RETURNING)
-		returningPart := insertQuery[originalReturningIdx+8:] // Skip "RETURNING" (8 chars)
+		// Find the actual position accounting for case differences
+		// Since queryUpper and insertQuery should have same length, we can use returningIdx directly
+		returningPart := insertQuery[returningIdx+8:] // Skip "RETURNING" (8 chars)
 		// Skip any whitespace after RETURNING
 		returningPart = strings.TrimLeft(returningPart, " \t\n\r")
 		
@@ -138,7 +128,7 @@ func InsertAndGetId(ctx context.Context, exec Executor, insertQuery string, args
 		}
 
 		// Build new query with INTO clause
-		queryBeforeReturning := insertQuery[:originalReturningIdx+8] // Everything up to and including "RETURNING"
+		queryBeforeReturning := insertQuery[:returningIdx+8] // Everything up to and including "RETURNING"
 		returningPlaceholder := fmt.Sprintf(":%d", len(args)+1)
 		newQuery := queryBeforeReturning + " " + returningFields + " INTO " + returningPlaceholder
 
