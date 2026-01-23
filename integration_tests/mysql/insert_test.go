@@ -53,7 +53,7 @@ func TestMySQL_Insert(t *testing.T) {
 	}
 }
 
-func TestMySQL_InsertAndReturn(t *testing.T) {
+func TestMySQL_InsertAndLoad(t *testing.T) {
 	ctx := context.Background()
 	db, err := typedb.Open("mysql", getTestDSN())
 	if err != nil {
@@ -71,34 +71,36 @@ func TestMySQL_InsertAndReturn(t *testing.T) {
 		t.Fatal("Need at least one user in database for foreign key")
 	}
 
-	// MySQL doesn't support RETURNING, so we'll test InsertAndGetId instead
-	// For InsertAndReturn, we'd need to use a separate SELECT after INSERT
-	// But MySQL's LastInsertId() works with InsertAndGetId
-	postID, err := typedb.InsertAndGetId(ctx, db,
-		"INSERT INTO posts (user_id, title, content, tags, metadata, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-		firstUser.ID, "Test Post", "Test content", `["go","database"]`, `{"test":true}`, "2024-01-01 00:00:00")
+	// Insert post using InsertAndLoad
+	newPost := &Post{
+		UserID:   firstUser.ID,
+		Title:    "Test Post",
+		Content:  "Test content",
+		Tags:     `["go","database"]`,
+		Metadata: `{"test":true}`,
+	}
+	returnedPost, err := typedb.InsertAndLoad[*Post](ctx, db, newPost)
 	if err != nil {
-		t.Fatalf("InsertAndGetId failed: %v", err)
+		t.Fatalf("InsertAndLoad failed: %v", err)
 	}
 
 	// Clean up
 	defer func() {
-		db.Exec(ctx, "DELETE FROM posts WHERE id = ?", postID)
+		db.Exec(ctx, "DELETE FROM posts WHERE id = ?", returnedPost.ID)
 	}()
 
-	// Verify ID was returned
-	if postID == 0 {
-		t.Error("Post ID should not be zero")
+	// Verify returned post is fully populated
+	if returnedPost.ID == 0 {
+		t.Error("Post ID should be set")
 	}
-
-	// Verify post exists
-	loaded := &Post{ID: int(postID)}
-	if err := typedb.Load(ctx, db, loaded); err != nil {
-		t.Fatalf("Failed to load inserted post: %v", err)
+	if returnedPost.Title != "Test Post" {
+		t.Errorf("Expected title 'Test Post', got '%s'", returnedPost.Title)
 	}
-
-	if loaded.Title != "Test Post" {
-		t.Errorf("Expected title 'Test Post', got '%s'", loaded.Title)
+	if returnedPost.UserID != firstUser.ID {
+		t.Errorf("Expected UserID %d, got %d", firstUser.ID, returnedPost.UserID)
+	}
+	if returnedPost.CreatedAt == "" {
+		t.Error("CreatedAt should be populated from database")
 	}
 }
 
