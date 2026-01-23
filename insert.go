@@ -96,11 +96,9 @@ func InsertAndGetId(ctx context.Context, exec Executor, insertQuery string, args
 			return 0, fmt.Errorf("typedb: InsertAndGetId Oracle query must contain RETURNING clause")
 		}
 
-		// Extract the RETURNING part (everything after RETURNING)
-		// Find the actual position accounting for case differences
-		// Since queryUpper and insertQuery should have same length, we can use returningIdx directly
-		returningPart := insertQuery[returningIdx+8:] // Skip "RETURNING" (8 chars)
-		// Skip any whitespace after RETURNING
+		// Extract the RETURNING part (everything after "RETURNING")
+		// Skip "RETURNING" (9 chars) and any following whitespace
+		returningPart := insertQuery[returningIdx+9:]
 		returningPart = strings.TrimLeft(returningPart, " \t\n\r")
 		
 		// Find where RETURNING clause ends (before INTO, or end of query)
@@ -121,15 +119,17 @@ func InsertAndGetId(ctx context.Context, exec Executor, insertQuery string, args
 		}
 
 		// Need to add INTO clause - extract what's being returned (usually just "id")
-		returningFields := strings.TrimSpace(returningPart)
+		returningFields := returningPart
 		// Remove any trailing parts (like FROM, WHERE, etc. shouldn't be there in INSERT RETURNING)
 		if spaceIdx := strings.Index(returningFields, " "); spaceIdx != -1 {
 			returningFields = returningFields[:spaceIdx]
 		}
 
 		// Build new query with INTO clause
-		queryBeforeReturning := insertQuery[:returningIdx+8] // Everything up to and including "RETURNING"
+		// Get everything up to and including "RETURNING" (9 chars) from original query
+		queryBeforeReturning := insertQuery[:returningIdx+9]
 		returningPlaceholder := fmt.Sprintf(":%d", len(args)+1)
+		// Add space, field name, space, INTO, space, placeholder
 		newQuery := queryBeforeReturning + " " + returningFields + " INTO " + returningPlaceholder
 
 		var id int64
