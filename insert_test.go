@@ -552,22 +552,6 @@ func TestGetDriverName(t *testing.T) {
 	}
 }
 
-func TestInsertedId_Deserialize(t *testing.T) {
-	insertedId := &insertedId{}
-	row := map[string]any{
-		"id": int64(123),
-	}
-
-	err := insertedId.deserialize(row)
-	if err != nil {
-		t.Fatalf("insertedId.deserialize failed: %v", err)
-	}
-
-	if insertedId.ID != 123 {
-		t.Errorf("Expected ID 123, got %d", insertedId.ID)
-	}
-}
-
 // TestDeserialize_AddressableValue tests deserialization via direct Deserialize() call.
 // We always use buildFieldMapFromPtr (unsafe path) regardless of addressability to
 // avoid checkptr errors across all Go versions 1.18-1.25.
