@@ -73,10 +73,10 @@ func TestPostgreSQL_InsertAndLoad(t *testing.T) {
 
 	// Insert post using InsertAndLoad
 	newPost := &Post{
-		UserID:  firstUser.ID,
-		Title:   "Test Post",
-		Content: "Test content",
-		Tags:    `["go","database"]`,
+		UserID:   firstUser.ID,
+		Title:    "Test Post",
+		Content:  "Test content",
+		Tags:     `{"go","database"}`,
 		Metadata: `{"test":true}`,
 	}
 	returnedPost, err := typedb.InsertAndLoad[*Post](ctx, db, newPost)
