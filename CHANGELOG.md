@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.30] - 2026-01-23
+
+**Commit:** [`460cdc3`](https://github.com/TheBlackhowling/typedb/commit/460cdc375b4b9b1259800a19d6c3eb9ecb525b62)
+**Pull Request:** [#37](https://github.com/TheBlackhowling/typedb/pull/37)
+
+**Summary:** Fix SQL injection vulnerability in Oracle InsertAndReturn by validating and escaping identifiers
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.30.md](versions/0.1.30.md)
+
+
 ## [0.1.29] - 2026-01-20
 
 **Commit:** [`d1a287d`](https://github.com/TheBlackhowling/typedb/commit/d1a287de5533c1a1b9fb99c16721514f1db7ee24)
