@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.31] - 2026-01-23
+
+**Commit:** [`055c664`](https://github.com/TheBlackhowling/typedb/commit/055c664e21def76f5ea90b697ce2d8a3e3cc78e7)
+**Pull Request:** [#38](https://github.com/TheBlackhowling/typedb/pull/38)
+
+**Summary:** Add validation and quote escaping to quoteIdentifier function to prevent identifier injection
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.31.md](versions/0.1.31.md)
+
+
 ## [0.1.30] - 2026-01-23
 
 **Commit:** [`460cdc3`](https://github.com/TheBlackhowling/typedb/commit/460cdc375b4b9b1259800a19d6c3eb9ecb525b62)
