@@ -845,6 +845,8 @@ func TestQuoteIdentifierEscaping(t *testing.T) {
 			name:       "SQL Server invalid identifier with closing bracket",
 			driverName: "sqlserver",
 			identifier: "user]table",
+			wantPanic:  true,
+		},
 		// Empty identifier test (should panic)
 		{
 			name:       "PostgreSQL empty identifier",
