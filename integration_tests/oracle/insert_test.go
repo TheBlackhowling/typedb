@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -58,7 +59,7 @@ func TestOracle_Insert(t *testing.T) {
 	}
 }
 
-func TestOracle_InsertAndReturn(t *testing.T) {
+func TestOracle_InsertAndLoad(t *testing.T) {
 	ctx := context.Background()
 	db, err := typedb.Open("oracle", getTestDSN())
 	if err != nil {
@@ -76,31 +77,38 @@ func TestOracle_InsertAndReturn(t *testing.T) {
 		t.Fatal("Need at least one user in database for foreign key")
 	}
 
-	// Insert post with RETURNING clause using unique title
-	uniqueTitle := fmt.Sprintf("Test Post %d", time.Now().UnixNano())
-	insertedPost, err := typedb.InsertAndReturn[*Post](ctx, db,
-		"INSERT INTO posts (user_id, title, content, tags, metadata, created_at) VALUES (:1, :2, :3, :4, :5, TO_TIMESTAMP(:6, 'YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"')) RETURNING id, user_id, title, content, tags, metadata, created_at",
-		firstUser.ID, uniqueTitle, "Test content", `["go","database"]`, `{"test":true}`, "2024-01-01T00:00:00Z")
+	// Insert post using InsertAndLoad
+	newPost := &Post{
+		UserID:   firstUser.ID,
+		Title:    "Test Post",
+		Content:  "Test content",
+		Tags:     `["go","database"]`,
+		Metadata: `{"test":true}`,
+	}
+	returnedPost, err := typedb.InsertAndLoad[*Post](ctx, db, newPost)
 	if err != nil {
-		t.Fatalf("InsertAndReturn failed: %v", err)
+		t.Fatalf("InsertAndLoad failed: %v", err)
 	}
 
 	// Register cleanup that runs even on failure
 	t.Cleanup(func() {
-		if insertedPost.ID != 0 {
-			db.Exec(ctx, "DELETE FROM posts WHERE id = :1", insertedPost.ID)
+		if returnedPost.ID != 0 {
+			db.Exec(ctx, "DELETE FROM posts WHERE id = :1", returnedPost.ID)
 		}
 	})
 
-	// Verify returned post
-	if insertedPost.ID == 0 {
+	// Verify returned post is fully populated
+	if returnedPost.ID == 0 {
 		t.Error("Post ID should be set")
 	}
-	if insertedPost.Title != uniqueTitle {
-		t.Errorf("Expected title '%s', got '%s'", uniqueTitle, insertedPost.Title)
+	if returnedPost.Title != "Test Post" {
+		t.Errorf("Expected title 'Test Post', got '%s'", returnedPost.Title)
 	}
-	if insertedPost.UserID != firstUser.ID {
-		t.Errorf("Expected UserID %d, got %d", firstUser.ID, insertedPost.UserID)
+	if returnedPost.UserID != firstUser.ID {
+		t.Errorf("Expected UserID %d, got %d", firstUser.ID, returnedPost.UserID)
+	}
+	if returnedPost.CreatedAt == "" {
+		t.Error("CreatedAt should be populated from database")
 	}
 }
 
