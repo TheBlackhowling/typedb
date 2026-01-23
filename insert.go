@@ -85,6 +85,63 @@ func InsertAndGetId(ctx context.Context, exec Executor, insertQuery string, args
 		return id, nil
 	}
 
+	// Handle Oracle specially - it requires RETURNING ... INTO syntax with sql.Out
+	driverName := getDriverName(exec)
+	driverNameLower := strings.ToLower(driverName)
+	if driverNameLower == "oracle" {
+		// Oracle requires RETURNING ... INTO :bindvar syntax
+		// We need to modify the query to use RETURNING ... INTO and use sql.Out
+		// Find the RETURNING clause and extract what's being returned
+		returningIdx := strings.Index(queryUpper, "RETURNING")
+		if returningIdx == -1 {
+			return 0, fmt.Errorf("typedb: InsertAndGetId Oracle query must contain RETURNING clause")
+		}
+
+		// Extract the RETURNING part (everything after RETURNING)
+		returningPart := insertQuery[returningIdx+9:] // Skip "RETURNING "
+		// Find where RETURNING clause ends (before INTO, or end of query)
+		intoIdx := strings.Index(strings.ToUpper(returningPart), " INTO ")
+		if intoIdx != -1 {
+			// Already has INTO clause, use as-is but need to handle sql.Out
+			var id int64
+			outParam := sql.Out{Dest: &id}
+			argsWithOut := make([]any, len(args)+1)
+			copy(argsWithOut, args)
+			argsWithOut[len(args)] = outParam
+
+			_, err := exec.Exec(ctx, insertQuery, argsWithOut...)
+			if err != nil {
+				return 0, fmt.Errorf("typedb: InsertAndGetId failed: %w", err)
+			}
+			return id, nil
+		}
+
+		// Need to add INTO clause - assume RETURNING id (most common case)
+		// Extract what's being returned (usually just "id")
+		returningFields := strings.TrimSpace(returningPart)
+		// Remove any trailing parts (like FROM, WHERE, etc. shouldn't be there in INSERT RETURNING)
+		if spaceIdx := strings.Index(returningFields, " "); spaceIdx != -1 {
+			returningFields = returningFields[:spaceIdx]
+		}
+
+		// Build new query with INTO clause
+		queryBeforeReturning := insertQuery[:returningIdx+9] // Everything up to and including "RETURNING "
+		returningPlaceholder := fmt.Sprintf(":%d", len(args)+1)
+		newQuery := queryBeforeReturning + returningFields + " INTO " + returningPlaceholder
+
+		var id int64
+		outParam := sql.Out{Dest: &id}
+		argsWithOut := make([]any, len(args)+1)
+		copy(argsWithOut, args)
+		argsWithOut[len(args)] = outParam
+
+		_, err := exec.Exec(ctx, newQuery, argsWithOut...)
+		if err != nil {
+			return 0, fmt.Errorf("typedb: InsertAndGetId failed: %w", err)
+		}
+		return id, nil
+	}
+
 	// For databases with RETURNING/OUTPUT, use QueryRowMap to get the ID directly
 	row, err := exec.QueryRowMap(ctx, insertQuery, args...)
 	if err != nil {
