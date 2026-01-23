@@ -10,123 +10,24 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 )
 
-// InsertTestModel is a simple model for testing InsertAndReturn
+// InsertTestModel is a simple model for testing Insert functions
 type InsertTestModel struct {
 	Model
-	ID        int64  `db:"id"`
+	ID        int64  `db:"id" load:"primary"`
 	Name      string `db:"name"`
 	CreatedAt string `db:"created_at"`
 }
 
+func (m *InsertTestModel) TableName() string {
+	return "users"
+}
+
+func (m *InsertTestModel) QueryByID() string {
+	return "SELECT id, name, created_at FROM users WHERE id = $1"
+}
+
 func init() {
 	RegisterModel[*InsertTestModel]()
-}
-
-func TestInsertAndReturn_Success(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("Failed to create mock: %v", err)
-	}
-	defer db.Close()
-
-	typedbDB := NewDB(db, "postgres", 5*time.Second)
-	ctx := context.Background()
-
-	// Mock QueryRowMap to return a row
-	rows := sqlmock.NewRows([]string{"id", "name", "created_at"}).
-		AddRow(123, "John Doe", "2024-01-15 10:00:00")
-
-	mock.ExpectQuery("INSERT INTO users").
-		WithArgs("John Doe", "john@example.com").
-		WillReturnRows(rows)
-
-	result, err := InsertAndReturn[*InsertTestModel](ctx, typedbDB,
-		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id, name, created_at",
-		"John Doe", "john@example.com")
-
-	if err != nil {
-		t.Fatalf("InsertAndReturn failed: %v", err)
-	}
-
-	if result.ID != 123 {
-		t.Errorf("Expected ID 123, got %d", result.ID)
-	}
-
-	if result.Name != "John Doe" {
-		t.Errorf("Expected name 'John Doe', got %q", result.Name)
-	}
-
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("Unmet mock expectations: %v", err)
-	}
-}
-
-func TestInsertAndReturn_QueryRowMapError(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("Failed to create mock: %v", err)
-	}
-	defer db.Close()
-
-	typedbDB := NewDB(db, "postgres", 5*time.Second)
-	ctx := context.Background()
-
-	mock.ExpectQuery("INSERT INTO users").
-		WithArgs("John Doe", "john@example.com").
-		WillReturnError(errors.New("database error"))
-
-	result, err := InsertAndReturn[*InsertTestModel](ctx, typedbDB,
-		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id, name, created_at",
-		"John Doe", "john@example.com")
-
-	if err == nil {
-		t.Fatal("Expected error from InsertAndReturn")
-	}
-
-	var zero *InsertTestModel
-	if result != zero {
-		t.Errorf("Expected zero value, got %+v", result)
-	}
-
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("Unmet mock expectations: %v", err)
-	}
-}
-
-func TestInsertAndReturn_DeserializationError(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("Failed to create mock: %v", err)
-	}
-	defer db.Close()
-
-	typedbDB := NewDB(db, "postgres", 5*time.Second)
-	ctx := context.Background()
-
-	// Return invalid data type (string for int64 ID)
-	rows := sqlmock.NewRows([]string{"id", "name", "created_at"}).
-		AddRow("invalid", "John Doe", "2024-01-15 10:00:00")
-
-	mock.ExpectQuery("INSERT INTO users").
-		WithArgs("John Doe", "john@example.com").
-		WillReturnRows(rows)
-
-	result, err := InsertAndReturn[*InsertTestModel](ctx, typedbDB,
-		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id, name, created_at",
-		"John Doe", "john@example.com")
-
-	if err == nil {
-		t.Fatal("Expected deserialization error")
-	}
-
-	var zero *InsertTestModel
-	if result != zero {
-		t.Errorf("Expected zero value, got %+v", result)
-	}
-
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("Unmet mock expectations: %v", err)
-	}
 }
 
 func TestInsertAndGetId_WithReturning_Success(t *testing.T) {
@@ -403,7 +304,7 @@ func TestInsertAndGetId_WithReturning_InsertAndReturnError(t *testing.T) {
 		"John Doe", "john@example.com")
 
 	if err == nil {
-		t.Fatal("Expected error from InsertAndReturn")
+		t.Fatal("Expected error from InsertAndGetId")
 	}
 
 	if id != 0 {
@@ -479,6 +380,131 @@ func TestInsertAndGetId_Transaction_Success(t *testing.T) {
 
 	if id != 123 {
 		t.Errorf("Expected ID 123, got %d", id)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestInsertAndLoad_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// Mock INSERT with RETURNING id
+	insertRows := sqlmock.NewRows([]string{"id"}).AddRow(123)
+	mock.ExpectQuery("INSERT INTO \"users\"").
+		WithArgs("John Doe").
+		WillReturnRows(insertRows)
+
+	// Mock Load query
+	loadRows := sqlmock.NewRows([]string{"id", "name", "created_at"}).
+		AddRow(123, "John Doe", "2024-01-15 10:00:00")
+	mock.ExpectQuery("SELECT id, name, created_at FROM users WHERE id = \\$1").
+		WithArgs(123).
+		WillReturnRows(loadRows)
+
+	model := &InsertTestModel{Name: "John Doe"}
+	returnedModel, err := InsertAndLoad[*InsertTestModel](ctx, typedbDB, model)
+
+	if err != nil {
+		t.Fatalf("InsertAndLoad failed: %v", err)
+	}
+
+	if returnedModel.ID != 123 {
+		t.Errorf("Expected ID 123, got %d", returnedModel.ID)
+	}
+
+	if returnedModel.Name != "John Doe" {
+		t.Errorf("Expected name 'John Doe', got %q", returnedModel.Name)
+	}
+
+	if returnedModel.CreatedAt != "2024-01-15 10:00:00" {
+		t.Errorf("Expected CreatedAt '2024-01-15 10:00:00', got %q", returnedModel.CreatedAt)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestInsertAndLoad_InsertError(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// Mock INSERT failure
+	mock.ExpectQuery("INSERT INTO \"users\"").
+		WithArgs("John Doe").
+		WillReturnError(errors.New("database error"))
+
+	model := &InsertTestModel{Name: "John Doe"}
+	returnedModel, err := InsertAndLoad[*InsertTestModel](ctx, typedbDB, model)
+
+	if err == nil {
+		t.Fatal("Expected error from InsertAndLoad")
+	}
+
+	var zero *InsertTestModel
+	if returnedModel != zero {
+		t.Errorf("Expected zero value, got %+v", returnedModel)
+	}
+
+	if !strings.Contains(err.Error(), "insert") {
+		t.Errorf("Expected error message to contain 'insert', got: %v", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestInsertAndLoad_LoadError(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// Mock INSERT with RETURNING id (succeeds)
+	insertRows := sqlmock.NewRows([]string{"id"}).AddRow(123)
+	mock.ExpectQuery("INSERT INTO \"users\"").
+		WithArgs("John Doe").
+		WillReturnRows(insertRows)
+
+	// Mock Load query failure
+	mock.ExpectQuery("SELECT id, name, created_at FROM users WHERE id = \\$1").
+		WithArgs(123).
+		WillReturnError(errors.New("load error"))
+
+	model := &InsertTestModel{Name: "John Doe"}
+	returnedModel, err := InsertAndLoad[*InsertTestModel](ctx, typedbDB, model)
+
+	if err == nil {
+		t.Fatal("Expected error from InsertAndLoad")
+	}
+
+	var zero *InsertTestModel
+	if returnedModel != zero {
+		t.Errorf("Expected zero value, got %+v", returnedModel)
+	}
+
+	if !strings.Contains(err.Error(), "load") {
+		t.Errorf("Expected error message to contain 'load', got: %v", err)
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
@@ -610,117 +636,7 @@ func TestDeserialize_NonAddressableValue(t *testing.T) {
 	}
 }
 
-// TestValidateIdentifier tests the validateIdentifier function
-func TestValidateIdentifier(t *testing.T) {
-	tests := []struct {
-		name      string
-		identifier string
-		wantErr   bool
-		errMsg    string
-	}{
-		{
-			name:      "valid simple identifier",
-			identifier: "users",
-			wantErr:   false,
-		},
-		{
-			name:      "valid identifier with underscore",
-			identifier: "user_table",
-			wantErr:   false,
-		},
-		{
-			name:      "valid identifier with numbers",
-			identifier: "user123",
-			wantErr:   false,
-		},
-		{
-			name:      "valid qualified identifier",
-			identifier: "schema.table",
-			wantErr:   false,
-		},
-		{
-			name:      "valid identifier with multiple dots",
-			identifier: "schema.table.column",
-			wantErr:   false,
-		},
-		{
-			name:      "empty identifier",
-			identifier: "",
-			wantErr:   true,
-			errMsg:    "cannot be empty",
-		},
-		{
-			name:      "identifier with space",
-			identifier: "user table",
-			wantErr:   true,
-			errMsg:    "invalid identifier",
-		},
-		{
-			name:      "identifier with quote (allowed, will be escaped)",
-			identifier: `user"table`,
-			wantErr:   false,
-		},
-		{
-			name:      "identifier with semicolon",
-			identifier: "user;table",
-			wantErr:   true,
-			errMsg:    "invalid identifier",
-		},
-		{
-			name:      "identifier with dash",
-			identifier: "user-table",
-			wantErr:   true,
-			errMsg:    "invalid identifier",
-		},
-		{
-			name:      "identifier with SQL injection attempt (semicolon)",
-			identifier: "users; DROP TABLE users; --",
-			wantErr:   true,
-			errMsg:    "invalid identifier", // Regex catches semicolon first
-		},
-		{
-			name:      "identifier with SQL injection attempt (DROP)",
-			identifier: "users DROP TABLE",
-			wantErr:   true,
-			errMsg:    "invalid identifier", // Regex catches space first
-		},
-		{
-			name:      "identifier with SQL comment pattern",
-			identifier: "users--comment",
-			wantErr:   true,
-			errMsg:    "invalid identifier", // Regex catches "--" (dash) first
-		},
-		{
-			name:      "identifier with SQL keyword (allowed - might be legitimate)",
-			identifier: "DROP",
-			wantErr:   false, // SQL keywords are allowed as they might be legitimate column names
-		},
-		{
-			name:      "identifier starting with number",
-			identifier: "123users",
-			wantErr:   false, // Numbers are allowed
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := validateIdentifier(tt.identifier)
-			if tt.wantErr {
-				if err == nil {
-					t.Errorf("validateIdentifier() expected error but got nil")
-				} else if tt.errMsg != "" && !strings.Contains(err.Error(), tt.errMsg) {
-					t.Errorf("validateIdentifier() error = %v, want error containing %q", err, tt.errMsg)
-				}
-			} else {
-				if err != nil {
-					t.Errorf("validateIdentifier() unexpected error = %v", err)
-				}
-			}
-		})
-	}
-}
-
-// TestQuoteIdentifierEscaping tests the quoteIdentifier function with quote escaping and security
+// TestQuoteIdentifierEscaping tests the quoteIdentifier function with quote escaping
 func TestQuoteIdentifierEscaping(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -818,23 +734,17 @@ func TestQuoteIdentifierEscaping(t *testing.T) {
 			want:       `"USERS"`,
 			wantPanic:  false,
 		},
-		// Invalid identifier tests (should panic)
+		// Empty identifier test (should panic)
 		{
-			name:       "PostgreSQL invalid identifier with space",
+			name:       "PostgreSQL empty identifier",
 			driverName: "postgres",
-			identifier: "user table",
+			identifier: "",
 			wantPanic:  true,
 		},
 		{
-			name:       "PostgreSQL invalid identifier with semicolon",
-			driverName: "postgres",
-			identifier: "users; DROP TABLE users; --",
-			wantPanic:  true,
-		},
-		{
-			name:       "SQL Server invalid identifier with closing bracket",
+			name:       "SQL Server empty identifier",
 			driverName: "sqlserver",
-			identifier: "user]table",
+			identifier: "",
 			wantPanic:  true,
 		},
 		{
