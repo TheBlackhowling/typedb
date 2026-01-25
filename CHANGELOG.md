@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.35] - 2026-01-25
+
+**Commit:** [`71ca245`](https://github.com/TheBlackhowling/typedb/commit/71ca24579dc4db577c941fffa1408b69ded1752b)
+**Pull Request:** [#42](https://github.com/TheBlackhowling/typedb/pull/42)
+
+**Summary:** Add static analysis tooling configuration and automation scripts
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.35.md](versions/0.1.35.md)
+
+
 ## [0.1.34] - 2026-01-25
 
 **Commit:** [`2c1929b`](https://github.com/TheBlackhowling/typedb/commit/2c1929b908816d700d61b21014e172a7dcd6b785)
