@@ -151,7 +151,7 @@ func setFieldValue(model any, fieldName string, value any) error {
 		fieldValue.SetInt(valueV.Int())
 	} else if valueV.Kind() == reflect.Int && fieldValue.Kind() == reflect.Int64 {
 		// Convert int to int64
-		fieldValue.SetInt(int64(valueV.Int()))
+		fieldValue.SetInt(valueV.Int())
 	} else if valueV.Kind() == reflect.Float64 && fieldValue.Kind() == reflect.Float32 {
 		// Convert float64 to float32
 		fieldValue.SetFloat(valueV.Float())
