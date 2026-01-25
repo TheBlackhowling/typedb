@@ -58,28 +58,25 @@ import (
 //	// Modify only name
 //	user.Name = "New Name"
 //	typedb.Update(ctx, db, user) // Only updates name field, not email
-func Update[T ModelInterface](ctx context.Context, exec Executor, model T) error {
-	// Validate model has TableName() method
+// validateUpdateModel validates model for update operation
+func validateUpdateModel[T ModelInterface](model T) (string, *reflect.StructField, string, error) {
 	tableName, err := getTableName(model)
 	if err != nil {
-		return fmt.Errorf("typedb: Update validation failed: %w", err)
+		return "", nil, "", fmt.Errorf("typedb: Update validation failed: %w", err)
 	}
 
-	// Validate model doesn't have dot notation (not a joined model)
 	if hasDotNotation(model) {
-		return fmt.Errorf("typedb: Update cannot be used with joined models (detected dot notation in db tags)")
+		return "", nil, "", fmt.Errorf("typedb: Update cannot be used with joined models (detected dot notation in db tags)")
 	}
 
-	// Find primary key field
 	primaryField, found := findFieldByTag(model, "load", "primary")
 	if !found {
-		return fmt.Errorf("typedb: Update requires a field with load:\"primary\" tag")
+		return "", nil, "", fmt.Errorf("typedb: Update requires a field with load:\"primary\" tag")
 	}
 
-	// Get primary key column name from db tag
 	primaryKeyColumn := primaryField.Tag.Get("db")
 	if primaryKeyColumn == "" || primaryKeyColumn == "-" {
-		return fmt.Errorf("typedb: primary key field %s must have a db tag", primaryField.Name)
+		return "", nil, "", fmt.Errorf("typedb: primary key field %s must have a db tag", primaryField.Name)
 	}
 
 	// Extract column name (handle dot notation - use last part)
@@ -88,54 +85,15 @@ func Update[T ModelInterface](ctx context.Context, exec Executor, model T) error
 		primaryKeyColumn = parts[len(parts)-1]
 	}
 
-	// Get primary key value from model (for WHERE clause)
-	primaryKeyValue, err := getFieldValue(model, primaryField.Name)
-	if err != nil {
-		return fmt.Errorf("typedb: Update failed to get primary key value: %w", err)
-	}
+	return tableName, primaryField, primaryKeyColumn, nil
+}
 
-	// Validate primary key is set (non-zero)
-	if isZeroOrNil(primaryKeyValue) {
-		return fmt.Errorf("typedb: Update requires primary key field %s to be set (non-zero value)", primaryField.Name)
-	}
-
-	// Get driver name for database-specific SQL generation
-	driverName := getDriverName(exec)
-
-	// Check if partial update is enabled for this model
-	structType := reflect.TypeOf(model).Elem()
-	opts := GetModelOptions(structType)
-	var changedFields map[string]bool
-	if opts.PartialUpdate {
-		// Get changed fields by comparing with original copy
-		changedFields, err = getChangedFields(model, primaryField.Name)
-		if err != nil {
-			return fmt.Errorf("typedb: Update failed to get changed fields: %w", err)
-		}
-	}
-
-	// Collect fields and values (excluding primary key, nil/zero values, and fields with noupdate tag)
-	// Also collects auto-update timestamp fields
-	// If partial update is enabled, only include changed fields
-	columns, values, autoUpdateColumns, maskIndices, err := serializeModelFieldsForUpdate(model, primaryField.Name, driverName, changedFields)
-	if err != nil {
-		return fmt.Errorf("typedb: Update failed to serialize model: %w", err)
-	}
-
-	if len(columns) == 0 && len(autoUpdateColumns) == 0 {
-		return fmt.Errorf("typedb: Update requires at least one non-nil field to update")
-	}
-
-	// Store mask indices in context for logging
-	if len(maskIndices) > 0 {
-		ctx = WithMaskIndices(ctx, maskIndices)
-	}
-
-	// Build UPDATE query
+// buildUpdateQuery builds the UPDATE query with SET clause
+func buildUpdateQuery(driverName string, tableName string, primaryKeyColumn string,
+	columns []string, values []any, autoUpdateColumns []string) (string, []any) {
 	quotedTableName := quoteIdentifier(driverName, tableName)
 	quotedPrimaryKeyColumn := quoteIdentifier(driverName, primaryKeyColumn)
 
-	// Build SET clause
 	var setClauses []string
 	placeholderIndex := 1
 
@@ -154,19 +112,67 @@ func Update[T ModelInterface](ctx context.Context, exec Executor, model T) error
 		setClauses = append(setClauses, fmt.Sprintf("%s = %s", quotedCol, timestampFunc))
 	}
 
-	// Add primary key value to args for WHERE clause
 	wherePlaceholder := generatePlaceholder(driverName, len(values)+1)
-	allValues := append(values, primaryKeyValue.Interface())
-
-	// Build UPDATE query
-	updateQuery := fmt.Sprintf("UPDATE %s SET %s WHERE %s = %s",
+	query := fmt.Sprintf("UPDATE %s SET %s WHERE %s = %s",
 		quotedTableName,
 		strings.Join(setClauses, ", "),
 		quotedPrimaryKeyColumn,
 		wherePlaceholder)
 
-	// Execute UPDATE
-	_, err = exec.Exec(ctx, updateQuery, allValues...)
+	allValues := append(values, nil) // Placeholder for primary key value
+	return query, allValues
+}
+
+func Update[T ModelInterface](ctx context.Context, exec Executor, model T) error {
+	// Validation
+	tableName, primaryField, primaryKeyColumn, err := validateUpdateModel(model)
+	if err != nil {
+		return err
+	}
+
+	// Get primary key value
+	primaryKeyValue, err := getFieldValue(model, primaryField.Name)
+	if err != nil {
+		return fmt.Errorf("typedb: Update failed to get primary key value: %w", err)
+	}
+
+	if isZeroOrNil(primaryKeyValue) {
+		return fmt.Errorf("typedb: Update requires primary key field %s to be set (non-zero value)", primaryField.Name)
+	}
+
+	// Get changed fields if partial update enabled
+	driverName := getDriverName(exec)
+	structType := reflect.TypeOf(model).Elem()
+	opts := GetModelOptions(structType)
+	var changedFields map[string]bool
+	if opts.PartialUpdate {
+		changedFields, err = getChangedFields(model, primaryField.Name)
+		if err != nil {
+			return fmt.Errorf("typedb: Update failed to get changed fields: %w", err)
+		}
+	}
+
+	// Serialize fields
+	columns, values, autoUpdateColumns, maskIndices, err := serializeModelFieldsForUpdate(model, primaryField.Name, driverName, changedFields)
+	if err != nil {
+		return fmt.Errorf("typedb: Update failed to serialize model: %w", err)
+	}
+
+	if len(columns) == 0 && len(autoUpdateColumns) == 0 {
+		return fmt.Errorf("typedb: Update requires at least one non-nil field to update")
+	}
+
+	// Store mask indices
+	if len(maskIndices) > 0 {
+		ctx = WithMaskIndices(ctx, maskIndices)
+	}
+
+	// Build query
+	query, allValues := buildUpdateQuery(driverName, tableName, primaryKeyColumn, columns, values, autoUpdateColumns)
+	allValues[len(allValues)-1] = primaryKeyValue.Interface()
+
+	// Execute
+	_, err = exec.Exec(ctx, query, allValues...)
 	if err != nil {
 		return fmt.Errorf("typedb: Update failed: %w", err)
 	}
