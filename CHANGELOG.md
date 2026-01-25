@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.38] - 2026-01-25
+
+**Commit:** [`d6e9a97`](https://github.com/TheBlackhowling/typedb/commit/d6e9a97fa73c817027a54bf7b17daf2920a52964)
+**Pull Request:** [#50](https://github.com/TheBlackhowling/typedb/pull/50)
+
+**Summary:** Reduce cyclomatic complexity of deserializeToField function from 36 to below 15
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.38.md](versions/0.1.38.md)
+
+
 ## [0.1.37] - 2026-01-25
 
 **Commit:** [`6371d90`](https://github.com/TheBlackhowling/typedb/commit/6371d90db930bda7a5e4824a3788451f65121325)
