@@ -599,5 +599,5 @@ type SerializeModelWithUnexported struct {
 	Model
 	ID   int    `db:"id" load:"primary"`
 	Name string `db:"name"`
-	age  int    `db:"age"` // unexported
+	age  int    `db:"age"` //nolint:unused // unexported - intentionally unused for testing
 }
