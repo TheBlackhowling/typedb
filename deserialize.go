@@ -281,7 +281,7 @@ func deserializeBasicType(target, value any) error {
 }
 
 // deserializeUintType handles unsigned integer types: *uint64, *uint32, *uint
-func deserializeUintType(target any, value any) error {
+func deserializeUintType(target, value any) error {
 	switch ptr := target.(type) {
 	case *uint64:
 		val, err := deserializeUint64(value)
