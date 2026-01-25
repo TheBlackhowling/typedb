@@ -2,6 +2,7 @@ package typedb
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"strings"
 	"testing"
@@ -709,6 +710,1927 @@ func TestLogConfigOptions(t *testing.T) {
 		}
 		if !foundError {
 			t.Error("Expected 'error' key in error log")
+		}
+	})
+}
+
+// TestMaskArgs verifies that maskArgs function correctly masks arguments at specified indices
+func TestMaskArgs(t *testing.T) {
+	tests := []struct {
+		name        string
+		args        []any
+		maskIndices []int
+		expected    []any
+	}{
+		{
+			name:        "no indices to mask",
+			args:        []any{"John", "john@example.com", "password123"},
+			maskIndices: []int{},
+			expected:    []any{"John", "john@example.com", "password123"},
+		},
+		{
+			name:        "mask single index",
+			args:        []any{"John", "john@example.com", "password123"},
+			maskIndices: []int{2},
+			expected:    []any{"John", "john@example.com", "[REDACTED]"},
+		},
+		{
+			name:        "mask first index",
+			args:        []any{"secret123", "john@example.com", "John"},
+			maskIndices: []int{0},
+			expected:    []any{"[REDACTED]", "john@example.com", "John"},
+		},
+		{
+			name:        "mask multiple indices",
+			args:        []any{"John", "secret123", "anotherSecret"},
+			maskIndices: []int{1, 2},
+			expected:    []any{"John", "[REDACTED]", "[REDACTED]"},
+		},
+		{
+			name:        "mask all indices",
+			args:        []any{"secret1", "secret2", "secret3"},
+			maskIndices: []int{0, 1, 2},
+			expected:    []any{"[REDACTED]", "[REDACTED]", "[REDACTED]"},
+		},
+		{
+			name:        "mask out of bounds index (should not panic)",
+			args:        []any{"John", "john@example.com"},
+			maskIndices: []int{5},
+			expected:    []any{"John", "john@example.com"},
+		},
+		{
+			name:        "mask negative index (should not panic)",
+			args:        []any{"John", "john@example.com"},
+			maskIndices: []int{-1},
+			expected:    []any{"John", "john@example.com"},
+		},
+		{
+			name:        "empty args",
+			args:        []any{},
+			maskIndices: []int{0},
+			expected:    []any{},
+		},
+		{
+			name:        "mask middle index",
+			args:        []any{"John", "secret123", "Doe", "john@example.com"},
+			maskIndices: []int{1},
+			expected:    []any{"John", "[REDACTED]", "Doe", "john@example.com"},
+		},
+		{
+			name:        "duplicate indices",
+			args:        []any{"John", "secret123"},
+			maskIndices: []int{1, 1},
+			expected:    []any{"John", "[REDACTED]"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := maskArgs(tt.args, tt.maskIndices)
+
+			if len(result) != len(tt.expected) {
+				t.Errorf("Expected result length %d, got %d", len(tt.expected), len(result))
+				return
+			}
+
+			for i := range result {
+				if result[i] != tt.expected[i] {
+					t.Errorf("Index %d: expected %v, got %v", i, tt.expected[i], result[i])
+				}
+			}
+
+			// Verify original args are not modified
+			if len(tt.args) > 0 && len(tt.maskIndices) > 0 {
+				// Check that original args still contain original values
+				for i, idx := range tt.maskIndices {
+					if idx >= 0 && idx < len(tt.args) {
+						// Original should still have the original value
+						if result[idx] == "[REDACTED]" && tt.args[idx] == "[REDACTED]" {
+							t.Errorf("Original args were modified at index %d", idx)
+						}
+					}
+					_ = i // avoid unused variable
+				}
+			}
+		})
+	}
+}
+
+// TestWithMaskIndices verifies that WithMaskIndices stores indices in context correctly
+func TestWithMaskIndices(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("store single index", func(t *testing.T) {
+		ctx := WithMaskIndices(ctx, []int{1})
+		maskIndices := ctx.Value(maskIndicesKey{})
+		if maskIndices == nil {
+			t.Fatal("Expected maskIndices to be stored in context")
+		}
+		indices, ok := maskIndices.([]int)
+		if !ok {
+			t.Fatalf("Expected []int, got %T", maskIndices)
+		}
+		if len(indices) != 1 || indices[0] != 1 {
+			t.Errorf("Expected [1], got %v", indices)
+		}
+	})
+
+	t.Run("store multiple indices", func(t *testing.T) {
+		ctx := WithMaskIndices(ctx, []int{0, 2, 5})
+		maskIndices := ctx.Value(maskIndicesKey{})
+		if maskIndices == nil {
+			t.Fatal("Expected maskIndices to be stored in context")
+		}
+		indices, ok := maskIndices.([]int)
+		if !ok {
+			t.Fatalf("Expected []int, got %T", maskIndices)
+		}
+		expected := []int{0, 2, 5}
+		if len(indices) != len(expected) {
+			t.Errorf("Expected length %d, got %d", len(expected), len(indices))
+		}
+		for i := range indices {
+			if indices[i] != expected[i] {
+				t.Errorf("Index %d: expected %d, got %d", i, expected[i], indices[i])
+			}
+		}
+	})
+
+	t.Run("store empty indices", func(t *testing.T) {
+		ctx := WithMaskIndices(ctx, []int{})
+		maskIndices := ctx.Value(maskIndicesKey{})
+		if maskIndices == nil {
+			t.Fatal("Expected maskIndices to be stored in context (even if empty)")
+		}
+		indices, ok := maskIndices.([]int)
+		if !ok {
+			t.Fatalf("Expected []int, got %T", maskIndices)
+		}
+		if len(indices) != 0 {
+			t.Errorf("Expected empty slice, got %v", indices)
+		}
+	})
+
+	t.Run("chaining WithMaskIndices overwrites previous", func(t *testing.T) {
+		ctx := WithMaskIndices(ctx, []int{1, 2})
+		ctx = WithMaskIndices(ctx, []int{3, 4})
+		maskIndices := ctx.Value(maskIndicesKey{})
+		if maskIndices == nil {
+			t.Fatal("Expected maskIndices to be stored in context")
+		}
+		indices, ok := maskIndices.([]int)
+		if !ok {
+			t.Fatalf("Expected []int, got %T", maskIndices)
+		}
+		expected := []int{3, 4}
+		if len(indices) != len(expected) {
+			t.Errorf("Expected length %d, got %d", len(expected), len(indices))
+		}
+		for i := range indices {
+			if indices[i] != expected[i] {
+				t.Errorf("Index %d: expected %d, got %d", i, expected[i], indices[i])
+			}
+		}
+	})
+}
+
+// TestGetLoggingFlagsAndArgs verifies that getLoggingFlagsAndArgs correctly retrieves and applies masking
+func TestGetLoggingFlagsAndArgs(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("no masking when no mask indices in context", func(t *testing.T) {
+		args := []any{"John", "john@example.com", "password123"}
+		logQueries, logArgs, logArgsCopy := getLoggingFlagsAndArgs(ctx, true, true, args)
+
+		if !logQueries {
+			t.Error("Expected logQueries to be true")
+		}
+		if !logArgs {
+			t.Error("Expected logArgs to be true")
+		}
+		if len(logArgsCopy) != len(args) {
+			t.Errorf("Expected args length %d, got %d", len(args), len(logArgsCopy))
+		}
+		for i := range args {
+			if logArgsCopy[i] != args[i] {
+				t.Errorf("Index %d: expected %v, got %v", i, args[i], logArgsCopy[i])
+			}
+		}
+	})
+
+	t.Run("masking applied when mask indices in context", func(t *testing.T) {
+		ctx := WithMaskIndices(ctx, []int{2})
+		args := []any{"John", "john@example.com", "password123"}
+		logQueries, logArgs, logArgsCopy := getLoggingFlagsAndArgs(ctx, true, true, args)
+
+		if !logQueries {
+			t.Error("Expected logQueries to be true")
+		}
+		if !logArgs {
+			t.Error("Expected logArgs to be true")
+		}
+		if len(logArgsCopy) != len(args) {
+			t.Errorf("Expected args length %d, got %d", len(args), len(logArgsCopy))
+		}
+		// First two should be unchanged
+		if logArgsCopy[0] != "John" {
+			t.Errorf("Index 0: expected 'John', got %v", logArgsCopy[0])
+		}
+		if logArgsCopy[1] != "john@example.com" {
+			t.Errorf("Index 1: expected 'john@example.com', got %v", logArgsCopy[1])
+		}
+		// Third should be masked
+		if logArgsCopy[2] != "[REDACTED]" {
+			t.Errorf("Index 2: expected '[REDACTED]', got %v", logArgsCopy[2])
+		}
+		// Original args should not be modified
+		if args[2] != "password123" {
+			t.Error("Original args were modified")
+		}
+	})
+
+	t.Run("masking multiple indices", func(t *testing.T) {
+		ctx := WithMaskIndices(ctx, []int{0, 2})
+		args := []any{"secret1", "john@example.com", "secret2"}
+		logQueries, logArgs, logArgsCopy := getLoggingFlagsAndArgs(ctx, true, true, args)
+
+		if !logQueries {
+			t.Error("Expected logQueries to be true")
+		}
+		if !logArgs {
+			t.Error("Expected logArgs to be true")
+		}
+		if logArgsCopy[0] != "[REDACTED]" {
+			t.Errorf("Index 0: expected '[REDACTED]', got %v", logArgsCopy[0])
+		}
+		if logArgsCopy[1] != "john@example.com" {
+			t.Errorf("Index 1: expected 'john@example.com', got %v", logArgsCopy[1])
+		}
+		if logArgsCopy[2] != "[REDACTED]" {
+			t.Errorf("Index 2: expected '[REDACTED]', got %v", logArgsCopy[2])
+		}
+	})
+
+	t.Run("masking with LogArgs=false (should not mask)", func(t *testing.T) {
+		ctx := WithMaskIndices(ctx, []int{2})
+		args := []any{"John", "john@example.com", "password123"}
+		logQueries, logArgs, logArgsCopy := getLoggingFlagsAndArgs(ctx, true, false, args)
+
+		if !logQueries {
+			t.Error("Expected logQueries to be true")
+		}
+		if logArgs {
+			t.Error("Expected logArgs to be false")
+		}
+		// When LogArgs=false, masking is not applied, but args are still returned
+		// (they just won't be logged). The function returns the original args.
+		if len(logArgsCopy) != len(args) {
+			t.Errorf("Expected args length %d, got %d", len(args), len(logArgsCopy))
+		}
+		// Args should not be masked when LogArgs=false
+		if logArgsCopy[2] == "[REDACTED]" {
+			t.Error("Expected args not to be masked when LogArgs=false")
+		}
+		if logArgsCopy[2] != "password123" {
+			t.Errorf("Expected password123, got %v", logArgsCopy[2])
+		}
+	})
+
+	t.Run("masking with LogQueries=false and LogArgs=true", func(t *testing.T) {
+		ctx := WithMaskIndices(ctx, []int{2})
+		args := []any{"John", "john@example.com", "password123"}
+		logQueries, logArgs, logArgsCopy := getLoggingFlagsAndArgs(ctx, false, true, args)
+
+		if logQueries {
+			t.Error("Expected logQueries to be false")
+		}
+		if !logArgs {
+			t.Error("Expected logArgs to be true")
+		}
+		// Args should still be masked even if queries are not logged
+		if len(logArgsCopy) != len(args) {
+			t.Errorf("Expected args length %d, got %d", len(args), len(logArgsCopy))
+		}
+		if logArgsCopy[2] != "[REDACTED]" {
+			t.Errorf("Index 2: expected '[REDACTED]', got %v", logArgsCopy[2])
+		}
+	})
+}
+
+// TestExecHelperMasking verifies that execHelper correctly masks arguments
+func TestExecHelperMasking(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	logger := &testLogger{}
+	ctx := context.Background()
+	query := "INSERT INTO users (name, email, password) VALUES ($1, $2, $3)"
+	args := []any{"John", "john@example.com", "secret123"}
+
+	t.Run("no mask indices - args logged as-is", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		mock.ExpectExec("INSERT INTO users").
+			WithArgs("John", "john@example.com", "secret123").
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		_, err := execHelper(ctx, db, logger, 5*time.Second, true, true, query, args...)
+		if err != nil {
+			t.Fatalf("execHelper failed: %v", err)
+		}
+
+		// Verify args are logged as-is
+		foundArgs := false
+		var loggedArgs []any
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+					if args, ok := entry.keyvals[i+1].([]any); ok {
+						loggedArgs = args
+					}
+					break
+				}
+			}
+			if foundArgs {
+				break
+			}
+		}
+
+		if !foundArgs {
+			t.Fatal("Expected 'args' key in log")
+		}
+		if len(loggedArgs) != 3 {
+			t.Fatalf("Expected 3 args, got %d", len(loggedArgs))
+		}
+		if loggedArgs[0] != "John" || loggedArgs[1] != "john@example.com" || loggedArgs[2] != "secret123" {
+			t.Errorf("Expected args to be logged as-is, got %v", loggedArgs)
+		}
+	})
+
+	t.Run("with mask indices - args masked", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		ctx := WithMaskIndices(ctx, []int{2}) // Mask password at index 2
+
+		mock.ExpectExec("INSERT INTO users").
+			WithArgs("John", "john@example.com", "secret123").
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		_, err := execHelper(ctx, db, logger, 5*time.Second, true, true, query, args...)
+		if err != nil {
+			t.Fatalf("execHelper failed: %v", err)
+		}
+
+		// Verify args are masked
+		foundArgs := false
+		var loggedArgs []any
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+					if args, ok := entry.keyvals[i+1].([]any); ok {
+						loggedArgs = args
+					}
+					break
+				}
+			}
+			if foundArgs {
+				break
+			}
+		}
+
+		if !foundArgs {
+			t.Fatal("Expected 'args' key in log")
+		}
+		if len(loggedArgs) != 3 {
+			t.Fatalf("Expected 3 args, got %d", len(loggedArgs))
+		}
+		if loggedArgs[0] != "John" {
+			t.Errorf("Expected first arg to be 'John', got %v", loggedArgs[0])
+		}
+		if loggedArgs[1] != "john@example.com" {
+			t.Errorf("Expected second arg to be 'john@example.com', got %v", loggedArgs[1])
+		}
+		if loggedArgs[2] != "[REDACTED]" {
+			t.Errorf("Expected third arg to be '[REDACTED]', got %v", loggedArgs[2])
+		}
+	})
+}
+
+// TestQueryAllHelperMasking verifies that queryAllHelper correctly masks arguments
+func TestQueryAllHelperMasking(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	logger := &testLogger{}
+	ctx := context.Background()
+	query := "SELECT id, name, email FROM users WHERE email = $1 AND password = $2"
+	args := []any{"john@example.com", "secret123"}
+
+	t.Run("no mask indices - args logged as-is", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs("john@example.com", "secret123").
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(1, "John", "john@example.com"))
+
+		_, err := queryAllHelper(ctx, db, logger, 5*time.Second, true, true, query, args...)
+		if err != nil {
+			t.Fatalf("queryAllHelper failed: %v", err)
+		}
+
+		// Verify args are logged as-is
+		foundArgs := false
+		var loggedArgs []any
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+					if args, ok := entry.keyvals[i+1].([]any); ok {
+						loggedArgs = args
+					}
+					break
+				}
+			}
+			if foundArgs {
+				break
+			}
+		}
+
+		if !foundArgs {
+			t.Fatal("Expected 'args' key in log")
+		}
+		if len(loggedArgs) != 2 {
+			t.Fatalf("Expected 2 args, got %d", len(loggedArgs))
+		}
+		if loggedArgs[0] != "john@example.com" || loggedArgs[1] != "secret123" {
+			t.Errorf("Expected args to be logged as-is, got %v", loggedArgs)
+		}
+	})
+
+	t.Run("with mask indices - args masked", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		ctx := WithMaskIndices(ctx, []int{1}) // Mask password at index 1
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs("john@example.com", "secret123").
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(1, "John", "john@example.com"))
+
+		_, err := queryAllHelper(ctx, db, logger, 5*time.Second, true, true, query, args...)
+		if err != nil {
+			t.Fatalf("queryAllHelper failed: %v", err)
+		}
+
+		// Verify args are masked
+		foundArgs := false
+		var loggedArgs []any
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+					if args, ok := entry.keyvals[i+1].([]any); ok {
+						loggedArgs = args
+					}
+					break
+				}
+			}
+			if foundArgs {
+				break
+			}
+		}
+
+		if !foundArgs {
+			t.Fatal("Expected 'args' key in log")
+		}
+		if len(loggedArgs) != 2 {
+			t.Fatalf("Expected 2 args, got %d", len(loggedArgs))
+		}
+		if loggedArgs[0] != "john@example.com" {
+			t.Errorf("Expected first arg to be 'john@example.com', got %v", loggedArgs[0])
+		}
+		if loggedArgs[1] != "[REDACTED]" {
+			t.Errorf("Expected second arg to be '[REDACTED]', got %v", loggedArgs[1])
+		}
+	})
+}
+
+// TestQueryRowMapHelperMasking verifies that queryRowMapHelper correctly masks arguments
+func TestQueryRowMapHelperMasking(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	logger := &testLogger{}
+	ctx := context.Background()
+	query := "SELECT id, name, email FROM users WHERE id = $1 AND password = $2"
+	args := []any{123, "secret123"}
+
+	t.Run("no mask indices - args logged as-is", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs(123, "secret123").
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(123, "John", "john@example.com"))
+
+		_, err := queryRowMapHelper(ctx, db, logger, 5*time.Second, true, true, query, args...)
+		if err != nil {
+			t.Fatalf("queryRowMapHelper failed: %v", err)
+		}
+
+		// Verify args are logged as-is
+		foundArgs := false
+		var loggedArgs []any
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+					if args, ok := entry.keyvals[i+1].([]any); ok {
+						loggedArgs = args
+					}
+					break
+				}
+			}
+			if foundArgs {
+				break
+			}
+		}
+
+		if !foundArgs {
+			t.Fatal("Expected 'args' key in log")
+		}
+		if len(loggedArgs) != 2 {
+			t.Fatalf("Expected 2 args, got %d", len(loggedArgs))
+		}
+		if loggedArgs[0] != 123 || loggedArgs[1] != "secret123" {
+			t.Errorf("Expected args to be logged as-is, got %v", loggedArgs)
+		}
+	})
+
+	t.Run("with mask indices - args masked", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		ctx := WithMaskIndices(ctx, []int{1}) // Mask password at index 1
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs(123, "secret123").
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(123, "John", "john@example.com"))
+
+		_, err := queryRowMapHelper(ctx, db, logger, 5*time.Second, true, true, query, args...)
+		if err != nil {
+			t.Fatalf("queryRowMapHelper failed: %v", err)
+		}
+
+		// Verify args are masked
+		foundArgs := false
+		var loggedArgs []any
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+					if args, ok := entry.keyvals[i+1].([]any); ok {
+						loggedArgs = args
+					}
+					break
+				}
+			}
+			if foundArgs {
+				break
+			}
+		}
+
+		if !foundArgs {
+			t.Fatal("Expected 'args' key in log")
+		}
+		if len(loggedArgs) != 2 {
+			t.Fatalf("Expected 2 args, got %d", len(loggedArgs))
+		}
+		if loggedArgs[0] != 123 {
+			t.Errorf("Expected first arg to be 123, got %v", loggedArgs[0])
+		}
+		if loggedArgs[1] != "[REDACTED]" {
+			t.Errorf("Expected second arg to be '[REDACTED]', got %v", loggedArgs[1])
+		}
+	})
+}
+
+// TestGetIntoHelperMasking verifies that getIntoHelper correctly masks arguments
+func TestGetIntoHelperMasking(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	logger := &testLogger{}
+	ctx := context.Background()
+	query := "SELECT id, name, email FROM users WHERE email = $1 AND password = $2"
+	args := []any{"john@example.com", "secret123"}
+	var id int
+	var name, email string
+
+	t.Run("no mask indices - args logged as-is", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs("john@example.com", "secret123").
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(1, "John", "john@example.com"))
+
+		err := getIntoHelper(ctx, db, logger, 5*time.Second, true, true, query, args, &id, &name, &email)
+		if err != nil {
+			t.Fatalf("getIntoHelper failed: %v", err)
+		}
+
+		// Verify args are logged as-is
+		foundArgs := false
+		var loggedArgs []any
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+					if args, ok := entry.keyvals[i+1].([]any); ok {
+						loggedArgs = args
+					}
+					break
+				}
+			}
+			if foundArgs {
+				break
+			}
+		}
+
+		if !foundArgs {
+			t.Fatal("Expected 'args' key in log")
+		}
+		if len(loggedArgs) != 2 {
+			t.Fatalf("Expected 2 args, got %d", len(loggedArgs))
+		}
+		if loggedArgs[0] != "john@example.com" || loggedArgs[1] != "secret123" {
+			t.Errorf("Expected args to be logged as-is, got %v", loggedArgs)
+		}
+	})
+
+	t.Run("with mask indices - args masked", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		ctx := WithMaskIndices(ctx, []int{1}) // Mask password at index 1
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs("john@example.com", "secret123").
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(1, "John", "john@example.com"))
+
+		err := getIntoHelper(ctx, db, logger, 5*time.Second, true, true, query, args, &id, &name, &email)
+		if err != nil {
+			t.Fatalf("getIntoHelper failed: %v", err)
+		}
+
+		// Verify args are masked
+		foundArgs := false
+		var loggedArgs []any
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+					if args, ok := entry.keyvals[i+1].([]any); ok {
+						loggedArgs = args
+					}
+					break
+				}
+			}
+			if foundArgs {
+				break
+			}
+		}
+
+		if !foundArgs {
+			t.Fatal("Expected 'args' key in log")
+		}
+		if len(loggedArgs) != 2 {
+			t.Fatalf("Expected 2 args, got %d", len(loggedArgs))
+		}
+		if loggedArgs[0] != "john@example.com" {
+			t.Errorf("Expected first arg to be 'john@example.com', got %v", loggedArgs[0])
+		}
+		if loggedArgs[1] != "[REDACTED]" {
+			t.Errorf("Expected second arg to be '[REDACTED]', got %v", loggedArgs[1])
+		}
+	})
+}
+
+// TestQueryDoHelperMasking verifies that queryDoHelper correctly masks arguments
+func TestQueryDoHelperMasking(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	logger := &testLogger{}
+	ctx := context.Background()
+	query := "SELECT id, name, email FROM users WHERE email = $1 AND password = $2"
+	args := []any{"john@example.com", "secret123"}
+
+	t.Run("no mask indices - args logged as-is", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs("john@example.com", "secret123").
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(1, "John", "john@example.com"))
+
+		scanCalled := false
+		err := queryDoHelper(ctx, db, logger, 5*time.Second, true, true, query, args, func(rows *sql.Rows) error {
+			scanCalled = true
+			return nil
+		})
+		if err != nil {
+			t.Fatalf("queryDoHelper failed: %v", err)
+		}
+		if !scanCalled {
+			t.Error("Expected scan function to be called")
+		}
+
+		// Verify args are logged as-is
+		foundArgs := false
+		var loggedArgs []any
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+					if args, ok := entry.keyvals[i+1].([]any); ok {
+						loggedArgs = args
+					}
+					break
+				}
+			}
+			if foundArgs {
+				break
+			}
+		}
+
+		if !foundArgs {
+			t.Fatal("Expected 'args' key in log")
+		}
+		if len(loggedArgs) != 2 {
+			t.Fatalf("Expected 2 args, got %d", len(loggedArgs))
+		}
+		if loggedArgs[0] != "john@example.com" || loggedArgs[1] != "secret123" {
+			t.Errorf("Expected args to be logged as-is, got %v", loggedArgs)
+		}
+	})
+
+	t.Run("with mask indices - args masked", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		ctx := WithMaskIndices(ctx, []int{1}) // Mask password at index 1
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs("john@example.com", "secret123").
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(1, "John", "john@example.com"))
+
+		scanCalled := false
+		err := queryDoHelper(ctx, db, logger, 5*time.Second, true, true, query, args, func(rows *sql.Rows) error {
+			scanCalled = true
+			return nil
+		})
+		if err != nil {
+			t.Fatalf("queryDoHelper failed: %v", err)
+		}
+		if !scanCalled {
+			t.Error("Expected scan function to be called")
+		}
+
+		// Verify args are masked
+		foundArgs := false
+		var loggedArgs []any
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+					if args, ok := entry.keyvals[i+1].([]any); ok {
+						loggedArgs = args
+					}
+					break
+				}
+			}
+			if foundArgs {
+				break
+			}
+		}
+
+		if !foundArgs {
+			t.Fatal("Expected 'args' key in log")
+		}
+		if len(loggedArgs) != 2 {
+			t.Fatalf("Expected 2 args, got %d", len(loggedArgs))
+		}
+		if loggedArgs[0] != "john@example.com" {
+			t.Errorf("Expected first arg to be 'john@example.com', got %v", loggedArgs[0])
+		}
+		if loggedArgs[1] != "[REDACTED]" {
+			t.Errorf("Expected second arg to be '[REDACTED]', got %v", loggedArgs[1])
+		}
+	})
+}
+
+// TestExecGlobalLoggingConfig verifies that global logging config options work for Exec
+func TestExecGlobalLoggingConfig(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	logger := &testLogger{}
+	ctx := context.Background()
+	query := "INSERT INTO users (name, email) VALUES ($1, $2)"
+	args := []any{"John", "john@example.com"}
+
+	t.Run("LogQueries=false disables query logging", func(t *testing.T) {
+		logger.debugs = nil
+		typedbDB := NewDBWithLoggerAndFlags(db, "test", 5*time.Second, logger, false, true)
+
+		mock.ExpectExec("INSERT INTO users").
+			WithArgs("John", "john@example.com").
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		_, err := typedbDB.Exec(ctx, query, args...)
+		if err != nil {
+			t.Fatalf("Exec failed: %v", err)
+		}
+
+		// Should log message but without query
+		if len(logger.debugs) == 0 {
+			t.Fatal("Expected Debug log even when LogQueries=false")
+		}
+		foundQuery := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+			}
+		}
+		if foundQuery {
+			t.Error("Expected 'query' key to be absent when LogQueries=false")
+		}
+	})
+
+	t.Run("LogArgs=false disables argument logging", func(t *testing.T) {
+		logger.debugs = nil
+		typedbDB := NewDBWithLoggerAndFlags(db, "test", 5*time.Second, logger, true, false)
+
+		mock.ExpectExec("INSERT INTO users").
+			WithArgs("John", "john@example.com").
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		_, err := typedbDB.Exec(ctx, query, args...)
+		if err != nil {
+			t.Fatalf("Exec failed: %v", err)
+		}
+
+		// Should log query but without args
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if !foundQuery {
+			t.Error("Expected 'query' key to be present when LogQueries=true")
+		}
+		if foundArgs {
+			t.Error("Expected 'args' key to be absent when LogArgs=false")
+		}
+	})
+
+	t.Run("LogQueries=false and LogArgs=false disables both", func(t *testing.T) {
+		logger.debugs = nil
+		typedbDB := NewDBWithLoggerAndFlags(db, "test", 5*time.Second, logger, false, false)
+
+		mock.ExpectExec("INSERT INTO users").
+			WithArgs("John", "john@example.com").
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		_, err := typedbDB.Exec(ctx, query, args...)
+		if err != nil {
+			t.Fatalf("Exec failed: %v", err)
+		}
+
+		// Should log message but without query or args
+		if len(logger.debugs) == 0 {
+			t.Fatal("Expected Debug log even when both disabled")
+		}
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if foundQuery {
+			t.Error("Expected 'query' key to be absent when LogQueries=false")
+		}
+		if foundArgs {
+			t.Error("Expected 'args' key to be absent when LogArgs=false")
+		}
+	})
+}
+
+// TestQueryAllGlobalLoggingConfig verifies that global logging config options work for QueryAll
+func TestQueryAllGlobalLoggingConfig(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	logger := &testLogger{}
+	ctx := context.Background()
+	query := "SELECT id, name, email FROM users WHERE email = $1"
+	args := []any{"john@example.com"}
+
+	t.Run("LogQueries=false disables query logging", func(t *testing.T) {
+		logger.debugs = nil
+		typedbDB := NewDBWithLoggerAndFlags(db, "test", 5*time.Second, logger, false, true)
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs("john@example.com").
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(1, "John", "john@example.com"))
+
+		_, err := typedbDB.QueryAll(ctx, query, args...)
+		if err != nil {
+			t.Fatalf("QueryAll failed: %v", err)
+		}
+
+		// Should log message but without query
+		if len(logger.debugs) == 0 {
+			t.Fatal("Expected Debug log even when LogQueries=false")
+		}
+		foundQuery := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+			}
+		}
+		if foundQuery {
+			t.Error("Expected 'query' key to be absent when LogQueries=false")
+		}
+	})
+
+	t.Run("LogArgs=false disables argument logging", func(t *testing.T) {
+		logger.debugs = nil
+		typedbDB := NewDBWithLoggerAndFlags(db, "test", 5*time.Second, logger, true, false)
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs("john@example.com").
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(1, "John", "john@example.com"))
+
+		_, err := typedbDB.QueryAll(ctx, query, args...)
+		if err != nil {
+			t.Fatalf("QueryAll failed: %v", err)
+		}
+
+		// Should log query but without args
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if !foundQuery {
+			t.Error("Expected 'query' key to be present when LogQueries=true")
+		}
+		if foundArgs {
+			t.Error("Expected 'args' key to be absent when LogArgs=false")
+		}
+	})
+}
+
+// TestQueryRowMapGlobalLoggingConfig verifies that global logging config options work for QueryRowMap
+func TestQueryRowMapGlobalLoggingConfig(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	logger := &testLogger{}
+	ctx := context.Background()
+	query := "SELECT id, name, email FROM users WHERE id = $1"
+	args := []any{123}
+
+	t.Run("LogQueries=false disables query logging", func(t *testing.T) {
+		logger.debugs = nil
+		typedbDB := NewDBWithLoggerAndFlags(db, "test", 5*time.Second, logger, false, true)
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs(123).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(123, "John", "john@example.com"))
+
+		_, err := typedbDB.QueryRowMap(ctx, query, args...)
+		if err != nil {
+			t.Fatalf("QueryRowMap failed: %v", err)
+		}
+
+		// Should log message but without query
+		if len(logger.debugs) == 0 {
+			t.Fatal("Expected Debug log even when LogQueries=false")
+		}
+		foundQuery := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+			}
+		}
+		if foundQuery {
+			t.Error("Expected 'query' key to be absent when LogQueries=false")
+		}
+	})
+
+	t.Run("LogArgs=false disables argument logging", func(t *testing.T) {
+		logger.debugs = nil
+		typedbDB := NewDBWithLoggerAndFlags(db, "test", 5*time.Second, logger, true, false)
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs(123).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(123, "John", "john@example.com"))
+
+		_, err := typedbDB.QueryRowMap(ctx, query, args...)
+		if err != nil {
+			t.Fatalf("QueryRowMap failed: %v", err)
+		}
+
+		// Should log query but without args
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if !foundQuery {
+			t.Error("Expected 'query' key to be present when LogQueries=true")
+		}
+		if foundArgs {
+			t.Error("Expected 'args' key to be absent when LogArgs=false")
+		}
+	})
+}
+
+// TestGetIntoGlobalLoggingConfig verifies that global logging config options work for GetInto
+func TestGetIntoGlobalLoggingConfig(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	logger := &testLogger{}
+	ctx := context.Background()
+	query := "SELECT id, name, email FROM users WHERE id = $1"
+	args := []any{123}
+	var id int
+	var name, email string
+
+	t.Run("LogQueries=false disables query logging", func(t *testing.T) {
+		logger.debugs = nil
+		typedbDB := NewDBWithLoggerAndFlags(db, "test", 5*time.Second, logger, false, true)
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs(123).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(123, "John", "john@example.com"))
+
+		err := typedbDB.GetInto(ctx, query, args, &id, &name, &email)
+		if err != nil {
+			t.Fatalf("GetInto failed: %v", err)
+		}
+
+		// Should log message but without query
+		if len(logger.debugs) == 0 {
+			t.Fatal("Expected Debug log even when LogQueries=false")
+		}
+		foundQuery := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+			}
+		}
+		if foundQuery {
+			t.Error("Expected 'query' key to be absent when LogQueries=false")
+		}
+	})
+
+	t.Run("LogArgs=false disables argument logging", func(t *testing.T) {
+		logger.debugs = nil
+		typedbDB := NewDBWithLoggerAndFlags(db, "test", 5*time.Second, logger, true, false)
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs(123).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(123, "John", "john@example.com"))
+
+		err := typedbDB.GetInto(ctx, query, args, &id, &name, &email)
+		if err != nil {
+			t.Fatalf("GetInto failed: %v", err)
+		}
+
+		// Should log query but without args
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if !foundQuery {
+			t.Error("Expected 'query' key to be present when LogQueries=true")
+		}
+		if foundArgs {
+			t.Error("Expected 'args' key to be absent when LogArgs=false")
+		}
+	})
+}
+
+// TestQueryDoGlobalLoggingConfig verifies that global logging config options work for QueryDo
+func TestQueryDoGlobalLoggingConfig(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	logger := &testLogger{}
+	ctx := context.Background()
+	query := "SELECT id, name, email FROM users WHERE email = $1"
+	args := []any{"john@example.com"}
+
+	t.Run("LogQueries=false disables query logging", func(t *testing.T) {
+		logger.debugs = nil
+		typedbDB := NewDBWithLoggerAndFlags(db, "test", 5*time.Second, logger, false, true)
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs("john@example.com").
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(1, "John", "john@example.com"))
+
+		err := typedbDB.QueryDo(ctx, query, args, func(rows *sql.Rows) error {
+			return nil
+		})
+		if err != nil {
+			t.Fatalf("QueryDo failed: %v", err)
+		}
+
+		// Should log message but without query
+		if len(logger.debugs) == 0 {
+			t.Fatal("Expected Debug log even when LogQueries=false")
+		}
+		foundQuery := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+			}
+		}
+		if foundQuery {
+			t.Error("Expected 'query' key to be absent when LogQueries=false")
+		}
+	})
+
+	t.Run("LogArgs=false disables argument logging", func(t *testing.T) {
+		logger.debugs = nil
+		typedbDB := NewDBWithLoggerAndFlags(db, "test", 5*time.Second, logger, true, false)
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs("john@example.com").
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(1, "John", "john@example.com"))
+
+		err := typedbDB.QueryDo(ctx, query, args, func(rows *sql.Rows) error {
+			return nil
+		})
+		if err != nil {
+			t.Fatalf("QueryDo failed: %v", err)
+		}
+
+		// Should log query but without args
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if !foundQuery {
+			t.Error("Expected 'query' key to be present when LogQueries=true")
+		}
+		if foundArgs {
+			t.Error("Expected 'args' key to be absent when LogArgs=false")
+		}
+	})
+}
+
+// TestExecContextLoggingOverrides verifies that context-based logging overrides work for Exec
+func TestExecContextLoggingOverrides(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	logger := &testLogger{}
+	ctx := context.Background()
+	typedbDB := NewDBWithLoggerAndFlags(db, "test", 5*time.Second, logger, true, true)
+	query := "INSERT INTO users (name, email) VALUES ($1, $2)"
+	args := []any{"John", "john@example.com"}
+
+	t.Run("WithNoLogging disables all logging", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		mock.ExpectExec("INSERT INTO users").
+			WithArgs("John", "john@example.com").
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		ctx := WithNoLogging(ctx)
+		_, err := typedbDB.Exec(ctx, query, args...)
+		if err != nil {
+			t.Fatalf("Exec failed: %v", err)
+		}
+
+		// Should log message but without query/args
+		if len(logger.debugs) == 0 {
+			t.Fatal("Expected Debug log even when logging disabled")
+		}
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if foundQuery {
+			t.Error("Expected 'query' key to be absent when WithNoLogging is used")
+		}
+		if foundArgs {
+			t.Error("Expected 'args' key to be absent when WithNoLogging is used")
+		}
+	})
+
+	t.Run("WithNoQueryLogging disables query logging only", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		mock.ExpectExec("INSERT INTO users").
+			WithArgs("John", "john@example.com").
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		ctx := WithNoQueryLogging(ctx)
+		_, err := typedbDB.Exec(ctx, query, args...)
+		if err != nil {
+			t.Fatalf("Exec failed: %v", err)
+		}
+
+		// Query should not be logged, but args should be
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if foundQuery {
+			t.Error("Expected 'query' key to be absent when WithNoQueryLogging is used")
+		}
+		if !foundArgs {
+			t.Error("Expected 'args' key to be present when WithNoQueryLogging is used (only query disabled)")
+		}
+	})
+
+	t.Run("WithNoArgLogging disables argument logging only", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		mock.ExpectExec("INSERT INTO users").
+			WithArgs("John", "john@example.com").
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		ctx := WithNoArgLogging(ctx)
+		_, err := typedbDB.Exec(ctx, query, args...)
+		if err != nil {
+			t.Fatalf("Exec failed: %v", err)
+		}
+
+		// Args should not be logged, but query should be
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if !foundQuery {
+			t.Error("Expected 'query' key to be present when WithNoArgLogging is used (only args disabled)")
+		}
+		if foundArgs {
+			t.Error("Expected 'args' key to be absent when WithNoArgLogging is used")
+		}
+	})
+}
+
+// TestQueryAllContextLoggingOverrides verifies that context-based logging overrides work for QueryAll
+func TestQueryAllContextLoggingOverrides(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	logger := &testLogger{}
+	ctx := context.Background()
+	typedbDB := NewDBWithLoggerAndFlags(db, "test", 5*time.Second, logger, true, true)
+	query := "SELECT id, name, email FROM users WHERE email = $1"
+	args := []any{"john@example.com"}
+
+	t.Run("WithNoLogging disables all logging", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs("john@example.com").
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(1, "John", "john@example.com"))
+
+		ctx := WithNoLogging(ctx)
+		_, err := typedbDB.QueryAll(ctx, query, args...)
+		if err != nil {
+			t.Fatalf("QueryAll failed: %v", err)
+		}
+
+		// Should log message but without query/args
+		if len(logger.debugs) == 0 {
+			t.Fatal("Expected Debug log even when logging disabled")
+		}
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if foundQuery {
+			t.Error("Expected 'query' key to be absent when WithNoLogging is used")
+		}
+		if foundArgs {
+			t.Error("Expected 'args' key to be absent when WithNoLogging is used")
+		}
+	})
+
+	t.Run("WithNoQueryLogging disables query logging only", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs("john@example.com").
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(1, "John", "john@example.com"))
+
+		ctx := WithNoQueryLogging(ctx)
+		_, err := typedbDB.QueryAll(ctx, query, args...)
+		if err != nil {
+			t.Fatalf("QueryAll failed: %v", err)
+		}
+
+		// Query should not be logged, but args should be
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if foundQuery {
+			t.Error("Expected 'query' key to be absent when WithNoQueryLogging is used")
+		}
+		if !foundArgs {
+			t.Error("Expected 'args' key to be present when WithNoQueryLogging is used (only query disabled)")
+		}
+	})
+
+	t.Run("WithNoArgLogging disables argument logging only", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs("john@example.com").
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(1, "John", "john@example.com"))
+
+		ctx := WithNoArgLogging(ctx)
+		_, err := typedbDB.QueryAll(ctx, query, args...)
+		if err != nil {
+			t.Fatalf("QueryAll failed: %v", err)
+		}
+
+		// Args should not be logged, but query should be
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if !foundQuery {
+			t.Error("Expected 'query' key to be present when WithNoArgLogging is used (only args disabled)")
+		}
+		if foundArgs {
+			t.Error("Expected 'args' key to be absent when WithNoArgLogging is used")
+		}
+	})
+}
+
+// TestQueryRowMapContextLoggingOverrides verifies that context-based logging overrides work for QueryRowMap
+func TestQueryRowMapContextLoggingOverrides(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	logger := &testLogger{}
+	ctx := context.Background()
+	typedbDB := NewDBWithLoggerAndFlags(db, "test", 5*time.Second, logger, true, true)
+	query := "SELECT id, name, email FROM users WHERE id = $1"
+	args := []any{123}
+
+	t.Run("WithNoLogging disables all logging", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs(123).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(123, "John", "john@example.com"))
+
+		ctx := WithNoLogging(ctx)
+		_, err := typedbDB.QueryRowMap(ctx, query, args...)
+		if err != nil {
+			t.Fatalf("QueryRowMap failed: %v", err)
+		}
+
+		// Should log message but without query/args
+		if len(logger.debugs) == 0 {
+			t.Fatal("Expected Debug log even when logging disabled")
+		}
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if foundQuery {
+			t.Error("Expected 'query' key to be absent when WithNoLogging is used")
+		}
+		if foundArgs {
+			t.Error("Expected 'args' key to be absent when WithNoLogging is used")
+		}
+	})
+
+	t.Run("WithNoQueryLogging disables query logging only", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs(123).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(123, "John", "john@example.com"))
+
+		ctx := WithNoQueryLogging(ctx)
+		_, err := typedbDB.QueryRowMap(ctx, query, args...)
+		if err != nil {
+			t.Fatalf("QueryRowMap failed: %v", err)
+		}
+
+		// Query should not be logged, but args should be
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if foundQuery {
+			t.Error("Expected 'query' key to be absent when WithNoQueryLogging is used")
+		}
+		if !foundArgs {
+			t.Error("Expected 'args' key to be present when WithNoQueryLogging is used (only query disabled)")
+		}
+	})
+
+	t.Run("WithNoArgLogging disables argument logging only", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs(123).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(123, "John", "john@example.com"))
+
+		ctx := WithNoArgLogging(ctx)
+		_, err := typedbDB.QueryRowMap(ctx, query, args...)
+		if err != nil {
+			t.Fatalf("QueryRowMap failed: %v", err)
+		}
+
+		// Args should not be logged, but query should be
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if !foundQuery {
+			t.Error("Expected 'query' key to be present when WithNoArgLogging is used (only args disabled)")
+		}
+		if foundArgs {
+			t.Error("Expected 'args' key to be absent when WithNoArgLogging is used")
+		}
+	})
+}
+
+// TestGetIntoContextLoggingOverrides verifies that context-based logging overrides work for GetInto
+func TestGetIntoContextLoggingOverrides(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	logger := &testLogger{}
+	ctx := context.Background()
+	typedbDB := NewDBWithLoggerAndFlags(db, "test", 5*time.Second, logger, true, true)
+	query := "SELECT id, name, email FROM users WHERE id = $1"
+	args := []any{123}
+	var id int
+	var name, email string
+
+	t.Run("WithNoLogging disables all logging", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs(123).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(123, "John", "john@example.com"))
+
+		ctx := WithNoLogging(ctx)
+		err := typedbDB.GetInto(ctx, query, args, &id, &name, &email)
+		if err != nil {
+			t.Fatalf("GetInto failed: %v", err)
+		}
+
+		// Should log message but without query/args
+		if len(logger.debugs) == 0 {
+			t.Fatal("Expected Debug log even when logging disabled")
+		}
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if foundQuery {
+			t.Error("Expected 'query' key to be absent when WithNoLogging is used")
+		}
+		if foundArgs {
+			t.Error("Expected 'args' key to be absent when WithNoLogging is used")
+		}
+	})
+
+	t.Run("WithNoQueryLogging disables query logging only", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs(123).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(123, "John", "john@example.com"))
+
+		ctx := WithNoQueryLogging(ctx)
+		err := typedbDB.GetInto(ctx, query, args, &id, &name, &email)
+		if err != nil {
+			t.Fatalf("GetInto failed: %v", err)
+		}
+
+		// Query should not be logged, but args should be
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if foundQuery {
+			t.Error("Expected 'query' key to be absent when WithNoQueryLogging is used")
+		}
+		if !foundArgs {
+			t.Error("Expected 'args' key to be present when WithNoQueryLogging is used (only query disabled)")
+		}
+	})
+
+	t.Run("WithNoArgLogging disables argument logging only", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs(123).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(123, "John", "john@example.com"))
+
+		ctx := WithNoArgLogging(ctx)
+		err := typedbDB.GetInto(ctx, query, args, &id, &name, &email)
+		if err != nil {
+			t.Fatalf("GetInto failed: %v", err)
+		}
+
+		// Args should not be logged, but query should be
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if !foundQuery {
+			t.Error("Expected 'query' key to be present when WithNoArgLogging is used (only args disabled)")
+		}
+		if foundArgs {
+			t.Error("Expected 'args' key to be absent when WithNoArgLogging is used")
+		}
+	})
+}
+
+// TestQueryDoContextLoggingOverrides verifies that context-based logging overrides work for QueryDo
+func TestQueryDoContextLoggingOverrides(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	logger := &testLogger{}
+	ctx := context.Background()
+	typedbDB := NewDBWithLoggerAndFlags(db, "test", 5*time.Second, logger, true, true)
+	query := "SELECT id, name, email FROM users WHERE email = $1"
+	args := []any{"john@example.com"}
+
+	t.Run("WithNoLogging disables all logging", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs("john@example.com").
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(1, "John", "john@example.com"))
+
+		ctx := WithNoLogging(ctx)
+		err := typedbDB.QueryDo(ctx, query, args, func(rows *sql.Rows) error {
+			return nil
+		})
+		if err != nil {
+			t.Fatalf("QueryDo failed: %v", err)
+		}
+
+		// Should log message but without query/args
+		if len(logger.debugs) == 0 {
+			t.Fatal("Expected Debug log even when logging disabled")
+		}
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if foundQuery {
+			t.Error("Expected 'query' key to be absent when WithNoLogging is used")
+		}
+		if foundArgs {
+			t.Error("Expected 'args' key to be absent when WithNoLogging is used")
+		}
+	})
+
+	t.Run("WithNoQueryLogging disables query logging only", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs("john@example.com").
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(1, "John", "john@example.com"))
+
+		ctx := WithNoQueryLogging(ctx)
+		err := typedbDB.QueryDo(ctx, query, args, func(rows *sql.Rows) error {
+			return nil
+		})
+		if err != nil {
+			t.Fatalf("QueryDo failed: %v", err)
+		}
+
+		// Query should not be logged, but args should be
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if foundQuery {
+			t.Error("Expected 'query' key to be absent when WithNoQueryLogging is used")
+		}
+		if !foundArgs {
+			t.Error("Expected 'args' key to be present when WithNoQueryLogging is used (only query disabled)")
+		}
+	})
+
+	t.Run("WithNoArgLogging disables argument logging only", func(t *testing.T) {
+		logger.debugs = nil
+		logger.errors = nil
+
+		mock.ExpectQuery("SELECT id, name, email FROM users").
+			WithArgs("john@example.com").
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(1, "John", "john@example.com"))
+
+		ctx := WithNoArgLogging(ctx)
+		err := typedbDB.QueryDo(ctx, query, args, func(rows *sql.Rows) error {
+			return nil
+		})
+		if err != nil {
+			t.Fatalf("QueryDo failed: %v", err)
+		}
+
+		// Args should not be logged, but query should be
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.debugs {
+			for i := 0; i < len(entry.keyvals)-1; i += 2 {
+				if entry.keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if !foundQuery {
+			t.Error("Expected 'query' key to be present when WithNoArgLogging is used (only args disabled)")
+		}
+		if foundArgs {
+			t.Error("Expected 'args' key to be absent when WithNoArgLogging is used")
 		}
 	})
 }
