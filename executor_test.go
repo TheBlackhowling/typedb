@@ -43,7 +43,8 @@ func TestDB_WithTimeout(t *testing.T) {
 	cancel()
 
 	// Test with context that already has deadline
-	ctxWithDeadline, _ := context.WithTimeout(context.Background(), 2*time.Second)
+	ctxWithDeadline, cancelDeadline := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancelDeadline()
 	newCtx2, cancel2 := db.withTimeout(ctxWithDeadline)
 	if newCtx2 != ctxWithDeadline {
 		t.Error("Expected same context when deadline already exists")
@@ -221,7 +222,8 @@ func TestTx_WithTimeout(t *testing.T) {
 	cancel()
 
 	// Test with context that already has deadline
-	ctxWithDeadline, _ := context.WithTimeout(context.Background(), 2*time.Second)
+	ctxWithDeadline, cancelDeadline := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancelDeadline()
 	newCtx2, cancel2 := typedbTx.withTimeout(ctxWithDeadline)
 	if newCtx2 != ctxWithDeadline {
 		t.Error("Expected same context when deadline already exists")
