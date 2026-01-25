@@ -1,17 +1,9 @@
 package typedb
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"strings"
-)
-
-var (
-	// ErrFieldNotFound is returned when a field cannot be found
-	ErrFieldNotFound = errors.New("typedb: field not found")
-	// ErrMethodNotFound is returned when a method cannot be found
-	ErrMethodNotFound = errors.New("typedb: method not found")
 )
 
 // getModelType returns the reflect.Type of a model.
