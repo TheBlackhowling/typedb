@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 	"testing"
@@ -548,6 +549,187 @@ func TestPostgreSQL_Logging_NologTagMasking(t *testing.T) {
 		// This test verifies that Load completes successfully with nolog-tagged models
 		if len(logger.Debugs) == 0 {
 			t.Error("Expected Debug log for Load operation")
+		}
+	})
+}
+
+func TestPostgreSQL_Logging_SerializationNolog(t *testing.T) {
+	logger := &testhelpers.TestLogger{}
+	db, err := typedb.OpenWithoutValidation("postgres", getTestDSN(), typedb.WithLogger(logger))
+	if err != nil {
+		t.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	ctx := context.Background()
+
+	t.Run("QueryAll masks nolog fields in model arguments", func(t *testing.T) {
+		logger.Debugs = nil
+		email := fmt.Sprintf("test-serialization-%d@example.com", time.Now().UnixNano())
+		user := &UserWithNolog{
+			Name:  "Test User",
+			Email: email,
+		}
+
+		// Pass model as argument to QueryAll
+		_, err := db.QueryAll(ctx, "SELECT id, name, email FROM users WHERE email = $1", user)
+		if err != nil {
+			t.Fatalf("QueryAll failed: %v", err)
+		}
+
+		// Check that email is masked in logs
+		foundArgs := false
+		foundMasked := false
+		for _, entry := range logger.Debugs {
+			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
+				if entry.Keyvals[i] == "args" {
+					foundArgs = true
+					args := entry.Keyvals[i+1].([]any)
+					for _, arg := range args {
+						if arg == "[REDACTED]" {
+							foundMasked = true
+						}
+						if arg == email {
+							t.Error("Email should be masked, but found raw value in logs")
+						}
+					}
+				}
+			}
+		}
+		if !foundArgs {
+			t.Error("Expected 'args' key in Debug log")
+		}
+		if !foundMasked {
+			t.Error("Expected email to be masked as [REDACTED]")
+		}
+	})
+
+	t.Run("QueryRowMap masks nolog fields in model arguments", func(t *testing.T) {
+		logger.Debugs = nil
+		email := fmt.Sprintf("test-serialization-rowmap-%d@example.com", time.Now().UnixNano())
+		user := &UserWithNolog{
+			Name:  "Test User",
+			Email: email,
+		}
+
+		// Pass model as argument to QueryRowMap
+		_, err := db.QueryRowMap(ctx, "SELECT id, name, email FROM users WHERE email = $1", user)
+		// May return ErrNotFound if user doesn't exist, which is fine for this test
+		if err != nil && err != typedb.ErrNotFound {
+			t.Fatalf("QueryRowMap failed: %v", err)
+		}
+
+		// Check that email is masked in logs
+		foundArgs := false
+		foundMasked := false
+		for _, entry := range logger.Debugs {
+			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
+				if entry.Keyvals[i] == "args" {
+					foundArgs = true
+					args := entry.Keyvals[i+1].([]any)
+					for _, arg := range args {
+						if arg == "[REDACTED]" {
+							foundMasked = true
+						}
+						if arg == email {
+							t.Error("Email should be masked, but found raw value in logs")
+						}
+					}
+				}
+			}
+		}
+		if !foundArgs {
+			t.Error("Expected 'args' key in Debug log")
+		}
+		if !foundMasked {
+			t.Error("Expected email to be masked as [REDACTED]")
+		}
+	})
+
+	t.Run("GetInto masks nolog fields in model arguments", func(t *testing.T) {
+		logger.Debugs = nil
+		email := fmt.Sprintf("test-serialization-getinto-%d@example.com", time.Now().UnixNano())
+		user := &UserWithNolog{
+			Name:  "Test User",
+			Email: email,
+		}
+		var dest map[string]any
+
+		// Pass model as argument to GetInto
+		err := db.GetInto(ctx, "SELECT id, name, email FROM users WHERE email = $1", []any{user}, &dest)
+		// May return ErrNotFound if user doesn't exist, which is fine for this test
+		if err != nil && err != typedb.ErrNotFound {
+			t.Fatalf("GetInto failed: %v", err)
+		}
+
+		// Check that email is masked in logs
+		foundArgs := false
+		foundMasked := false
+		for _, entry := range logger.Debugs {
+			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
+				if entry.Keyvals[i] == "args" {
+					foundArgs = true
+					args := entry.Keyvals[i+1].([]any)
+					for _, arg := range args {
+						if arg == "[REDACTED]" {
+							foundMasked = true
+						}
+						if arg == email {
+							t.Error("Email should be masked, but found raw value in logs")
+						}
+					}
+				}
+			}
+		}
+		if !foundArgs {
+			t.Error("Expected 'args' key in Debug log")
+		}
+		if !foundMasked {
+			t.Error("Expected email to be masked as [REDACTED]")
+		}
+	})
+
+	t.Run("QueryDo masks nolog fields in model arguments", func(t *testing.T) {
+		logger.Debugs = nil
+		email := fmt.Sprintf("test-serialization-querydo-%d@example.com", time.Now().UnixNano())
+		user := &UserWithNolog{
+			Name:  "Test User",
+			Email: email,
+		}
+
+		// Pass model as argument to QueryDo
+		err := db.QueryDo(ctx, "SELECT id, name, email FROM users WHERE email = $1", []any{user}, func(rows *sql.Rows) error {
+			return nil
+		})
+		// May return ErrNotFound if user doesn't exist, which is fine for this test
+		if err != nil && err != typedb.ErrNotFound {
+			t.Fatalf("QueryDo failed: %v", err)
+		}
+
+		// Check that email is masked in logs
+		foundArgs := false
+		foundMasked := false
+		for _, entry := range logger.Debugs {
+			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
+				if entry.Keyvals[i] == "args" {
+					foundArgs = true
+					args := entry.Keyvals[i+1].([]any)
+					for _, arg := range args {
+						if arg == "[REDACTED]" {
+							foundMasked = true
+						}
+						if arg == email {
+							t.Error("Email should be masked, but found raw value in logs")
+						}
+					}
+				}
+			}
+		}
+		if !foundArgs {
+			t.Error("Expected 'args' key in Debug log")
+		}
+		if !foundMasked {
+			t.Error("Expected email to be masked as [REDACTED]")
 		}
 	})
 }
