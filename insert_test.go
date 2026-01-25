@@ -1083,3 +1083,187 @@ func TestQuoteIdentifierEscaping(t *testing.T) {
 		})
 	}
 }
+
+func TestInsertAndGetId_MissingIdColumn_PostgreSQL(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// Mock QueryRowMap returning row without 'id' or 'ID' key
+	rows := sqlmock.NewRows([]string{"name", "email"}).AddRow("John Doe", "john@example.com")
+
+	mock.ExpectQuery("INSERT INTO users").
+		WithArgs("John Doe", "john@example.com").
+		WillReturnRows(rows)
+
+	_, err = InsertAndGetId(ctx, typedbDB,
+		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING name, email",
+		"John Doe", "john@example.com")
+
+	if err == nil {
+		t.Fatal("Expected error for missing ID column")
+	}
+
+	expectedError := "typedb: InsertAndGetId RETURNING/OUTPUT clause did not return 'id' column"
+	if err.Error() != expectedError {
+		t.Errorf("Expected error '%s', got '%s'", expectedError, err.Error())
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestInsertAndGetId_MissingIdColumn_MSSQL(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "mssql", 5*time.Second)
+	ctx := context.Background()
+
+	// Mock QueryRowMap returning row without 'id' or 'ID' key
+	rows := sqlmock.NewRows([]string{"name", "email"}).AddRow("John Doe", "john@example.com")
+
+	mock.ExpectQuery("INSERT INTO users").
+		WithArgs("John Doe", "john@example.com").
+		WillReturnRows(rows)
+
+	_, err = InsertAndGetId(ctx, typedbDB,
+		"INSERT INTO users (name, email) OUTPUT INSERTED.name, INSERTED.email VALUES (@p1, @p2)",
+		"John Doe", "john@example.com")
+
+	if err == nil {
+		t.Fatal("Expected error for missing ID column")
+	}
+
+	expectedError := "typedb: InsertAndGetId RETURNING/OUTPUT clause did not return 'id' column"
+	if err.Error() != expectedError {
+		t.Errorf("Expected error '%s', got '%s'", expectedError, err.Error())
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestInsertAndGetId_NonIntegerId_String(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// Mock QueryRowMap returning ID as string
+	rows := sqlmock.NewRows([]string{"id"}).AddRow("abc123")
+
+	mock.ExpectQuery("INSERT INTO users").
+		WithArgs("John Doe", "john@example.com").
+		WillReturnRows(rows)
+
+	_, err = InsertAndGetId(ctx, typedbDB,
+		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id",
+		"John Doe", "john@example.com")
+
+	if err == nil {
+		t.Fatal("Expected error for non-integer ID type")
+	}
+
+	expectedErrorPrefix := "typedb: InsertAndGetId returned non-integer ID type:"
+	if !strings.Contains(err.Error(), expectedErrorPrefix) {
+		t.Errorf("Expected error to contain '%s', got '%s'", expectedErrorPrefix, err.Error())
+	}
+
+	if !strings.Contains(err.Error(), "string") {
+		t.Errorf("Expected error to mention 'string' type, got '%s'", err.Error())
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestInsertAndGetId_NonIntegerId_Bool(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// Mock QueryRowMap returning ID as bool
+	rows := sqlmock.NewRows([]string{"id"}).AddRow(true)
+
+	mock.ExpectQuery("INSERT INTO users").
+		WithArgs("John Doe", "john@example.com").
+		WillReturnRows(rows)
+
+	_, err = InsertAndGetId(ctx, typedbDB,
+		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id",
+		"John Doe", "john@example.com")
+
+	if err == nil {
+		t.Fatal("Expected error for non-integer ID type")
+	}
+
+	expectedErrorPrefix := "typedb: InsertAndGetId returned non-integer ID type:"
+	if !strings.Contains(err.Error(), expectedErrorPrefix) {
+		t.Errorf("Expected error to contain '%s', got '%s'", expectedErrorPrefix, err.Error())
+	}
+
+	if !strings.Contains(err.Error(), "bool") {
+		t.Errorf("Expected error to mention 'bool' type, got '%s'", err.Error())
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestInsertAndGetId_NonIntegerId_Slice(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// Mock QueryRowMap returning ID as slice (unlikely but possible with JSON types)
+	// Note: sqlmock may not support this directly, so we'll use a byte slice which is more realistic
+	rows := sqlmock.NewRows([]string{"id"}).AddRow([]byte("123"))
+
+	mock.ExpectQuery("INSERT INTO users").
+		WithArgs("John Doe", "john@example.com").
+		WillReturnRows(rows)
+
+	_, err = InsertAndGetId(ctx, typedbDB,
+		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id",
+		"John Doe", "john@example.com")
+
+	if err == nil {
+		t.Fatal("Expected error for non-integer ID type")
+	}
+
+	expectedErrorPrefix := "typedb: InsertAndGetId returned non-integer ID type:"
+	if !strings.Contains(err.Error(), expectedErrorPrefix) {
+		t.Errorf("Expected error to contain '%s', got '%s'", expectedErrorPrefix, err.Error())
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
