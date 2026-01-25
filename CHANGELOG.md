@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.40] - 2026-01-25
+
+**Commit:** [`4125cae`](https://github.com/TheBlackhowling/typedb/commit/4125caef7c71c72090c632d948709450539f9b7c)
+**Pull Request:** [#52](https://github.com/TheBlackhowling/typedb/pull/52)
+
+**Summary:** Reduce cyclomatic complexity of Insert function from 23 to below 15
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.40.md](versions/0.1.40.md)
+
+
 ## [0.1.39] - 2026-01-25
 
 **Commit:** [`a80e5e8`](https://github.com/TheBlackhowling/typedb/commit/a80e5e864e11e7e3d8d641b4e7febd58cf16bdfe)
