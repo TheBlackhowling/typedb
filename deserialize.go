@@ -753,20 +753,31 @@ func deserializeInt32(value any) (int32, error) {
 	}
 }
 
+// parseBoolString parses various string formats to bool
+func parseBoolString(s string) (bool, error) {
+	lower := strings.ToLower(strings.TrimSpace(s))
+
+	// Common true values
+	if lower == "t" || lower == "true" || lower == "1" {
+		return true, nil
+	}
+
+	// Common false values
+	if lower == "f" || lower == "false" || lower == "0" {
+		return false, nil
+	}
+
+	// Fallback to strconv.ParseBool
+	return strconv.ParseBool(s)
+}
+
 // deserializeBool converts a value to bool
 func deserializeBool(value any) (bool, error) {
 	switch v := value.(type) {
 	case bool:
 		return v, nil
 	case string:
-		lower := strings.ToLower(strings.TrimSpace(v))
-		if lower == "t" || lower == "true" || lower == "1" {
-			return true, nil
-		}
-		if lower == "f" || lower == "false" || lower == "0" {
-			return false, nil
-		}
-		return strconv.ParseBool(v)
+		return parseBoolString(v)
 	case int:
 		return v != 0, nil
 	case int64:
@@ -774,15 +785,9 @@ func deserializeBool(value any) (bool, error) {
 	case int32:
 		return v != 0, nil
 	default:
+		// Convert to string and parse
 		str := fmt.Sprintf("%v", value)
-		lower := strings.ToLower(strings.TrimSpace(str))
-		if lower == "t" || lower == "true" || lower == "1" {
-			return true, nil
-		}
-		if lower == "f" || lower == "false" || lower == "0" {
-			return false, nil
-		}
-		return strconv.ParseBool(str)
+		return parseBoolString(str)
 	}
 }
 
