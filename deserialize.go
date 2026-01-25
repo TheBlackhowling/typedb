@@ -242,7 +242,7 @@ func buildFieldMapFromPtr(ptrValue, structValue reflect.Value) map[string]reflec
 }
 
 // deserializeBasicType handles basic types: *int, *int64, *int32, *bool, *string
-func deserializeBasicType(target any, value any) error {
+func deserializeBasicType(target, value any) error {
 	switch ptr := target.(type) {
 	case *int:
 		val, err := deserializeInt(value)
