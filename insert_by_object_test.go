@@ -961,7 +961,7 @@ func TestSerializeModelFields(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			columns, values, err := serializeModelFields(tt.model, tt.primaryKeyFieldName)
+			columns, values, maskIndices, err := serializeModelFields(tt.model, tt.primaryKeyFieldName)
 
 			if tt.expectError {
 				if err == nil {
@@ -987,6 +987,11 @@ func TestSerializeModelFields(t *testing.T) {
 			if len(values) != len(tt.expectedValues) {
 				t.Errorf("serializeModelFields() values length = %d, want %d. Got: %v, Want: %v", len(values), len(tt.expectedValues), values, tt.expectedValues)
 				return
+			}
+
+			// maskIndices should be empty for these tests (no nolog tags)
+			if len(maskIndices) > 0 {
+				t.Errorf("serializeModelFields() unexpected maskIndices: %v", maskIndices)
 			}
 
 			for i, col := range columns {

@@ -87,15 +87,23 @@ func (d *DB) withTimeout(ctx context.Context) (context.Context, context.CancelFu
 // execHelper executes a query that doesn't return rows, with logging and timeout handling.
 func execHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger, timeout time.Duration, logQueries, logArgs bool, query string, args ...any) (sql.Result, error) {
 	logger = getLoggerHelper(logger)
+	
+	// Get effective logging flags and masked args
+	logQueries, logArgs, logArgsCopy := getLoggingFlagsAndArgs(ctx, logQueries, logArgs, args)
+	
 	if logQueries {
 		if logArgs {
-			logger.Debug("Executing query", "query", query, "args", args)
+			logger.Debug("Executing query", "query", query, "args", logArgsCopy)
 		} else {
 			logger.Debug("Executing query", "query", query)
 		}
 	} else {
-		// Still log that we're executing, but without query/args
-		logger.Debug("Executing query")
+		// Query logging disabled, but may still log args if enabled
+		if logArgs {
+			logger.Debug("Executing query", "args", logArgsCopy)
+		} else {
+			logger.Debug("Executing query")
+		}
 	}
 	ctx, cancel := withTimeoutHelper(ctx, timeout)
 	defer cancel()
@@ -103,7 +111,7 @@ func execHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger, timeo
 	if err != nil {
 		if logQueries {
 			if logArgs {
-				logger.Error("Query execution failed", "query", query, "args", args, "error", err)
+				logger.Error("Query execution failed", "query", query, "args", logArgsCopy, "error", err)
 			} else {
 				logger.Error("Query execution failed", "query", query, "error", err)
 			}
@@ -124,14 +132,23 @@ func (d *DB) Exec(ctx context.Context, query string, args ...any) (sql.Result, e
 // queryAllHelper executes a query and returns all rows as []map[string]any, with logging and timeout handling.
 func queryAllHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger, timeout time.Duration, logQueries, logArgs bool, query string, args ...any) ([]map[string]any, error) {
 	logger = getLoggerHelper(logger)
+	
+	// Get effective logging flags and masked args
+	logQueries, logArgs, logArgsCopy := getLoggingFlagsAndArgs(ctx, logQueries, logArgs, args)
+	
 	if logQueries {
 		if logArgs {
-			logger.Debug("Querying all rows", "query", query, "args", args)
+			logger.Debug("Querying all rows", "query", query, "args", logArgsCopy)
 		} else {
 			logger.Debug("Querying all rows", "query", query)
 		}
 	} else {
-		logger.Debug("Querying all rows")
+		// Query logging disabled, but may still log args if enabled
+		if logArgs {
+			logger.Debug("Querying all rows", "args", logArgsCopy)
+		} else {
+			logger.Debug("Querying all rows")
+		}
 	}
 	ctx, cancel := withTimeoutHelper(ctx, timeout)
 	defer cancel()
@@ -140,7 +157,7 @@ func queryAllHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger, t
 	if err != nil {
 		if logQueries {
 			if logArgs {
-				logger.Error("Query failed", "query", query, "args", args, "error", err)
+				logger.Error("Query failed", "query", query, "args", logArgsCopy, "error", err)
 			} else {
 				logger.Error("Query failed", "query", query, "error", err)
 			}
@@ -168,6 +185,25 @@ func (d *DB) QueryAll(ctx context.Context, query string, args ...any) ([]map[str
 // queryRowMapHelper executes a query and returns the first row as map[string]any, with logging and timeout handling.
 func queryRowMapHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger, timeout time.Duration, logQueries, logArgs bool, query string, args ...any) (map[string]any, error) {
 	logger = getLoggerHelper(logger)
+	
+	// Get effective logging flags and masked args
+	logQueries, logArgs, logArgsCopy := getLoggingFlagsAndArgs(ctx, logQueries, logArgs, args)
+	
+	if logQueries {
+		if logArgs {
+			logger.Debug("Querying row map", "query", query, "args", logArgsCopy)
+		} else {
+			logger.Debug("Querying row map", "query", query)
+		}
+	} else {
+		// Query logging disabled, but may still log args if enabled
+		if logArgs {
+			logger.Debug("Querying row map", "args", logArgsCopy)
+		} else {
+			logger.Debug("Querying row map")
+		}
+	}
+	
 	ctx, cancel := withTimeoutHelper(ctx, timeout)
 	defer cancel()
 
@@ -175,7 +211,7 @@ func queryRowMapHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger
 	if err != nil {
 		if logQueries {
 			if logArgs {
-				logger.Error("Query failed", "query", query, "args", args, "error", err)
+				logger.Error("Query failed", "query", query, "args", logArgsCopy, "error", err)
 			} else {
 				logger.Error("Query failed", "query", query, "error", err)
 			}
@@ -232,14 +268,23 @@ func (d *DB) QueryRowMap(ctx context.Context, query string, args ...any) (map[st
 // getIntoHelper scans a single row into dest pointers, with logging and timeout handling.
 func getIntoHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger, timeout time.Duration, logQueries, logArgs bool, query string, args []any, dest ...any) error {
 	logger = getLoggerHelper(logger)
+	
+	// Get effective logging flags and masked args
+	logQueries, logArgs, logArgsCopy := getLoggingFlagsAndArgs(ctx, logQueries, logArgs, args)
+	
 	if logQueries {
 		if logArgs {
-			logger.Debug("Scanning row into destination", "query", query, "args", args)
+			logger.Debug("Scanning row into destination", "query", query, "args", logArgsCopy)
 		} else {
 			logger.Debug("Scanning row into destination", "query", query)
 		}
 	} else {
-		logger.Debug("Scanning row into destination")
+		// Query logging disabled, but may still log args if enabled
+		if logArgs {
+			logger.Debug("Scanning row into destination", "args", logArgsCopy)
+		} else {
+			logger.Debug("Scanning row into destination")
+		}
 	}
 	ctx, cancel := withTimeoutHelper(ctx, timeout)
 	defer cancel()
@@ -256,7 +301,7 @@ func getIntoHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger, ti
 		}
 		if logQueries {
 			if logArgs {
-				logger.Error("Failed to scan row", "query", query, "args", args, "error", err)
+				logger.Error("Failed to scan row", "query", query, "args", logArgsCopy, "error", err)
 			} else {
 				logger.Error("Failed to scan row", "query", query, "error", err)
 			}
@@ -278,14 +323,23 @@ func (d *DB) GetInto(ctx context.Context, query string, args []any, dest ...any)
 // queryDoHelper executes a query and calls scan for each row (streaming), with logging and timeout handling.
 func queryDoHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger, timeout time.Duration, logQueries, logArgs bool, query string, args []any, scan func(rows *sql.Rows) error) error {
 	logger = getLoggerHelper(logger)
+	
+	// Get effective logging flags and masked args
+	logQueries, logArgs, logArgsCopy := getLoggingFlagsAndArgs(ctx, logQueries, logArgs, args)
+	
 	if logQueries {
 		if logArgs {
-			logger.Debug("Executing streaming query", "query", query, "args", args)
+			logger.Debug("Executing streaming query", "query", query, "args", logArgsCopy)
 		} else {
 			logger.Debug("Executing streaming query", "query", query)
 		}
 	} else {
-		logger.Debug("Executing streaming query")
+		// Query logging disabled, but may still log args if enabled
+		if logArgs {
+			logger.Debug("Executing streaming query", "args", logArgsCopy)
+		} else {
+			logger.Debug("Executing streaming query")
+		}
 	}
 	ctx, cancel := withTimeoutHelper(ctx, timeout)
 	defer cancel()
@@ -294,7 +348,7 @@ func queryDoHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger, ti
 	if err != nil {
 		if logQueries {
 			if logArgs {
-				logger.Error("Query failed", "query", query, "args", args, "error", err)
+				logger.Error("Query failed", "query", query, "args", logArgsCopy, "error", err)
 			} else {
 				logger.Error("Query failed", "query", query, "error", err)
 			}
@@ -645,4 +699,115 @@ func WithLogArgs(enabled bool) Option {
 	return func(cfg *Config) {
 		cfg.LogArgs = enabled
 	}
+}
+
+// Context keys for logging overrides
+type logOverrideKey struct{}
+type maskIndicesKey struct{}
+
+// logOverride holds per-call logging override flags.
+type logOverride struct {
+	noQueries bool // If true, don't log queries for this call
+	noArgs    bool // If true, don't log arguments for this call
+}
+
+// WithNoLogging disables all logging (queries and arguments) for the specific operation.
+// This overrides the global LogQueries and LogArgs settings.
+// Useful for sensitive operations where you want to ensure no data is logged.
+func WithNoLogging(ctx context.Context) context.Context {
+	return context.WithValue(ctx, logOverrideKey{}, logOverride{
+		noQueries: true,
+		noArgs:    true,
+	})
+}
+
+// WithNoQueryLogging disables query logging for the specific operation.
+// This overrides the global LogQueries setting.
+// Arguments will still be logged if LogArgs is enabled.
+func WithNoQueryLogging(ctx context.Context) context.Context {
+	return context.WithValue(ctx, logOverrideKey{}, logOverride{
+		noQueries: true,
+		noArgs:    false,
+	})
+}
+
+// WithNoArgLogging disables argument logging for the specific operation.
+// This overrides the global LogArgs setting.
+// Queries will still be logged if LogQueries is enabled.
+func WithNoArgLogging(ctx context.Context) context.Context {
+	return context.WithValue(ctx, logOverrideKey{}, logOverride{
+		noQueries: false,
+		noArgs:    true,
+	})
+}
+
+// WithMaskIndices stores argument indices that should be masked in logs.
+// Used internally by Insert/Update operations based on nolog struct tags.
+func WithMaskIndices(ctx context.Context, indices []int) context.Context {
+	return context.WithValue(ctx, maskIndicesKey{}, indices)
+}
+
+// getLogOverride extracts logging override flags from context.
+// Returns the override flags and whether any override was found.
+func getLogOverride(ctx context.Context) (logOverride, bool) {
+	override, ok := ctx.Value(logOverrideKey{}).(logOverride)
+	return override, ok
+}
+
+// getMaskIndices extracts mask indices from context.
+// Returns the mask indices and whether any were found.
+func getMaskIndices(ctx context.Context) ([]int, bool) {
+	indices, ok := ctx.Value(maskIndicesKey{}).([]int)
+	return indices, ok
+}
+
+// maskArgs masks arguments at the specified indices, replacing them with "[REDACTED]".
+func maskArgs(args []any, maskIndices []int) []any {
+	if len(maskIndices) == 0 {
+		return args
+	}
+	
+	// Create a map for O(1) lookup
+	maskMap := make(map[int]bool)
+	for _, idx := range maskIndices {
+		if idx >= 0 && idx < len(args) {
+			maskMap[idx] = true
+		}
+	}
+	
+	// Create a copy of args with masked values
+	masked := make([]any, len(args))
+	copy(masked, args)
+	for idx := range masked {
+		if maskMap[idx] {
+			masked[idx] = "[REDACTED]"
+		}
+	}
+	
+	return masked
+}
+
+// getLoggingFlagsAndArgs extracts logging flags from context and applies masking if needed.
+// Returns the effective logQueries, logArgs flags and the args to use for logging (may be masked).
+func getLoggingFlagsAndArgs(ctx context.Context, logQueries, logArgs bool, args []any) (bool, bool, []any) {
+	// Check for context-based logging overrides
+	override, hasOverride := getLogOverride(ctx)
+	if hasOverride {
+		if override.noQueries {
+			logQueries = false
+		}
+		if override.noArgs {
+			logArgs = false
+		}
+	}
+	
+	// Check for mask indices and apply masking if needed
+	logArgsCopy := args
+	if logArgs {
+		if maskIndices, hasMask := getMaskIndices(ctx); hasMask {
+			logArgsCopy = maskArgs(args, maskIndices)
+		}
+	}
+	
+	return logQueries, logArgs, logArgsCopy
 }
