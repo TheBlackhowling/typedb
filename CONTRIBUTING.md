@@ -1,6 +1,22 @@
 # Contributing to typedb
 
-Thank you for your interest in contributing! This document provides guidelines for contributing to this project.
+**Note:** We are not currently accepting code contributions. However, we welcome feature requests, suggestions, and bug reports!
+
+## Feature Requests & Suggestions
+
+We'd love to hear your ideas for improving typedb:
+
+- **Feature Requests**: Open an issue describing the feature you'd like to see
+- **Suggestions**: Share your ideas for improvements, optimizations, or new capabilities  
+- **Bug Reports**: Report any issues you encounter
+
+Your feedback helps shape the future of typedb!
+
+---
+
+## Development Guidelines (For Maintainers)
+
+The following sections are for maintainers and internal development reference.
 
 ## Getting Started
 

@@ -23,15 +23,15 @@ A type-safe, generic database query library for Go that prioritizes SQL-first de
   - [Requirements](#requirements)
   - [Quick Start](#quick-start)
   - [Examples](#examples)
+- [API Reference](API.md) - Complete API documentation
 - [API Overview](#api-overview)
   - [Query Functions](#query-functions)
   - [Load Functions](#load-functions)
   - [Insert Functions](#insert-functions)
   - [Update Functions](#update-functions)
-- [API Reference](API.md) - Complete API documentation
 - [Performance](#performance)
 - [Testing](#testing)
-- [Contributing](#contributing)
+- [Feature Requests & Suggestions](#feature-requests--suggestions)
 - [License](#license)
 - [Status](#status)
 
@@ -839,9 +839,15 @@ See the [integration_tests/](integration_tests/) directory for complete test cov
 
 **Additional Database Support:** We are open to expanding our test coverage to include additional databases. If you need support for a database not currently covered, please open an issue to discuss adding it to our test matrix.
 
-## Contributing
+## Feature Requests & Suggestions
 
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome feature requests and suggestions! While we're not currently accepting code contributions, we'd love to hear your ideas for improving typedb.
+
+- **Feature Requests**: Open an issue describing the feature you'd like to see
+- **Suggestions**: Share your ideas for improvements, optimizations, or new capabilities
+- **Bug Reports**: Report any issues you encounter
+
+Your feedback helps shape the future of typedb!
 
 ## License
 

@@ -1195,5 +1195,4 @@ err := typedb.Update(ctx, db, user4)
 ## See Also
 
 - [README.md](README.md) - Project overview, usage examples, and tutorials
-- [CONTRIBUTING.md](CONTRIBUTING.md) - Contribution guidelines
 - [CHANGELOG.md](CHANGELOG.md) - Version history and changes
