@@ -28,6 +28,7 @@ A type-safe, generic database query library for Go that prioritizes SQL-first de
   - [Load Functions](#load-functions)
   - [Insert Functions](#insert-functions)
   - [Update Functions](#update-functions)
+- [API Reference](API.md) - Complete API documentation
 - [Performance](#performance)
 - [Testing](#testing)
 - [Contributing](#contributing)

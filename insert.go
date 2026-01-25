@@ -438,20 +438,21 @@ func iterateStructFields(structType reflect.Type, structValue reflect.Value, pri
 // Excludes primary key field, fields with db:"-" tag, and fields with dbInsert:"false" tag.
 // Fields with db:"-" are excluded from all database operations (INSERT, UPDATE, SELECT).
 // Fields with dbInsert:"false" are excluded from INSERT but can still be used in UPDATE and SELECT.
-// Returns: column names and field values for serialization.
-func serializeModelFields(model ModelInterface, primaryKeyFieldName string) ([]string, []any, error) {
+// Returns: column names, field values, and mask indices (for fields with nolog:"true" tag).
+func serializeModelFields(model ModelInterface, primaryKeyFieldName string) ([]string, []any, []int, error) {
 	modelValue := reflect.ValueOf(model)
 	if modelValue.Kind() != reflect.Ptr || modelValue.IsNil() {
-		return nil, nil, fmt.Errorf("typedb: model must be a non-nil pointer")
+		return nil, nil, nil, fmt.Errorf("typedb: model must be a non-nil pointer")
 	}
 
 	modelValue = modelValue.Elem()
 	if modelValue.Kind() != reflect.Struct {
-		return nil, nil, fmt.Errorf("typedb: model must be a pointer to struct")
+		return nil, nil, nil, fmt.Errorf("typedb: model must be a pointer to struct")
 	}
 
 	var columns []string
 	var values []any
+	var maskIndices []int
 
 	iterateStructFields(modelValue.Type(), modelValue, primaryKeyFieldName, func(field reflect.StructField, fieldValue reflect.Value, columnName string) bool {
 		// Skip fields with dbInsert:"false" tag
@@ -464,12 +465,18 @@ func serializeModelFields(model ModelInterface, primaryKeyFieldName string) ([]s
 			return true
 		}
 
+		// Track if this field should be masked in logs
+		shouldMask := field.Tag.Get("nolog") == "true"
+		if shouldMask {
+			maskIndices = append(maskIndices, len(values))
+		}
+
 		columns = append(columns, columnName)
 		values = append(values, fieldValue.Interface())
 		return true
 	})
 
-	return columns, values, nil
+	return columns, values, maskIndices, nil
 }
 
 // isZeroOrNil checks if a reflect.Value is zero or nil.
@@ -548,13 +555,18 @@ func Insert[T ModelInterface](ctx context.Context, exec Executor, model T) error
 	}
 
 	// Collect fields and values (excluding primary key and nil/zero values)
-	columns, values, err := serializeModelFields(model, primaryField.Name)
+	columns, values, maskIndices, err := serializeModelFields(model, primaryField.Name)
 	if err != nil {
 		return fmt.Errorf("typedb: Insert failed to serialize model: %w", err)
 	}
 
 	if len(columns) == 0 {
 		return fmt.Errorf("typedb: Insert requires at least one non-nil field to insert")
+	}
+
+	// Store mask indices in context for logging
+	if len(maskIndices) > 0 {
+		ctx = WithMaskIndices(ctx, maskIndices)
 	}
 
 	// Get driver name for database-specific SQL generation
