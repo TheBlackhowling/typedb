@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -789,6 +790,120 @@ func maskArgs(args []any, maskIndices []int) []any {
 	return masked
 }
 
+// extractNologMaskIndicesFromArgs detects model structs in arguments and extracts mask indices
+// for fields with nolog:"true" tags. Returns indices of arguments that should be masked.
+// This allows automatic masking when models are passed as arguments to raw SQL functions.
+func extractNologMaskIndicesFromArgs(args []any) []int {
+	if len(args) == 0 {
+		return nil
+	}
+
+	var maskIndices []int
+	
+	for argIdx, arg := range args {
+		if arg == nil {
+			continue
+		}
+
+		// Check if argument implements ModelInterface
+		modelInterface, ok := arg.(ModelInterface)
+		if !ok {
+			// Try pointer to model
+			argValue := reflect.ValueOf(arg)
+			if argValue.Kind() == reflect.Ptr && !argValue.IsNil() {
+				if modelInterface, ok = argValue.Interface().(ModelInterface); !ok {
+					continue
+				}
+			} else {
+				continue
+			}
+		}
+
+		// Check if this model has any fields with nolog tags
+		if hasNologFields(modelInterface) {
+			maskIndices = append(maskIndices, argIdx)
+		}
+	}
+
+	return maskIndices
+}
+
+// hasNologFields checks if a model struct has any fields with nolog:"true" tags.
+func hasNologFields(model ModelInterface) bool {
+	modelValue := reflect.ValueOf(model)
+	if modelValue.Kind() != reflect.Ptr || modelValue.IsNil() {
+		return false
+	}
+
+	modelValue = modelValue.Elem()
+	if modelValue.Kind() != reflect.Struct {
+		return false
+	}
+
+	// Iterate through all fields to find nolog tags
+	found := false
+	iterateStructFieldsForNolog(modelValue.Type(), modelValue, func(field reflect.StructField, fieldValue reflect.Value) bool {
+		// Check for nolog tag
+		if field.Tag.Get("nolog") == "true" {
+			found = true
+			return false // Found nolog field, stop iteration
+		}
+		return true // Continue iteration
+	})
+	return found
+}
+
+// iterateStructFieldsForNolog iterates through struct fields to check for nolog tags.
+// Similar to iterateStructFields but doesn't filter by db tags or primary keys.
+// Returns false if iteration should stop (e.g., nolog field found), true to continue.
+func iterateStructFieldsForNolog(structType reflect.Type, structValue reflect.Value, visitor func(reflect.StructField, reflect.Value) bool) bool {
+	if structType.Kind() != reflect.Struct {
+		return true
+	}
+
+	var processFields func(reflect.Type, reflect.Value) bool
+	processFields = func(t reflect.Type, v reflect.Value) bool {
+		if t.Kind() != reflect.Struct {
+			return true
+		}
+
+		for i := 0; i < t.NumField(); i++ {
+			field := t.Field(i)
+			if !field.IsExported() {
+				continue
+			}
+
+			fieldValue := v.Field(i)
+
+			// Handle embedded structs
+			if field.Anonymous {
+				embeddedType := field.Type
+				if embeddedType.Kind() == reflect.Ptr {
+					if fieldValue.IsNil() {
+						continue
+					}
+					embeddedType = embeddedType.Elem()
+					fieldValue = fieldValue.Elem()
+				}
+				if embeddedType.Kind() == reflect.Struct {
+					if !processFields(embeddedType, fieldValue) {
+						return false
+					}
+					continue
+				}
+			}
+
+			// Check all exported fields for nolog tags
+			if !visitor(field, fieldValue) {
+				return false
+			}
+		}
+		return true
+	}
+
+	return processFields(structType, structValue)
+}
+
 // getLoggingFlagsAndArgs extracts logging flags from context and applies masking if needed.
 // Returns the effective logQueries, logArgs flags and the args to use for logging (may be masked).
 func getLoggingFlagsAndArgs(ctx context.Context, logQueries, logArgs bool, args []any) (bool, bool, []any) {
@@ -806,8 +921,30 @@ func getLoggingFlagsAndArgs(ctx context.Context, logQueries, logArgs bool, args 
 	// Check for mask indices and apply masking if needed
 	logArgsCopy := args
 	if logArgs {
+		// First check for explicit mask indices from context (set by Insert/Update/Load)
+		var allMaskIndices []int
 		if maskIndices, hasMask := getMaskIndices(ctx); hasMask {
-			logArgsCopy = maskArgs(args, maskIndices)
+			allMaskIndices = append(allMaskIndices, maskIndices...)
+		}
+		
+		// Also check for model structs in arguments with nolog tags
+		autoMaskIndices := extractNologMaskIndicesFromArgs(args)
+		if len(autoMaskIndices) > 0 {
+			// Merge with existing mask indices, avoiding duplicates
+			maskMap := make(map[int]bool)
+			for _, idx := range allMaskIndices {
+				maskMap[idx] = true
+			}
+			for _, idx := range autoMaskIndices {
+				if !maskMap[idx] {
+					allMaskIndices = append(allMaskIndices, idx)
+					maskMap[idx] = true
+				}
+			}
+		}
+		
+		if len(allMaskIndices) > 0 {
+			logArgsCopy = maskArgs(args, allMaskIndices)
 		}
 	}
 
