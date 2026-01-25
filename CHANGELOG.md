@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.46] - 2026-01-25
+
+**Commit:** [`beb7883`](https://github.com/TheBlackhowling/typedb/commit/beb7883ac9b156389620a4e156273c72ff674d75)
+**Pull Request:** [#58](https://github.com/TheBlackhowling/typedb/pull/58)
+
+**Summary:** Add coverage_* pattern to .gitignore to prevent coverage files from being committed
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.46.md](versions/0.1.46.md)
+
+
 ## [0.1.45] - 2026-01-25
 
 **Commit:** [`c98befd`](https://github.com/TheBlackhowling/typedb/commit/c98befd9cf441e24bb88e4cd64fe58706cd7bb7c)
