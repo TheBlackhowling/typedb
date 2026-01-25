@@ -805,92 +805,92 @@ func TestDeserialize_NonAddressableValue(t *testing.T) {
 // TestValidateIdentifier tests the validateIdentifier function
 func TestValidateIdentifier(t *testing.T) {
 	tests := []struct {
-		name      string
+		name       string
 		identifier string
-		wantErr   bool
-		errMsg    string
+		wantErr    bool
+		errMsg     string
 	}{
 		{
-			name:      "valid simple identifier",
+			name:       "valid simple identifier",
 			identifier: "users",
-			wantErr:   false,
+			wantErr:    false,
 		},
 		{
-			name:      "valid identifier with underscore",
+			name:       "valid identifier with underscore",
 			identifier: "user_table",
-			wantErr:   false,
+			wantErr:    false,
 		},
 		{
-			name:      "valid identifier with numbers",
+			name:       "valid identifier with numbers",
 			identifier: "user123",
-			wantErr:   false,
+			wantErr:    false,
 		},
 		{
-			name:      "valid qualified identifier",
+			name:       "valid qualified identifier",
 			identifier: "schema.table",
-			wantErr:   false,
+			wantErr:    false,
 		},
 		{
-			name:      "valid identifier with multiple dots",
+			name:       "valid identifier with multiple dots",
 			identifier: "schema.table.column",
-			wantErr:   false,
+			wantErr:    false,
 		},
 		{
-			name:      "empty identifier",
+			name:       "empty identifier",
 			identifier: "",
-			wantErr:   true,
-			errMsg:    "cannot be empty",
+			wantErr:    true,
+			errMsg:     "cannot be empty",
 		},
 		{
-			name:      "identifier with space",
+			name:       "identifier with space",
 			identifier: "user table",
-			wantErr:   true,
-			errMsg:    "invalid identifier",
+			wantErr:    true,
+			errMsg:     "invalid identifier",
 		},
 		{
-			name:      "identifier with quote (allowed, will be escaped)",
+			name:       "identifier with quote (allowed, will be escaped)",
 			identifier: `user"table`,
-			wantErr:   false,
+			wantErr:    false,
 		},
 		{
-			name:      "identifier with semicolon",
+			name:       "identifier with semicolon",
 			identifier: "user;table",
-			wantErr:   true,
-			errMsg:    "invalid identifier",
+			wantErr:    true,
+			errMsg:     "invalid identifier",
 		},
 		{
-			name:      "identifier with dash",
+			name:       "identifier with dash",
 			identifier: "user-table",
-			wantErr:   true,
-			errMsg:    "invalid identifier",
+			wantErr:    true,
+			errMsg:     "invalid identifier",
 		},
 		{
-			name:      "identifier with SQL injection attempt (semicolon)",
+			name:       "identifier with SQL injection attempt (semicolon)",
 			identifier: "users; DROP TABLE users; --",
-			wantErr:   true,
-			errMsg:    "invalid identifier",
+			wantErr:    true,
+			errMsg:     "invalid identifier",
 		},
 		{
-			name:      "identifier with SQL injection attempt (DROP)",
+			name:       "identifier with SQL injection attempt (DROP)",
 			identifier: "users DROP TABLE",
-			wantErr:   true,
-			errMsg:    "invalid identifier",
+			wantErr:    true,
+			errMsg:     "invalid identifier",
 		},
 		{
-			name:      "identifier with SQL comment pattern",
+			name:       "identifier with SQL comment pattern",
 			identifier: "users--comment",
-			wantErr:   true,
-			errMsg:    "invalid identifier",
+			wantErr:    true,
+			errMsg:     "invalid identifier",
 		},
 		{
-			name:      "identifier with SQL keyword (allowed - might be legitimate)",
+			name:       "identifier with SQL keyword (allowed - might be legitimate)",
 			identifier: "DROP",
-			wantErr:   false,
+			wantErr:    false,
 		},
 		{
-			name:      "identifier starting with number",
+			name:       "identifier starting with number",
 			identifier: "123users",
-			wantErr:   false,
+			wantErr:    false,
 		},
 	}
 

@@ -180,10 +180,10 @@ func TestRegisterModel_NonPointerTypePanics(t *testing.T) {
 	// ValueModel embeds Model, but Model.deserialize() has a pointer receiver,
 	// so only *ValueModel satisfies ModelInterface, not ValueModel.
 	// This test verifies that RegisterModel[*ValueModel]() works (pointer type).
-	
+
 	// Test with pointer type - should work
 	RegisterModel[*ValueModel]()
-	
+
 	// Verify it was registered
 	models := GetRegisteredModels()
 	found := false
@@ -196,7 +196,7 @@ func TestRegisterModel_NonPointerTypePanics(t *testing.T) {
 	if !found {
 		t.Error("Expected ValueModel to be registered")
 	}
-	
+
 	// Note: RegisterModel[ValueModel]() would fail at compile time because
 	// ValueModel doesn't satisfy ModelInterface (Model.deserialize() has pointer receiver).
 	// This is the desired behavior - only pointer types can satisfy ModelInterface,

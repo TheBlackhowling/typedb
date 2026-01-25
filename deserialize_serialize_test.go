@@ -307,4 +307,3 @@ func TestSerializeJSONB_MoreTypes(t *testing.T) {
 		})
 	}
 }
-

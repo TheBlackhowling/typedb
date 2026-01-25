@@ -150,7 +150,7 @@ func setFieldValue(model any, fieldName string, value any) error {
 	}
 
 	valueV := reflect.ValueOf(value)
-	
+
 	// Handle type conversion for numeric types
 	if valueV.Type().AssignableTo(fieldValue.Type()) {
 		fieldValue.Set(valueV)
@@ -169,7 +169,7 @@ func setFieldValue(model any, fieldName string, value any) error {
 	} else {
 		return fmt.Errorf("typedb: cannot assign %v to field %s of type %v", valueV.Type(), fieldName, fieldValue.Type())
 	}
-	
+
 	return nil
 }
 

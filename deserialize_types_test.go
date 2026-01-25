@@ -306,4 +306,3 @@ func TestDeserializeToField_PointerType(t *testing.T) {
 		t.Errorf("Expected *456, got %v", intPtr)
 	}
 }
-
