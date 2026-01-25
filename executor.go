@@ -486,10 +486,10 @@ func (t *Tx) QueryDo(ctx context.Context, query string, args []any, scan func(ro
 
 // Commit commits the transaction.
 func (t *Tx) Commit() error {
-	t.logger.Info("Committing transaction")
+	t.getLogger().Info("Committing transaction")
 	err := t.tx.Commit()
 	if err != nil {
-		t.logger.Error("Transaction commit failed", "error", err)
+		t.getLogger().Error("Transaction commit failed", "error", err)
 		return err
 	}
 	return nil
@@ -497,10 +497,10 @@ func (t *Tx) Commit() error {
 
 // Rollback rolls back the transaction.
 func (t *Tx) Rollback() error {
-	t.logger.Info("Rolling back transaction")
+	t.getLogger().Info("Rolling back transaction")
 	err := t.tx.Rollback()
 	if err != nil {
-		t.logger.Error("Transaction rollback failed", "error", err)
+		t.getLogger().Error("Transaction rollback failed", "error", err)
 		return err
 	}
 	return nil
