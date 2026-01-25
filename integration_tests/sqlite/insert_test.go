@@ -120,3 +120,31 @@ func TestSQLite_InsertAndGetId(t *testing.T) {
 		t.Errorf("Expected title 'Test Post ID', got '%s'", loaded.Title)
 	}
 }
+
+func TestSQLite_InsertAndGetId_MissingIdColumn(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+	defer os.Remove(getTestDSN())
+
+	ctx := context.Background()
+
+	// Get first user for foreign key
+	firstUser, err := typedb.QueryFirst[*User](ctx, db, "SELECT id, name, email, created_at FROM users ORDER BY id LIMIT 1")
+	if err != nil || firstUser == nil {
+		t.Fatal("Need at least one user in database for foreign key")
+	}
+
+	// Insert post with RETURNING clause that doesn't return 'id' column
+	_, err = typedb.InsertAndGetId(ctx, db,
+		"INSERT INTO posts (user_id, title, content, tags, metadata, created_at) VALUES (?, ?, ?, ?, ?, ?) RETURNING title",
+		firstUser.ID, "Test Post", "Test content", `["go"]`, `{"test":true}`, "2024-01-01 00:00:00")
+
+	if err == nil {
+		t.Fatal("Expected error for missing ID column")
+	}
+
+	expectedError := "typedb: InsertAndGetId RETURNING/OUTPUT clause did not return 'id' column"
+	if err.Error() != expectedError {
+		t.Errorf("Expected error '%s', got '%s'", expectedError, err.Error())
+	}
+}
