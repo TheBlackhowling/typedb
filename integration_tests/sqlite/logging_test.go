@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/TheBlackHowling/typedb"
 	"github.com/TheBlackHowling/typedb/integration_tests/testhelpers"
@@ -20,7 +22,9 @@ func TestSQLite_Logging_Exec(t *testing.T) {
 
 	t.Run("success logs debug", func(t *testing.T) {
 		logger.Debugs = nil // Reset logs
-		_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", "test@example.com")
+		// Use a unique email to avoid conflicts
+		email := fmt.Sprintf("test-exec-%d@example.com", time.Now().UnixNano())
+		_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", email)
 		if err != nil {
 			t.Fatalf("Exec failed: %v", err)
 		}
@@ -211,7 +215,9 @@ func TestSQLite_Logging_PerInstanceLogger(t *testing.T) {
 
 	ctx := context.Background()
 
-	_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", "test2@example.com")
+	// Use a unique email to avoid conflicts
+	email := fmt.Sprintf("test-perinstance-%d@example.com", time.Now().UnixNano())
+	_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", email)
 	if err != nil {
 		t.Fatalf("Exec failed: %v", err)
 	}
@@ -327,7 +333,9 @@ func TestSQLite_Logging_ContextOverrides(t *testing.T) {
 	t.Run("WithNoLogging disables all logging", func(t *testing.T) {
 		logger.Debugs = nil
 		ctx := typedb.WithNoLogging(ctx)
-		_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", "test@example.com")
+		// Use a unique email to avoid conflicts
+		email := fmt.Sprintf("test-nolog-%d@example.com", time.Now().UnixNano())
+		_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", email)
 		if err != nil {
 			t.Fatalf("Exec failed: %v", err)
 		}
@@ -359,7 +367,9 @@ func TestSQLite_Logging_ContextOverrides(t *testing.T) {
 	t.Run("WithNoQueryLogging disables query logging only", func(t *testing.T) {
 		logger.Debugs = nil
 		ctx := typedb.WithNoQueryLogging(ctx)
-		_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", "test@example.com")
+		// Use a unique email to avoid conflicts
+		email := fmt.Sprintf("test-noquery-%d@example.com", time.Now().UnixNano())
+		_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", email)
 		if err != nil {
 			t.Fatalf("Exec failed: %v", err)
 		}
@@ -388,7 +398,9 @@ func TestSQLite_Logging_ContextOverrides(t *testing.T) {
 	t.Run("WithNoArgLogging disables argument logging only", func(t *testing.T) {
 		logger.Debugs = nil
 		ctx := typedb.WithNoArgLogging(ctx)
-		_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", "test@example.com")
+		// Use a unique email to avoid conflicts
+		email := fmt.Sprintf("test-noargs-%d@example.com", time.Now().UnixNano())
+		_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", email)
 		if err != nil {
 			t.Fatalf("Exec failed: %v", err)
 		}
@@ -416,12 +428,12 @@ func TestSQLite_Logging_ContextOverrides(t *testing.T) {
 }
 
 // UserWithNolog is a test model with nolog tag
+// Note: Using email with nolog tag since SQLite schema doesn't have password column
 type UserWithNolog struct {
 	typedb.Model
-	ID       int    `db:"id" load:"primary"`
-	Name     string `db:"name"`
-	Email    string `db:"email"`
-	Password string `db:"password" nolog:"true"`
+	ID    int    `db:"id" load:"primary"`
+	Name  string `db:"name"`
+	Email string `db:"email" nolog:"true"`
 }
 
 func (u *UserWithNolog) TableName() string {
@@ -429,7 +441,7 @@ func (u *UserWithNolog) TableName() string {
 }
 
 func (u *UserWithNolog) QueryByID() string {
-	return "SELECT id, name, email, password FROM users WHERE id = ?"
+	return "SELECT id, name, email FROM users WHERE id = ?"
 }
 
 func init() {
@@ -446,17 +458,18 @@ func TestSQLite_Logging_NologTagMasking(t *testing.T) {
 
 	t.Run("Insert masks nolog fields", func(t *testing.T) {
 		logger.Debugs = nil
+		// Use a unique email to avoid conflicts
+		email := fmt.Sprintf("test-nolog-insert-%d@example.com", time.Now().UnixNano())
 		user := &UserWithNolog{
-			Name:     "Test User",
-			Email:    "test@example.com",
-			Password: "secret123",
+			Name:  "Test User",
+			Email: email,
 		}
 		err := typedb.Insert(ctx, db, user)
 		if err != nil {
 			t.Fatalf("Insert failed: %v", err)
 		}
 
-		// Check that password is masked in logs
+		// Check that email is masked in logs
 		foundArgs := false
 		foundMasked := false
 		for _, entry := range logger.Debugs {
@@ -468,8 +481,8 @@ func TestSQLite_Logging_NologTagMasking(t *testing.T) {
 						if arg == "[REDACTED]" {
 							foundMasked = true
 						}
-						if arg == "secret123" {
-							t.Error("Password should be masked, but found raw value in logs")
+						if arg == email {
+							t.Error("Email should be masked, but found raw value in logs")
 						}
 					}
 				}
@@ -479,24 +492,25 @@ func TestSQLite_Logging_NologTagMasking(t *testing.T) {
 			t.Error("Expected 'args' key in Debug log")
 		}
 		if !foundMasked {
-			t.Error("Expected password to be masked as [REDACTED]")
+			t.Error("Expected email to be masked as [REDACTED]")
 		}
 	})
 
 	t.Run("Update masks nolog fields", func(t *testing.T) {
 		logger.Debugs = nil
+		// Use a unique email to avoid conflicts
+		email := fmt.Sprintf("test-nolog-update-%d@example.com", time.Now().UnixNano())
 		user := &UserWithNolog{
-			ID:       1,
-			Name:     "Updated User",
-			Email:    "updated@example.com",
-			Password: "newsecret456",
+			ID:    1,
+			Name:  "Updated User",
+			Email: email,
 		}
 		err := typedb.Update(ctx, db, user)
 		if err != nil {
 			t.Fatalf("Update failed: %v", err)
 		}
 
-		// Check that password is masked in logs
+		// Check that email is masked in logs
 		foundMasked := false
 		for _, entry := range logger.Debugs {
 			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
@@ -506,15 +520,15 @@ func TestSQLite_Logging_NologTagMasking(t *testing.T) {
 						if arg == "[REDACTED]" {
 							foundMasked = true
 						}
-						if arg == "newsecret456" {
-							t.Error("Password should be masked, but found raw value in logs")
+						if arg == email {
+							t.Error("Email should be masked, but found raw value in logs")
 						}
 					}
 				}
 			}
 		}
 		if !foundMasked {
-			t.Error("Expected password to be masked as [REDACTED]")
+			t.Error("Expected email to be masked as [REDACTED]")
 		}
 	})
 
