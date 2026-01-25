@@ -989,6 +989,130 @@ func serializeJSONB(value any) (any, error) {
 	}
 }
 
+// convertInt64Slice converts []int64 to []int
+func convertInt64Slice(v []int64) []int {
+	result := make([]int, len(v))
+	for i, val := range v {
+		result[i] = int(val)
+	}
+	return result
+}
+
+// convertInt32Slice converts []int32 to []int
+func convertInt32Slice(v []int32) []int {
+	result := make([]int, len(v))
+	for i, val := range v {
+		result[i] = int(val)
+	}
+	return result
+}
+
+// convertInt16Slice converts []int16 to []int
+func convertInt16Slice(v []int16) []int {
+	result := make([]int, len(v))
+	for i, val := range v {
+		result[i] = int(val)
+	}
+	return result
+}
+
+// convertInt8Slice converts []int8 to []int
+func convertInt8Slice(v []int8) []int {
+	result := make([]int, len(v))
+	for i, val := range v {
+		result[i] = int(val)
+	}
+	return result
+}
+
+// convertUintSlice converts []uint to []int
+func convertUintSlice(v []uint) []int {
+	result := make([]int, len(v))
+	for i, val := range v {
+		result[i] = int(val)
+	}
+	return result
+}
+
+// convertUint64Slice converts []uint64 to []int
+func convertUint64Slice(v []uint64) []int {
+	result := make([]int, len(v))
+	for i, val := range v {
+		result[i] = int(val)
+	}
+	return result
+}
+
+// convertUint32Slice converts []uint32 to []int
+func convertUint32Slice(v []uint32) []int {
+	result := make([]int, len(v))
+	for i, val := range v {
+		result[i] = int(val)
+	}
+	return result
+}
+
+// convertUint16Slice converts []uint16 to []int
+func convertUint16Slice(v []uint16) []int {
+	result := make([]int, len(v))
+	for i, val := range v {
+		result[i] = int(val)
+	}
+	return result
+}
+
+// convertUint8Slice converts []uint8 to []int
+func convertUint8Slice(v []uint8) []int {
+	result := make([]int, len(v))
+	for i, val := range v {
+		result[i] = int(val)
+	}
+	return result
+}
+
+// convertAnySlice converts []any to []int by deserializing each element
+func convertAnySlice(v []any) ([]int, error) {
+	result := make([]int, len(v))
+	for i, item := range v {
+		val, err := deserializeInt(item)
+		if err != nil {
+			return nil, fmt.Errorf("element %d: %w", i, err)
+		}
+		result[i] = val
+	}
+	return result, nil
+}
+
+// convertToIntSlice converts various integer slice types to []int
+func convertToIntSlice(value any) ([]int, error) {
+	switch v := value.(type) {
+	case []int:
+		return v, nil
+	case []int64:
+		return convertInt64Slice(v), nil
+	case []int32:
+		return convertInt32Slice(v), nil
+	case []int16:
+		return convertInt16Slice(v), nil
+	case []int8:
+		return convertInt8Slice(v), nil
+	case []uint:
+		return convertUintSlice(v), nil
+	case []uint64:
+		return convertUint64Slice(v), nil
+	case []uint32:
+		return convertUint32Slice(v), nil
+	case []uint16:
+		return convertUint16Slice(v), nil
+	case []uint8:
+		return convertUint8Slice(v), nil
+	case []any:
+		return convertAnySlice(v)
+	default:
+		return nil, fmt.Errorf("typedb: unsupported type for int array serialization: %T", value)
+	}
+}
+
 // serializeIntArray serializes a Go slice to PostgreSQL array format.
 // Converts []int, []int64, []int32, etc. to PostgreSQL array string "{1,2,3}".
 //
@@ -1000,66 +1124,9 @@ func serializeIntArray(value any) (string, error) {
 		return "{}", nil
 	}
 
-	var ints []int
-	switch v := value.(type) {
-	case []int:
-		ints = v
-	case []int64:
-		ints = make([]int, len(v))
-		for i, val := range v {
-			ints[i] = int(val)
-		}
-	case []int32:
-		ints = make([]int, len(v))
-		for i, val := range v {
-			ints[i] = int(val)
-		}
-	case []int16:
-		ints = make([]int, len(v))
-		for i, val := range v {
-			ints[i] = int(val)
-		}
-	case []int8:
-		ints = make([]int, len(v))
-		for i, val := range v {
-			ints[i] = int(val)
-		}
-	case []uint:
-		ints = make([]int, len(v))
-		for i, val := range v {
-			ints[i] = int(val)
-		}
-	case []uint64:
-		ints = make([]int, len(v))
-		for i, val := range v {
-			ints[i] = int(val)
-		}
-	case []uint32:
-		ints = make([]int, len(v))
-		for i, val := range v {
-			ints[i] = int(val)
-		}
-	case []uint16:
-		ints = make([]int, len(v))
-		for i, val := range v {
-			ints[i] = int(val)
-		}
-	case []uint8:
-		ints = make([]int, len(v))
-		for i, val := range v {
-			ints[i] = int(val)
-		}
-	case []any:
-		ints = make([]int, len(v))
-		for i, item := range v {
-			val, err := deserializeInt(item)
-			if err != nil {
-				return "", fmt.Errorf("element %d: %w", i, err)
-			}
-			ints[i] = val
-		}
-	default:
-		return "", fmt.Errorf("typedb: unsupported type for int array serialization: %T", value)
+	ints, err := convertToIntSlice(value)
+	if err != nil {
+		return "", err
 	}
 
 	if len(ints) == 0 {
