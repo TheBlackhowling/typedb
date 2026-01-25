@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.39] - 2026-01-25
+
+**Commit:** [`a80e5e8`](https://github.com/TheBlackhowling/typedb/commit/a80e5e864e11e7e3d8d641b4e7febd58cf16bdfe)
+**Pull Request:** [#51](https://github.com/TheBlackhowling/typedb/pull/51)
+
+**Summary:** Reduce cyclomatic complexity of serializeIntArray function from 26 to below 15
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.39.md](versions/0.1.39.md)
+
+
 ## [0.1.38] - 2026-01-25
 
 **Commit:** [`d6e9a97`](https://github.com/TheBlackhowling/typedb/commit/d6e9a97fa73c817027a54bf7b17daf2920a52964)
