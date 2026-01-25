@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.44] - 2026-01-25
+
+**Commit:** [`37c8b53`](https://github.com/TheBlackhowling/typedb/commit/37c8b535587cf6991dc839af50abbb66abe69419)
+**Pull Request:** [#56](https://github.com/TheBlackhowling/typedb/pull/56)
+
+**Summary:** Reduce cyclomatic complexity of getChangedFields function from 17 to below 15
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.44.md](versions/0.1.44.md)
+
+
 ## [0.1.43] - 2026-01-25
 
 **Commit:** [`43586e3`](https://github.com/TheBlackhowling/typedb/commit/43586e312e0288de53936df472bcb68dcee95e82)
