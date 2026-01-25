@@ -117,13 +117,18 @@ func Update[T ModelInterface](ctx context.Context, exec Executor, model T) error
 	// Collect fields and values (excluding primary key, nil/zero values, and fields with noupdate tag)
 	// Also collects auto-update timestamp fields
 	// If partial update is enabled, only include changed fields
-	columns, values, autoUpdateColumns, err := serializeModelFieldsForUpdate(model, primaryField.Name, driverName, changedFields)
+	columns, values, autoUpdateColumns, maskIndices, err := serializeModelFieldsForUpdate(model, primaryField.Name, driverName, changedFields)
 	if err != nil {
 		return fmt.Errorf("typedb: Update failed to serialize model: %w", err)
 	}
 
 	if len(columns) == 0 && len(autoUpdateColumns) == 0 {
 		return fmt.Errorf("typedb: Update requires at least one non-nil field to update")
+	}
+
+	// Store mask indices in context for logging
+	if len(maskIndices) > 0 {
+		ctx = WithMaskIndices(ctx, maskIndices)
 	}
 
 	// Build UPDATE query
@@ -201,21 +206,22 @@ func getTimestampFunction(driverName string) string {
 // Fields with dbUpdate:"false" are excluded from UPDATE but can still be used in INSERT and SELECT.
 // Fields with dbUpdate:"auto-timestamp" are automatically populated with database timestamp functions.
 // If changedFields is provided (partial update enabled), only includes fields that have changed.
-// Returns: column names, field values for serialization, and auto-update column names.
-func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName string, driverName string, changedFields map[string]bool) ([]string, []any, []string, error) {
+// Returns: column names, field values for serialization, auto-update column names, and mask indices (for fields with nolog:"true" tag).
+func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName string, driverName string, changedFields map[string]bool) ([]string, []any, []string, []int, error) {
 	modelValue := reflect.ValueOf(model)
 	if modelValue.Kind() != reflect.Ptr || modelValue.IsNil() {
-		return nil, nil, nil, fmt.Errorf("typedb: model must be a non-nil pointer")
+		return nil, nil, nil, nil, fmt.Errorf("typedb: model must be a non-nil pointer")
 	}
 
 	modelValue = modelValue.Elem()
 	if modelValue.Kind() != reflect.Struct {
-		return nil, nil, nil, fmt.Errorf("typedb: model must be a pointer to struct")
+		return nil, nil, nil, nil, fmt.Errorf("typedb: model must be a pointer to struct")
 	}
 
 	var columns []string
 	var values []any
 	var autoUpdateColumns []string
+	var maskIndices []int
 
 	iterateStructFields(modelValue.Type(), modelValue, primaryKeyFieldName, func(field reflect.StructField, fieldValue reflect.Value, columnName string) bool {
 		// Check for dbUpdate tag
@@ -247,12 +253,18 @@ func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName str
 			return true
 		}
 
+		// Track if this field should be masked in logs
+		shouldMask := field.Tag.Get("nolog") == "true"
+		if shouldMask {
+			maskIndices = append(maskIndices, len(values))
+		}
+
 		columns = append(columns, columnName)
 		values = append(values, fieldValue.Interface())
 		return true
 	})
 
-	return columns, values, autoUpdateColumns, nil
+	return columns, values, autoUpdateColumns, maskIndices, nil
 }
 
 // getChangedFields compares the current model state with its original copy and returns

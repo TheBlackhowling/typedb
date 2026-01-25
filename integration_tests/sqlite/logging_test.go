@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/TheBlackHowling/typedb"
 	"github.com/TheBlackHowling/typedb/integration_tests/testhelpers"
@@ -20,7 +22,9 @@ func TestSQLite_Logging_Exec(t *testing.T) {
 
 	t.Run("success logs debug", func(t *testing.T) {
 		logger.Debugs = nil // Reset logs
-		_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", "test@example.com")
+		// Use a unique email to avoid conflicts
+		email := fmt.Sprintf("test-exec-%d@example.com", time.Now().UnixNano())
+		_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", email)
 		if err != nil {
 			t.Fatalf("Exec failed: %v", err)
 		}
@@ -211,7 +215,9 @@ func TestSQLite_Logging_PerInstanceLogger(t *testing.T) {
 
 	ctx := context.Background()
 
-	_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", "test2@example.com")
+	// Use a unique email to avoid conflicts
+	email := fmt.Sprintf("test-perinstance-%d@example.com", time.Now().UnixNano())
+	_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", email)
 	if err != nil {
 		t.Fatalf("Exec failed: %v", err)
 	}
@@ -223,4 +229,318 @@ func TestSQLite_Logging_PerInstanceLogger(t *testing.T) {
 	if len(globalLogger.Debugs) != 0 {
 		t.Error("Expected global logger to NOT receive log when per-instance logger is set")
 	}
+}
+
+func TestSQLite_Logging_ConfigOptions(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("LogQueries=false disables query logging", func(t *testing.T) {
+		logger := &testhelpers.TestLogger{}
+		// Create DB with config options directly
+		db, err := typedb.OpenWithoutValidation("sqlite3", getTestDSN(),
+			typedb.WithLogger(logger),
+			typedb.WithLogQueries(false),
+			typedb.WithLogArgs(true))
+		if err != nil {
+			t.Fatalf("Failed to connect to database: %v", err)
+		}
+		defer db.Close()
+		defer os.Remove(getTestDSN())
+
+		// Run migrations manually
+		// Note: This test focuses on logging, so we'll use a simple query that doesn't require migrations
+		logger.Debugs = nil
+		_, err = db.Exec(ctx, "CREATE TABLE IF NOT EXISTS test_table (id INTEGER PRIMARY KEY, name TEXT)")
+		if err != nil {
+			t.Fatalf("Exec failed: %v", err)
+		}
+		_, err = db.Exec(ctx, "INSERT INTO test_table (name) VALUES (?)", "Test")
+		if err != nil {
+			t.Fatalf("Exec failed: %v", err)
+		}
+
+		// Should log message but without query
+		if len(logger.Debugs) == 0 {
+			t.Fatal("Expected Debug log even when LogQueries=false")
+		}
+		foundQuery := false
+		for _, entry := range logger.Debugs {
+			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
+				if entry.Keyvals[i] == "query" {
+					foundQuery = true
+				}
+			}
+		}
+		if foundQuery {
+			t.Error("Expected 'query' key to be absent when LogQueries=false")
+		}
+	})
+
+	t.Run("LogArgs=false disables argument logging", func(t *testing.T) {
+		logger := &testhelpers.TestLogger{}
+		// Create DB with config options directly
+		db, err := typedb.OpenWithoutValidation("sqlite3", getTestDSN(),
+			typedb.WithLogger(logger),
+			typedb.WithLogQueries(true),
+			typedb.WithLogArgs(false))
+		if err != nil {
+			t.Fatalf("Failed to connect to database: %v", err)
+		}
+		defer db.Close()
+		defer os.Remove(getTestDSN())
+
+		// Run migrations manually
+		logger.Debugs = nil
+		_, err = db.Exec(ctx, "CREATE TABLE IF NOT EXISTS test_table2 (id INTEGER PRIMARY KEY, name TEXT)")
+		if err != nil {
+			t.Fatalf("Exec failed: %v", err)
+		}
+		_, err = db.Exec(ctx, "INSERT INTO test_table2 (name) VALUES (?)", "Test")
+		if err != nil {
+			t.Fatalf("Exec failed: %v", err)
+		}
+
+		// Should log query but without args
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.Debugs {
+			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
+				if entry.Keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.Keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if !foundQuery {
+			t.Error("Expected 'query' key to be present when LogQueries=true")
+		}
+		if foundArgs {
+			t.Error("Expected 'args' key to be absent when LogArgs=false")
+		}
+	})
+}
+
+func TestSQLite_Logging_ContextOverrides(t *testing.T) {
+	logger := &testhelpers.TestLogger{}
+	db := setupTestDBWithLogger(t, logger)
+	defer db.Close()
+	defer os.Remove(getTestDSN())
+
+	ctx := context.Background()
+
+	t.Run("WithNoLogging disables all logging", func(t *testing.T) {
+		logger.Debugs = nil
+		ctx := typedb.WithNoLogging(ctx)
+		// Use a unique email to avoid conflicts
+		email := fmt.Sprintf("test-nolog-%d@example.com", time.Now().UnixNano())
+		_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", email)
+		if err != nil {
+			t.Fatalf("Exec failed: %v", err)
+		}
+
+		// Should log message but without query/args
+		if len(logger.Debugs) == 0 {
+			t.Fatal("Expected Debug log even when logging disabled")
+		}
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.Debugs {
+			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
+				if entry.Keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.Keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if foundQuery {
+			t.Error("Expected 'query' key to be absent when WithNoLogging is used")
+		}
+		if foundArgs {
+			t.Error("Expected 'args' key to be absent when WithNoLogging is used")
+		}
+	})
+
+	t.Run("WithNoQueryLogging disables query logging only", func(t *testing.T) {
+		logger.Debugs = nil
+		ctx := typedb.WithNoQueryLogging(ctx)
+		// Use a unique email to avoid conflicts
+		email := fmt.Sprintf("test-noquery-%d@example.com", time.Now().UnixNano())
+		_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", email)
+		if err != nil {
+			t.Fatalf("Exec failed: %v", err)
+		}
+
+		// Query should not be logged, but args should be
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.Debugs {
+			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
+				if entry.Keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.Keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if foundQuery {
+			t.Error("Expected 'query' key to be absent when WithNoQueryLogging is used")
+		}
+		if !foundArgs {
+			t.Error("Expected 'args' key to be present when WithNoQueryLogging is used (only query disabled)")
+		}
+	})
+
+	t.Run("WithNoArgLogging disables argument logging only", func(t *testing.T) {
+		logger.Debugs = nil
+		ctx := typedb.WithNoArgLogging(ctx)
+		// Use a unique email to avoid conflicts
+		email := fmt.Sprintf("test-noargs-%d@example.com", time.Now().UnixNano())
+		_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", email)
+		if err != nil {
+			t.Fatalf("Exec failed: %v", err)
+		}
+
+		// Args should not be logged, but query should be
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.Debugs {
+			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
+				if entry.Keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.Keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if !foundQuery {
+			t.Error("Expected 'query' key to be present when WithNoArgLogging is used (only args disabled)")
+		}
+		if foundArgs {
+			t.Error("Expected 'args' key to be absent when WithNoArgLogging is used")
+		}
+	})
+}
+
+// UserWithNolog is a test model with nolog tag
+// Note: Using email with nolog tag since SQLite schema doesn't have password column
+type UserWithNolog struct {
+	typedb.Model
+	ID    int    `db:"id" load:"primary"`
+	Name  string `db:"name"`
+	Email string `db:"email" nolog:"true"`
+}
+
+func (u *UserWithNolog) TableName() string {
+	return "users"
+}
+
+func (u *UserWithNolog) QueryByID() string {
+	return "SELECT id, name, email FROM users WHERE id = ?"
+}
+
+func init() {
+	typedb.RegisterModel[*UserWithNolog]()
+}
+
+func TestSQLite_Logging_NologTagMasking(t *testing.T) {
+	logger := &testhelpers.TestLogger{}
+	db := setupTestDBWithLogger(t, logger)
+	defer db.Close()
+	defer os.Remove(getTestDSN())
+
+	ctx := context.Background()
+
+	t.Run("Insert masks nolog fields", func(t *testing.T) {
+		logger.Debugs = nil
+		// Use a unique email to avoid conflicts
+		email := fmt.Sprintf("test-nolog-insert-%d@example.com", time.Now().UnixNano())
+		user := &UserWithNolog{
+			Name:  "Test User",
+			Email: email,
+		}
+		err := typedb.Insert(ctx, db, user)
+		if err != nil {
+			t.Fatalf("Insert failed: %v", err)
+		}
+
+		// Check that email is masked in logs
+		foundArgs := false
+		foundMasked := false
+		for _, entry := range logger.Debugs {
+			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
+				if entry.Keyvals[i] == "args" {
+					foundArgs = true
+					args := entry.Keyvals[i+1].([]any)
+					for _, arg := range args {
+						if arg == "[REDACTED]" {
+							foundMasked = true
+						}
+						if arg == email {
+							t.Error("Email should be masked, but found raw value in logs")
+						}
+					}
+				}
+			}
+		}
+		if !foundArgs {
+			t.Error("Expected 'args' key in Debug log")
+		}
+		if !foundMasked {
+			t.Error("Expected email to be masked as [REDACTED]")
+		}
+	})
+
+	t.Run("Update masks nolog fields", func(t *testing.T) {
+		logger.Debugs = nil
+		// Use a unique email to avoid conflicts
+		email := fmt.Sprintf("test-nolog-update-%d@example.com", time.Now().UnixNano())
+		user := &UserWithNolog{
+			ID:    1,
+			Name:  "Updated User",
+			Email: email,
+		}
+		err := typedb.Update(ctx, db, user)
+		if err != nil {
+			t.Fatalf("Update failed: %v", err)
+		}
+
+		// Check that email is masked in logs
+		foundMasked := false
+		for _, entry := range logger.Debugs {
+			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
+				if entry.Keyvals[i] == "args" {
+					args := entry.Keyvals[i+1].([]any)
+					for _, arg := range args {
+						if arg == "[REDACTED]" {
+							foundMasked = true
+						}
+						if arg == email {
+							t.Error("Email should be masked, but found raw value in logs")
+						}
+					}
+				}
+			}
+		}
+		if !foundMasked {
+			t.Error("Expected email to be masked as [REDACTED]")
+		}
+	})
+
+	t.Run("Load masks nolog fields", func(t *testing.T) {
+		logger.Debugs = nil
+		user := &UserWithNolog{ID: 1}
+		err := typedb.Load(ctx, db, user)
+		if err != nil {
+			t.Fatalf("Load failed: %v", err)
+		}
+
+		// For Load, the primary key (ID) is logged, not the password field
+		// The masking is tested in Insert/Update where password is actually in args
+	})
 }

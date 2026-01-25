@@ -37,6 +37,11 @@ func Load[T ModelInterface](ctx context.Context, exec Executor, model T) error {
 
 	fieldValue := fieldValueReflect.Interface()
 
+	// Check if primary key field has nolog tag and add mask index to context
+	if primaryField.Tag.Get("nolog") == "true" {
+		ctx = WithMaskIndices(ctx, []int{0})
+	}
+
 	// Find and call QueryBy{Field}() method
 	methodName := "QueryBy" + primaryField.Name
 	_, methodFound := findMethod(model, methodName)
@@ -83,6 +88,16 @@ func LoadByField[T ModelInterface](ctx context.Context, exec Executor, model T, 
 	}
 
 	fieldValue := fieldValueReflect.Interface()
+
+	// Get field struct to check for nolog tag
+	modelType := getModelType(model)
+	if modelType.Kind() == reflect.Ptr {
+		modelType = modelType.Elem()
+	}
+	field, found := modelType.FieldByName(fieldName)
+	if found && field.Tag.Get("nolog") == "true" {
+		ctx = WithMaskIndices(ctx, []int{0})
+	}
 
 	// Find and call QueryBy{Field}() method
 	methodName := "QueryBy" + fieldName
@@ -139,8 +154,14 @@ func LoadByComposite[T ModelInterface](ctx context.Context, exec Executor, model
 	}
 	sort.Strings(fieldNames)
 
-	// Get values for all fields in composite key
+	// Get values for all fields in composite key and check for nolog tags
 	fieldValues := make([]any, len(fieldNames))
+	var maskIndices []int
+	modelType := getModelType(model)
+	if modelType.Kind() == reflect.Ptr {
+		modelType = modelType.Elem()
+	}
+	
 	for i, fieldName := range fieldNames {
 		valueReflect, err := getFieldValue(model, fieldName)
 		if err != nil {
@@ -153,6 +174,17 @@ func LoadByComposite[T ModelInterface](ctx context.Context, exec Executor, model
 		}
 
 		fieldValues[i] = valueReflect.Interface()
+		
+		// Check if field has nolog tag
+		field, found := modelType.FieldByName(fieldName)
+		if found && field.Tag.Get("nolog") == "true" {
+			maskIndices = append(maskIndices, i)
+		}
+	}
+
+	// Add mask indices to context if any fields have nolog tags
+	if len(maskIndices) > 0 {
+		ctx = WithMaskIndices(ctx, maskIndices)
 	}
 
 	// Build method name: QueryBy{Field1}{Field2}...
