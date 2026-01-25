@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.36] - 2026-01-25
+
+**Commit:** [`1a62fa1`](https://github.com/TheBlackhowling/typedb/commit/1a62fa1ab84e3891df82bba3a3316418d568be7e)
+**Pull Request:** [#44](https://github.com/TheBlackhowling/typedb/pull/44)
+
+**Summary:** Add cursor rules file to guide AI assistants and maintain code quality standards
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.36.md](versions/0.1.36.md)
+
+
 ## [0.1.35] - 2026-01-25
 
 **Commit:** [`71ca245`](https://github.com/TheBlackhowling/typedb/commit/71ca24579dc4db577c941fffa1408b69ded1752b)
