@@ -168,7 +168,7 @@ func deepCopyModel(model ModelInterface) interface{} {
 // all Go versions (1.18-1.25).
 //
 //go:nocheckptr
-func buildFieldMapFromPtr(ptrValue reflect.Value, structValue reflect.Value) map[string]reflect.Value {
+func buildFieldMapFromPtr(ptrValue, structValue reflect.Value) map[string]reflect.Value {
 	structType := structValue.Type()
 	fieldMap := make(map[string]reflect.Value)
 
