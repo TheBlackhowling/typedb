@@ -380,7 +380,7 @@ func deserializeArrayType(target, value any) error {
 }
 
 // deserializeMapType handles map types: *map[string]any, *map[string]string
-func deserializeMapType(target any, value any) error {
+func deserializeMapType(target, value any) error {
 	switch ptr := target.(type) {
 	case *map[string]any:
 		jsonb, err := deserializeJSONB(value)
