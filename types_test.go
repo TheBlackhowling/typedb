@@ -68,11 +68,11 @@ func TestModelStruct(t *testing.T) {
 // MockExecutor is a test helper that implements Executor interface
 // Used for testing in later layers
 type MockExecutor struct {
-	ExecFunc      func(ctx context.Context, query string, args ...any) (sql.Result, error)
-	QueryAllFunc  func(ctx context.Context, query string, args ...any) ([]map[string]any, error)
+	ExecFunc        func(ctx context.Context, query string, args ...any) (sql.Result, error)
+	QueryAllFunc    func(ctx context.Context, query string, args ...any) ([]map[string]any, error)
 	QueryRowMapFunc func(ctx context.Context, query string, args ...any) (map[string]any, error)
-	GetIntoFunc   func(ctx context.Context, query string, args []any, dest ...any) error
-	QueryDoFunc   func(ctx context.Context, query string, args []any, scan func(rows *sql.Rows) error) error
+	GetIntoFunc     func(ctx context.Context, query string, args []any, dest ...any) error
+	QueryDoFunc     func(ctx context.Context, query string, args []any, scan func(rows *sql.Rows) error) error
 }
 
 func (m *MockExecutor) Exec(ctx context.Context, query string, args ...any) (sql.Result, error) {

@@ -324,9 +324,9 @@ func TestDeserialize_NilDest(t *testing.T) {
 func TestDeserialize_UnknownFields(t *testing.T) {
 	user := &DeserializeUser{}
 	row := map[string]any{
-		"id":        123,
-		"unknown":   "value",
-		"another":   456,
+		"id":      123,
+		"unknown": "value",
+		"another": 456,
 	}
 
 	// Should not error on unknown fields
@@ -339,4 +339,3 @@ func TestDeserialize_UnknownFields(t *testing.T) {
 		t.Errorf("Expected ID 123, got %d", user.ID)
 	}
 }
-

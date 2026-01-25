@@ -101,7 +101,7 @@ func InsertAndGetId(ctx context.Context, exec Executor, insertQuery string, args
 		// Skip "RETURNING" (9 chars) and any following whitespace
 		returningPart := insertQuery[returningIdx+9:]
 		returningPart = strings.TrimLeft(returningPart, " \t\n\r")
-		
+
 		// Find where RETURNING clause ends (before INTO, or end of query)
 		intoIdx := strings.Index(strings.ToUpper(returningPart), " INTO ")
 		if intoIdx != -1 {
@@ -151,7 +151,7 @@ func InsertAndGetId(ctx context.Context, exec Executor, insertQuery string, args
 	if err != nil {
 		return 0, fmt.Errorf("typedb: InsertAndGetId failed: %w", err)
 	}
-	
+
 	// Extract ID from the returned row
 	idValue, ok := row["id"]
 	if !ok {
@@ -161,7 +161,7 @@ func InsertAndGetId(ctx context.Context, exec Executor, insertQuery string, args
 			return 0, fmt.Errorf("typedb: InsertAndGetId RETURNING/OUTPUT clause did not return 'id' column")
 		}
 	}
-	
+
 	// Convert to int64
 	switch v := idValue.(type) {
 	case int64:
@@ -270,7 +270,7 @@ func validateIdentifier(identifier string) error {
 	if identifier == "" {
 		return fmt.Errorf("typedb: identifier cannot be empty")
 	}
-	
+
 	// Allow alphanumeric, underscore, dot, and quote characters
 	// Reject dangerous characters: semicolon, dash, parentheses, etc.
 	// This regex matches: letters, digits, underscore, dot, and quote characters
@@ -278,7 +278,7 @@ func validateIdentifier(identifier string) error {
 	if !validPattern.MatchString(identifier) {
 		return fmt.Errorf("typedb: invalid identifier '%s': identifiers can only contain alphanumeric characters, underscores, dots, and quote characters", identifier)
 	}
-	
+
 	// Additional check: reject identifiers that contain SQL injection patterns
 	// Note: We don't reject SQL keywords as they might be legitimate identifier names
 	// The regex above already rejects semicolons, spaces, and other dangerous characters
@@ -293,7 +293,7 @@ func validateIdentifier(identifier string) error {
 			return fmt.Errorf("typedb: invalid identifier '%s': contains potentially dangerous SQL pattern", identifier)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -307,7 +307,7 @@ func quoteIdentifier(driverName, identifier string) string {
 		// If this panics, it indicates a programming error, not a runtime security issue
 		panic(err.Error())
 	}
-	
+
 	driverName = strings.ToLower(driverName)
 	switch driverName {
 	case "postgres", "sqlite3":
@@ -623,16 +623,16 @@ func Insert[T ModelInterface](ctx context.Context, exec Executor, model T) error
 			strings.Join(placeholders, ", "),
 			quotedPK,
 			returningPlaceholder)
-		
+
 		// Create sql.Out parameter for the RETURNING INTO bind variable
 		var id int64
 		outParam := sql.Out{Dest: &id}
-		
+
 		// Append sql.Out to values for the RETURNING INTO clause
 		args := make([]any, len(values)+1)
 		copy(args, values)
 		args[len(values)] = outParam
-		
+
 		result, err := exec.Exec(ctx, insertQuery, args...)
 		if err != nil {
 			return fmt.Errorf("typedb: Insert failed: %w", err)
@@ -718,18 +718,18 @@ func Insert[T ModelInterface](ctx context.Context, exec Executor, model T) error
 //	// returnedUser.ID, returnedUser.CreatedAt, etc. are all populated
 func InsertAndLoad[T ModelInterface](ctx context.Context, exec Executor, model T) (T, error) {
 	var zero T
-	
+
 	// First, insert the model (this sets the ID)
 	err := Insert(ctx, exec, model)
 	if err != nil {
 		return zero, fmt.Errorf("typedb: InsertAndLoad failed during insert: %w", err)
 	}
-	
+
 	// Then load the full object
 	err = Load(ctx, exec, model)
 	if err != nil {
 		return zero, fmt.Errorf("typedb: InsertAndLoad failed during load: %w", err)
 	}
-	
+
 	return model, nil
 }

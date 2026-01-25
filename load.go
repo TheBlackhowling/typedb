@@ -161,7 +161,7 @@ func LoadByComposite[T ModelInterface](ctx context.Context, exec Executor, model
 	if modelType.Kind() == reflect.Ptr {
 		modelType = modelType.Elem()
 	}
-	
+
 	for i, fieldName := range fieldNames {
 		valueReflect, err := getFieldValue(model, fieldName)
 		if err != nil {
@@ -174,7 +174,7 @@ func LoadByComposite[T ModelInterface](ctx context.Context, exec Executor, model
 		}
 
 		fieldValues[i] = valueReflect.Interface()
-		
+
 		// Check if field has nolog tag
 		field, found := modelType.FieldByName(fieldName)
 		if found && field.Tag.Get("nolog") == "true" {
