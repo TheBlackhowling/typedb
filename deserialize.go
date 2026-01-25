@@ -310,7 +310,7 @@ func deserializeUintType(target, value any) error {
 }
 
 // deserializePointerType handles pointer-to-pointer types: **int, **bool, **string, **time.Time
-func deserializePointerType(target any, value any) error {
+func deserializePointerType(target, value any) error {
 	switch ptr := target.(type) {
 	case **int:
 		val, err := deserializeInt(value)
