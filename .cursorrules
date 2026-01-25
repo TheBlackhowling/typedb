@@ -253,6 +253,38 @@ Test plan documents should include:
 
 ## Workflow Guidelines
 
+### ⚠️ MANDATORY: Starting a New Task
+
+**Before starting ANY new task, you MUST:**
+
+1. **Checkout main branch:**
+   ```bash
+   git checkout main
+   ```
+
+2. **Get latest changes:**
+   ```bash
+   git pull
+   ```
+
+3. **Create a new branch:**
+   ```bash
+   git checkout -b <branch-type>/<branch-name>
+   ```
+
+4. **Verify you're on the new branch:**
+   ```bash
+   git branch
+   ```
+
+**This ensures:**
+- You have the latest codebase
+- You're working from a clean state
+- Your changes are isolated in a feature branch
+- No conflicts with other work
+
+**NO EXCEPTIONS**: Always start from main with latest changes before beginning any task.
+
 ### Branch Naming
 
 - `test/` - For test additions/modifications

@@ -59,6 +59,17 @@ func getDriverName(exec Executor) string {
 //	id, err := typedb.InsertAndGetId(ctx, db,
 //		"INSERT INTO users (name, email) VALUES (?, ?)",
 //		"John", "john@example.com")
+//
+// Complexity Note: This function has high cyclomatic complexity (20) due to database-specific
+// handling. The complexity is justified because:
+// 1. MySQL/SQLite use LastInsertId() path (no RETURNING clause)
+// 2. Oracle requires special RETURNING ... INTO syntax with sql.Out parameters
+// 3. Oracle logic includes dynamic query modification (adding INTO clause if missing)
+// 4. Other databases use QueryRowMap with RETURNING/OUTPUT clauses
+// 5. Type conversion logic for ID values (int64, int32, int16, int, float64)
+//
+// The complexity reflects the reality of database differences. Oracle-specific logic could
+// be extracted, but it's tightly coupled with the query parsing and parameter handling.
 func InsertAndGetId(ctx context.Context, exec Executor, insertQuery string, args ...any) (int64, error) {
 	// Check if query has RETURNING/OUTPUT clause
 	queryUpper := strings.ToUpper(insertQuery)
@@ -524,6 +535,24 @@ func isZeroOrNil(v reflect.Value) bool {
 //	user := &User{Name: "John", Email: "john@example.com"}
 //	err := typedb.Insert(ctx, db, user)
 //	// user.ID is now set with the inserted ID
+// Insert inserts a model into the database and sets the primary key on the model.
+// The model must have a TableName() method and a primary key field with load:"primary" tag.
+// Returns an error if the insert fails.
+//
+// Complexity Note: This function has high cyclomatic complexity (23) due to database-specific
+// handling. The complexity is justified because:
+// 1. MySQL uses LastInsertId() instead of RETURNING clause
+// 2. Oracle requires special RETURNING ... INTO syntax with sql.Out parameters
+// 3. Other databases (PostgreSQL, SQLite, MSSQL) use standard RETURNING/OUTPUT clauses
+// 4. Each database path requires different SQL generation and parameter handling
+//
+// The complexity reflects the reality of database differences. Extracting database-specific
+// logic into separate functions would reduce complexity but would also:
+// - Require passing many parameters between functions
+// - Make the code flow harder to follow
+// - Add overhead from additional function calls
+//
+// The current structure balances complexity with maintainability and performance.
 func Insert[T ModelInterface](ctx context.Context, exec Executor, model T) error {
 	// Validate model has TableName() method
 	tableName, err := getTableName(model)
