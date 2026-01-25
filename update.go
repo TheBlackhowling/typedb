@@ -273,6 +273,58 @@ func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName str
 	return columns, values, autoUpdateColumns, maskIndices, nil
 }
 
+// extractOriginalCopy extracts the original copy from Model.originalCopy field using unsafe
+func extractOriginalCopy(structValue reflect.Value) (interface{}, error) {
+	for i := 0; i < structValue.NumField(); i++ {
+		field := structValue.Type().Field(i)
+		if field.Anonymous && field.Type == reflect.TypeOf(Model{}) {
+			// Use unsafe to access unexported field
+			modelFieldValue := structValue.Field(i)
+			modelFieldPtr := unsafe.Pointer(modelFieldValue.UnsafeAddr())
+			originalCopyFieldType := field.Type.Field(0) // Model.originalCopy field
+			originalCopyFieldPtr := unsafe.Pointer(uintptr(modelFieldPtr) + uintptr(originalCopyFieldType.Offset))
+			originalCopy := *(*interface{})(originalCopyFieldPtr)
+			if originalCopy != nil {
+				return originalCopy, nil
+			}
+		}
+	}
+	return nil, nil // No original copy found
+}
+
+// compareFieldMaps compares two field maps and returns a map of changed column names
+func compareFieldMaps(currentFields, originalFields map[string]reflect.Value) map[string]bool {
+	changedFields := make(map[string]bool)
+
+	// Check fields in current model
+	for columnName, currentFieldValue := range currentFields {
+		originalFieldValue, exists := originalFields[columnName]
+		if !exists {
+			// Field exists in current but not in original - consider it changed
+			changedFields[columnName] = true
+			continue
+		}
+
+		// Compare field values
+		currentVal := currentFieldValue.Interface()
+		originalVal := originalFieldValue.Interface()
+
+		// Use DeepEqual for comparison
+		if !reflect.DeepEqual(currentVal, originalVal) {
+			changedFields[columnName] = true
+		}
+	}
+
+	// Check for fields in original but not in current (shouldn't happen, but be safe)
+	for columnName := range originalFields {
+		if _, exists := currentFields[columnName]; !exists {
+			changedFields[columnName] = true
+		}
+	}
+
+	return changedFields
+}
+
 // getChangedFields compares the current model state with its original copy and returns
 // a map of column names that have changed. Returns nil if partial update is not enabled
 // or if no original copy exists.
@@ -287,21 +339,10 @@ func getChangedFields(model ModelInterface, primaryKeyFieldName string) (map[str
 		return nil, fmt.Errorf("model must be a pointer to struct")
 	}
 
-	// Get the original copy from Model.originalCopy field using unsafe
-	var originalCopy interface{}
-	for i := 0; i < structValue.NumField(); i++ {
-		field := structValue.Type().Field(i)
-		if field.Anonymous && field.Type == reflect.TypeOf(Model{}) {
-			// Use unsafe to access unexported field
-			modelFieldValue := structValue.Field(i)
-			modelFieldPtr := unsafe.Pointer(modelFieldValue.UnsafeAddr())
-			originalCopyFieldType := field.Type.Field(0) // Model.originalCopy field
-			originalCopyFieldPtr := unsafe.Pointer(uintptr(modelFieldPtr) + uintptr(originalCopyFieldType.Offset))
-			originalCopy = *(*interface{})(originalCopyFieldPtr)
-			if originalCopy != nil {
-				break
-			}
-		}
+	// Extract original copy
+	originalCopy, err := extractOriginalCopy(structValue)
+	if err != nil {
+		return nil, err
 	}
 
 	if originalCopy == nil {
@@ -309,6 +350,7 @@ func getChangedFields(model ModelInterface, primaryKeyFieldName string) (map[str
 		return nil, nil
 	}
 
+	// Validate original copy
 	originalValue := reflect.ValueOf(originalCopy)
 	if originalValue.Kind() != reflect.Ptr || originalValue.IsNil() {
 		return nil, fmt.Errorf("original copy must be a non-nil pointer")
@@ -323,34 +365,8 @@ func getChangedFields(model ModelInterface, primaryKeyFieldName string) (map[str
 	currentFields := buildFieldMapForComparison(structValue, primaryKeyFieldName)
 	originalFields := buildFieldMapForComparison(originalStructValue, primaryKeyFieldName)
 
-	// Compare fields and identify changes
-	changedFields := make(map[string]bool)
-	for columnName, currentFieldValue := range currentFields {
-		originalFieldValue, exists := originalFields[columnName]
-		if !exists {
-			// Field exists in current but not in original - consider it changed
-			changedFields[columnName] = true
-			continue
-		}
-
-		// Compare field values - get actual values for comparison
-		currentVal := currentFieldValue.Interface()
-		originalVal := originalFieldValue.Interface()
-
-		// Use DeepEqual for comparison
-		if !reflect.DeepEqual(currentVal, originalVal) {
-			changedFields[columnName] = true
-		}
-	}
-
-	// Also check for fields that exist in original but not in current (shouldn't happen, but be safe)
-	for columnName := range originalFields {
-		if _, exists := currentFields[columnName]; !exists {
-			changedFields[columnName] = true
-		}
-	}
-
-	return changedFields, nil
+	// Compare and return changed fields
+	return compareFieldMaps(currentFields, originalFields), nil
 }
 
 // buildFieldMapForComparison builds a map of column names to field values for comparison.
