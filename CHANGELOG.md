@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.45] - 2026-01-25
+
+**Commit:** [`c98befd`](https://github.com/TheBlackhowling/typedb/commit/c98befd9cf441e24bb88e4cd64fe58706cd7bb7c)
+**Pull Request:** [#57](https://github.com/TheBlackhowling/typedb/pull/57)
+
+**Summary:** Reduce cyclomatic complexity of deserializeUint64 function from 17 to below 15
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.45.md](versions/0.1.45.md)
+
+
 ## [0.1.44] - 2026-01-25
 
 **Commit:** [`37c8b53`](https://github.com/TheBlackhowling/typedb/commit/37c8b535587cf6991dc839af50abbb66abe69419)
