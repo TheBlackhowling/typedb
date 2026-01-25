@@ -1267,3 +1267,174 @@ func TestInsertAndGetId_NonIntegerId_Slice(t *testing.T) {
 		t.Errorf("Unmet mock expectations: %v", err)
 	}
 }
+
+func TestInsertAndGetId_TypeConversion_Int32(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// Mock QueryRowMap returning ID as int32
+	rows := sqlmock.NewRows([]string{"id"}).AddRow(int32(456))
+
+	mock.ExpectQuery("INSERT INTO users").
+		WithArgs("John Doe", "john@example.com").
+		WillReturnRows(rows)
+
+	id, err := InsertAndGetId(ctx, typedbDB,
+		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id",
+		"John Doe", "john@example.com")
+
+	if err != nil {
+		t.Fatalf("InsertAndGetId failed: %v", err)
+	}
+
+	// Verify int32 was converted to int64
+	if id != 456 {
+		t.Errorf("Expected ID 456, got %d", id)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestInsertAndGetId_TypeConversion_Int16(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// Mock QueryRowMap returning ID as int16
+	rows := sqlmock.NewRows([]string{"id"}).AddRow(int16(789))
+
+	mock.ExpectQuery("INSERT INTO users").
+		WithArgs("John Doe", "john@example.com").
+		WillReturnRows(rows)
+
+	id, err := InsertAndGetId(ctx, typedbDB,
+		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id",
+		"John Doe", "john@example.com")
+
+	if err != nil {
+		t.Fatalf("InsertAndGetId failed: %v", err)
+	}
+
+	// Verify int16 was converted to int64
+	if id != 789 {
+		t.Errorf("Expected ID 789, got %d", id)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestInsertAndGetId_TypeConversion_Int(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// Mock QueryRowMap returning ID as int
+	rows := sqlmock.NewRows([]string{"id"}).AddRow(321)
+
+	mock.ExpectQuery("INSERT INTO users").
+		WithArgs("John Doe", "john@example.com").
+		WillReturnRows(rows)
+
+	id, err := InsertAndGetId(ctx, typedbDB,
+		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id",
+		"John Doe", "john@example.com")
+
+	if err != nil {
+		t.Fatalf("InsertAndGetId failed: %v", err)
+	}
+
+	// Verify int was converted to int64
+	if id != 321 {
+		t.Errorf("Expected ID 321, got %d", id)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestInsertAndGetId_TypeConversion_Float64(t *testing.T) {
+	tests := []struct {
+		name     string
+		floatVal float64
+		expected int64
+	}{
+		{
+			name:     "whole number",
+			floatVal: 654.0,
+			expected: 654,
+		},
+		{
+			name:     "decimal truncated",
+			floatVal: 654.7,
+			expected: 654,
+		},
+		{
+			name:     "negative whole number",
+			floatVal: -100.0,
+			expected: -100,
+		},
+		{
+			name:     "zero",
+			floatVal: 0.0,
+			expected: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("Failed to create mock: %v", err)
+			}
+			defer db.Close()
+
+			typedbDB := NewDB(db, "postgres", 5*time.Second)
+			ctx := context.Background()
+
+			// Mock QueryRowMap returning ID as float64
+			rows := sqlmock.NewRows([]string{"id"}).AddRow(tt.floatVal)
+
+			mock.ExpectQuery("INSERT INTO users").
+				WithArgs("John Doe", "john@example.com").
+				WillReturnRows(rows)
+
+			id, err := InsertAndGetId(ctx, typedbDB,
+				"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id",
+				"John Doe", "john@example.com")
+
+			if err != nil {
+				t.Fatalf("InsertAndGetId failed: %v", err)
+			}
+
+			// Verify float64 was converted to int64
+			if id != tt.expected {
+				t.Errorf("Expected ID %d, got %d", tt.expected, id)
+			}
+
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("Unmet mock expectations: %v", err)
+			}
+		})
+	}
+}
