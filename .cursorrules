@@ -294,6 +294,52 @@ Test plan documents should include:
 - `docs/` - For documentation changes
 - `chore/` - For maintenance tasks
 
+### Static Analysis Requirements
+
+**⚠️ MANDATORY: Run Static Analysis Before PR**
+
+**You MUST run static analysis before creating any PR:**
+
+1. **Run the static analysis script:**
+   ```bash
+   # Windows (PowerShell):
+   .\scripts\static-analysis.ps1
+   
+   # Unix/Linux/Mac:
+   ./scripts/static-analysis.sh
+   ```
+
+2. **All checks must pass:**
+   - `go vet` - Built-in Go static analyzer (MUST pass)
+   - `golangci-lint` - Comprehensive linter aggregator (errors MUST be fixed, warnings acceptable)
+   - `staticcheck` - Advanced static analysis (MUST pass)
+   - `gosec` - Security checker (security issues MUST be fixed)
+   - `govulncheck` - Vulnerability checker (vulnerabilities MUST be fixed)
+   - `errcheck` - Unchecked error checker (SHOULD be fixed unless intentional)
+
+3. **Fix critical issues:**
+   - Security vulnerabilities (gosec, govulncheck) - **MUST be fixed**
+   - Errors from golangci-lint - **MUST be fixed**
+   - Unchecked errors (errcheck) - **SHOULD be fixed** unless intentional
+
+4. **Document intentional warnings:**
+   - Style suggestions (field alignment, etc.) can be deferred
+   - Document in PR description if warnings are intentional
+   - Explain why they are acceptable or deferred
+
+**NO EXCEPTIONS**: All static analysis checks must pass before creating a PR. The GitHub Actions workflow will also run these checks automatically on all PRs.
+
+### Pre-PR Checklist
+
+**Before creating ANY PR, you MUST verify:**
+
+- [ ] Static analysis has been run and all checks pass (see Static Analysis Requirements above)
+- [ ] All tests pass locally
+- [ ] Code coverage is maintained ≥ 80%
+- [ ] Impact analysis completed (see Change Impact Checklist)
+- [ ] Documentation updated if needed (API.md, README.md)
+- [ ] PR description follows the required format (see PR Creation section)
+
 ### Commit Messages
 
 - Use conventional commit format: `type: description`
