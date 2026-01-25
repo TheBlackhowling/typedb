@@ -223,13 +223,13 @@ func queryRowMapHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger
 	defer rows.Close()
 
 	if !rows.Next() {
-		if err := rows.Err(); err != nil {
+		if iterErr := rows.Err(); iterErr != nil {
 			if logQueries {
-				logger.Error("Row iteration error", "query", query, "error", err)
+				logger.Error("Row iteration error", "query", query, "error", iterErr)
 			} else {
-				logger.Error("Row iteration error", "error", err)
+				logger.Error("Row iteration error", "error", iterErr)
 			}
-			return nil, err
+			return nil, iterErr
 		}
 		return nil, ErrNotFound
 	}
