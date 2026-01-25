@@ -358,7 +358,7 @@ func deserializeTimeType(target, value any) error {
 }
 
 // deserializeArrayType handles array types: *[]int, *[]string
-func deserializeArrayType(target any, value any) error {
+func deserializeArrayType(target, value any) error {
 	switch ptr := target.(type) {
 	case *[]int:
 		arr, err := deserializeIntArray(value)
