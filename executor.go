@@ -448,7 +448,9 @@ func (d *DB) WithTx(ctx context.Context, fn func(*Tx) error, opts *sql.TxOptions
 
 	if err := fn(tx); err != nil {
 		d.getLogger().Debug("Function returned error, rolling back transaction", "error", err)
-		_ = tx.Rollback()
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			d.getLogger().Error("Failed to rollback transaction", "error", rollbackErr)
+		}
 		return err
 	}
 
