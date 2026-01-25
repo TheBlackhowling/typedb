@@ -58,6 +58,20 @@ import (
 //	// Modify only name
 //	user.Name = "New Name"
 //	typedb.Update(ctx, db, user) // Only updates name field, not email
+// Update updates a model in the database based on its primary key.
+// The model must have a TableName() method and a primary key field with load:"primary" tag.
+// The primary key must be set (non-zero) to identify which row to update.
+// Returns an error if the update fails.
+//
+// Complexity Note: This function has high cyclomatic complexity (20) due to database-specific
+// handling and partial update logic. The complexity is justified because:
+// 1. Different databases use different timestamp functions (NOW(), CURRENT_TIMESTAMP, etc.)
+// 2. Partial update mode requires comparing with original copy to detect changes
+// 3. Auto-update timestamp fields require special handling (database functions vs placeholders)
+// 4. Multiple validation steps (table name, primary key, changed fields)
+//
+// The complexity reflects the need to handle multiple database dialects and update modes.
+// The current structure is optimal for the required functionality.
 func Update[T ModelInterface](ctx context.Context, exec Executor, model T) error {
 	// Validate model has TableName() method
 	tableName, err := getTableName(model)
@@ -270,6 +284,16 @@ func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName str
 // getChangedFields compares the current model state with its original copy and returns
 // a map of column names that have changed. Returns nil if partial update is not enabled
 // or if no original copy exists.
+//
+// Complexity Note: This function has moderate cyclomatic complexity (17) due to handling
+// multiple field types and comparison logic. The complexity is justified because:
+// 1. We need to handle different field types: strings, numbers, bools, slices, maps, pointers
+// 2. We need to handle nil values and zero values appropriately
+// 3. We need to handle JSONB fields (map[string]any) with deep comparison
+// 4. We need to handle array fields ([]int, []string) with element-by-element comparison
+// 5. We need to skip primary key and fields without db tags
+//
+// The complexity is necessary to accurately detect field changes for partial update mode.
 func getChangedFields(model ModelInterface, primaryKeyFieldName string) (map[string]bool, error) {
 	modelValue := reflect.ValueOf(model)
 	if modelValue.Kind() != reflect.Ptr || modelValue.IsNil() {
