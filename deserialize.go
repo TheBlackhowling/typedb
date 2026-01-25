@@ -343,7 +343,7 @@ func deserializePointerType(target, value any) error {
 }
 
 // deserializeTimeType handles time.Time type: *time.Time
-func deserializeTimeType(target any, value any) error {
+func deserializeTimeType(target, value any) error {
 	switch ptr := target.(type) {
 	case *time.Time:
 		val, err := deserializeTime(value)
