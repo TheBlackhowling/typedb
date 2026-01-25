@@ -146,9 +146,9 @@ func TestNologTagMasking(t *testing.T) {
 // UserWithNologPK is a test model with nolog tag on primary key
 type UserWithNologPK struct {
 	Model
-	ID       int    `db:"id" load:"primary" nolog:"true"`
-	Name     string `db:"name"`
-	Email    string `db:"email"`
+	ID    int    `db:"id" load:"primary" nolog:"true"`
+	Name  string `db:"name"`
+	Email string `db:"email"`
 }
 
 func (u *UserWithNologPK) TableName() string {
@@ -162,9 +162,9 @@ func (u *UserWithNologPK) QueryByID() string {
 // UserWithNologEmail is a test model with nolog tag on email field
 type UserWithNologEmail struct {
 	Model
-	ID       int    `db:"id" load:"primary"`
-	Name     string `db:"name"`
-	Email    string `db:"email" nolog:"true"`
+	ID    int    `db:"id" load:"primary"`
+	Name  string `db:"name"`
+	Email string `db:"email" nolog:"true"`
 }
 
 func (u *UserWithNologEmail) TableName() string {
@@ -182,9 +182,9 @@ func (u *UserWithNologEmail) QueryByEmail() string {
 // UserPostWithNolog is a test model with composite key where one field has nolog tag
 type UserPostWithNolog struct {
 	Model
-	UserID   int    `db:"user_id" load:"composite:userpost"`
-	PostID   int    `db:"post_id" load:"composite:userpost" nolog:"true"`
-	Title    string `db:"title"`
+	UserID int    `db:"user_id" load:"composite:userpost"`
+	PostID int    `db:"post_id" load:"composite:userpost" nolog:"true"`
+	Title  string `db:"title"`
 }
 
 func (u *UserPostWithNolog) TableName() string {

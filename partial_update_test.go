@@ -13,8 +13,8 @@ type PartialUpdateModelWithComplexTypes struct {
 	Email       string                 `db:"email"`
 	Age         int                    `db:"age"`
 	Metadata    map[string]any         `db:"metadata"` // JSONB-like field
-	Tags        []string               `db:"tags"`    // Array field
-	Settings    map[string]string     `db:"settings"`
+	Tags        []string               `db:"tags"`     // Array field
+	Settings    map[string]string      `db:"settings"`
 	IsActive    bool                   `db:"is_active"`
 	Score       float64                `db:"score"`
 	Preferences map[string]interface{} `db:"preferences"` // Another JSONB-like field
@@ -459,7 +459,7 @@ func TestGetChangedFields_NumericFields(t *testing.T) {
 		t.Fatalf("Failed to deserialize: %v", err)
 	}
 
-	current1.Age = 31   // Changed
+	current1.Age = 31 // Changed
 	// Score remains unchanged
 
 	changedFields1, err := getChangedFields(current1, "ID")
@@ -517,8 +517,8 @@ func TestGetChangedFields_BoolFields(t *testing.T) {
 	}
 
 	row := map[string]any{
-		"id":       int64(123),
-		"name":     "John",
+		"id":        int64(123),
+		"name":      "John",
 		"is_active": true,
 	}
 	if err := deserialize(row, current); err != nil {
@@ -551,14 +551,14 @@ func TestGetChangedFields_MultipleFields(t *testing.T) {
 	}
 
 	row := map[string]any{
-		"id":       int64(123),
-		"name":     "John",
-		"email":    "john@example.com",
-		"age":      30,
+		"id":        int64(123),
+		"name":      "John",
+		"email":     "john@example.com",
+		"age":       30,
 		"is_active": true,
-		"metadata": map[string]any{"key": "value"},
-		"tags":     []string{"tag1", "tag2"},
-		"score":    95.5,
+		"metadata":  map[string]any{"key": "value"},
+		"tags":      []string{"tag1", "tag2"},
+		"score":     95.5,
 	}
 	if err := deserialize(row, current); err != nil {
 		t.Fatalf("Failed to deserialize: %v", err)

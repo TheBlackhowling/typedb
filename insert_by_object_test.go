@@ -85,4 +85,3 @@ func (m *NoPrimaryKeyModel) TableName() string {
 func init() {
 	RegisterModel[*NoPrimaryKeyModel]()
 }
-

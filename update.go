@@ -138,7 +138,7 @@ func Update[T ModelInterface](ctx context.Context, exec Executor, model T) error
 	// Build SET clause
 	var setClauses []string
 	placeholderIndex := 1
-	
+
 	// Add regular fields with placeholders
 	for _, col := range columns {
 		quotedCol := quoteIdentifier(driverName, col)
@@ -146,7 +146,7 @@ func Update[T ModelInterface](ctx context.Context, exec Executor, model T) error
 		setClauses = append(setClauses, fmt.Sprintf("%s = %s", quotedCol, placeholder))
 		placeholderIndex++
 	}
-	
+
 	// Add auto-update timestamp fields with database functions
 	for _, col := range autoUpdateColumns {
 		quotedCol := quoteIdentifier(driverName, col)
@@ -226,7 +226,7 @@ func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName str
 	iterateStructFields(modelValue.Type(), modelValue, primaryKeyFieldName, func(field reflect.StructField, fieldValue reflect.Value, columnName string) bool {
 		// Check for dbUpdate tag
 		dbUpdateTag := field.Tag.Get("dbUpdate")
-		
+
 		// Skip fields with dbUpdate:"false" tag
 		if dbUpdateTag == "false" {
 			return true
@@ -330,7 +330,7 @@ func getChangedFields(model ModelInterface, primaryKeyFieldName string) (map[str
 		// Compare field values - get actual values for comparison
 		currentVal := currentFieldValue.Interface()
 		originalVal := originalFieldValue.Interface()
-		
+
 		// Use DeepEqual for comparison
 		if !reflect.DeepEqual(currentVal, originalVal) {
 			changedFields[columnName] = true

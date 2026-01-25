@@ -168,4 +168,3 @@ func TestInsert_JoinedModel_Error(t *testing.T) {
 		t.Errorf("Expected error about joined model, got: %v", err)
 	}
 }
-

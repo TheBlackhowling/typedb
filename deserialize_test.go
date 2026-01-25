@@ -40,8 +40,8 @@ type DeserializeModelWithArrays struct {
 
 type DeserializeModelWithJSON struct {
 	Model
-	ID      int            `db:"id"`
-	Metadata map[string]any `db:"metadata"`
+	ID       int               `db:"id"`
+	Metadata map[string]any    `db:"metadata"`
 	Config   map[string]string `db:"config"`
 }
 
@@ -60,4 +60,3 @@ type DerivedModel struct {
 	BaseModel
 	Name string `db:"name"`
 }
-

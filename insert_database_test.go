@@ -95,10 +95,10 @@ func TestInsert_Oracle_Success(t *testing.T) {
 	mock.ExpectExec(`INSERT INTO "USERS" \("NAME", "EMAIL"\) VALUES \(:1, :2\) RETURNING "ID" INTO :3`).
 		WithArgs("John", "john@example.com", sqlmock.AnyArg()).
 		WillReturnResult(result)
-	
+
 	// Wrap the DB to intercept Exec calls and populate sql.Out
 	wrappedDB := &oracleTestWrapper{DB: typedbDB, testID: 123}
-	
+
 	err = Insert(ctx, wrappedDB, user)
 	if err != nil {
 		t.Fatalf("Insert failed: %v", err)

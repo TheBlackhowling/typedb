@@ -166,7 +166,7 @@ func TestBuildFieldMap_NonStructEmbedded(t *testing.T) {
 	// Test embedded non-struct type (should skip)
 	type ModelWithIntEmbedded struct {
 		Model
-		int // unexported embedded int
+		int         // unexported embedded int
 		Name string `db:"name"`
 	}
 
@@ -185,7 +185,7 @@ func TestDeserialize_NonStructDest(t *testing.T) {
 	type NonStructModel struct {
 		ID int `db:"id"`
 	}
-	
+
 	// Create a pointer to int (not a struct)
 	var i int
 	nonStruct := (*NonStructModel)(nil)
@@ -270,31 +270,31 @@ func TestDeserializeUint64(t *testing.T) {
 		{"uint32", uint32(789), 789, false},
 		{"uint16", uint16(100), 100, false},
 		{"uint8", uint8(200), 200, false},
-		
+
 		// Positive signed integers
 		{"int64 positive", int64(999), 999, false},
 		{"int positive", int(888), 888, false},
 		{"int32 positive", int32(777), 777, false},
-		
+
 		// Negative signed integers (should error)
 		{"int64 negative", int64(-1), 0, true},
 		{"int negative", int(-2), 0, true},
 		{"int32 negative", int32(-3), 0, true},
-		
+
 		// String (MySQL unsigned BIGINT case)
 		{"string valid", "18446744073709551615", uint64(18446744073709551615), false},
 		{"string small", "42", 42, false},
 		{"string zero", "0", 0, false},
 		{"string negative", "-1", 0, true},
 		{"string invalid", "not a number", 0, true},
-		
+
 		// Float types
 		{"float64 positive", float64(123.7), 123, false},
 		{"float64 zero", float64(0.0), 0, false},
 		{"float64 negative", float64(-1.5), 0, true},
 		{"float32 positive", float32(456.8), 456, false},
 		{"float32 negative", float32(-2.3), 0, true},
-		
+
 		// Default case (fmt.Sprintf) - these will fail to parse
 		{"bool true", true, 0, true},
 		{"bool false", false, 0, true},
@@ -327,15 +327,15 @@ func TestDeserializeUint32(t *testing.T) {
 		{"uint", uint(456), 456, false},
 		{"uint16", uint16(789), 789, false},
 		{"uint8", uint8(200), 200, false},
-		
+
 		// Positive signed integers
 		{"int32 positive", int32(999), 999, false},
 		{"int positive", int(888), 888, false},
-		
+
 		// Negative signed integers (should error)
 		{"int32 negative", int32(-1), 0, true},
 		{"int negative", int(-2), 0, true},
-		
+
 		// String
 		{"string valid", "4294967295", uint32(4294967295), false},
 		{"string small", "42", 42, false},
@@ -343,14 +343,14 @@ func TestDeserializeUint32(t *testing.T) {
 		{"string negative", "-1", 0, true},
 		{"string invalid", "not a number", 0, true},
 		{"string overflow", "4294967296", 0, true}, // Exceeds uint32 max
-		
+
 		// Float types
 		{"float64 positive", float64(123.7), 123, false},
 		{"float64 zero", float64(0.0), 0, false},
 		{"float64 negative", float64(-1.5), 0, true},
 		{"float32 positive", float32(456.8), 456, false},
 		{"float32 negative", float32(-2.3), 0, true},
-		
+
 		// Default case (fmt.Sprintf) - these will fail to parse
 		{"bool true", true, 0, true},
 		{"bool false", false, 0, true},
@@ -384,29 +384,29 @@ func TestDeserializeUint(t *testing.T) {
 		{"uint32", uint32(789), 789, false},
 		{"uint16", uint16(100), 100, false},
 		{"uint8", uint8(200), 200, false},
-		
+
 		// Positive signed integers
 		{"int64 positive", int64(999), 999, false},
 		{"int positive", int(888), 888, false},
-		
+
 		// Negative signed integers (should error)
 		{"int64 negative", int64(-1), 0, true},
 		{"int negative", int(-2), 0, true},
-		
+
 		// String
 		{"string valid", "18446744073709551615", uint(18446744073709551615), false},
 		{"string small", "42", 42, false},
 		{"string zero", "0", 0, false},
 		{"string negative", "-1", 0, true},
 		{"string invalid", "not a number", 0, true},
-		
+
 		// Float types
 		{"float64 positive", float64(123.7), 123, false},
 		{"float64 zero", float64(0.0), 0, false},
 		{"float64 negative", float64(-1.5), 0, true},
 		{"float32 positive", float32(456.8), 456, false},
 		{"float32 negative", float32(-2.3), 0, true},
-		
+
 		// Default case (fmt.Sprintf) - these will fail to parse
 		{"bool true", true, 0, true},
 		{"bool false", false, 0, true},
@@ -426,4 +426,3 @@ func TestDeserializeUint(t *testing.T) {
 		})
 	}
 }
-

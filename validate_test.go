@@ -301,7 +301,7 @@ func TestValidateAllRegistered_InvalidModels(t *testing.T) {
 	registeredModels = nil
 
 	RegisterModel[*ValidUser]()
-	
+
 	// Registration-time validation should panic for invalid models
 	panicked := false
 	func() {
@@ -318,10 +318,10 @@ func TestValidateAllRegistered_InvalidModels(t *testing.T) {
 				}
 			}
 		}()
-		
+
 		RegisterModel[*MissingPrimaryMethod]()
 	}()
-	
+
 	if !panicked {
 		t.Error("Expected panic when registering invalid model MissingPrimaryMethod")
 	}
@@ -356,25 +356,25 @@ func TestMustValidateAllRegistered_Panic(t *testing.T) {
 				panicked = true
 			}
 		}()
-		
+
 		RegisterModel[*MissingPrimaryMethod]()
 	}()
-	
+
 	if !panicked {
 		t.Error("Expected panic when registering invalid model MissingPrimaryMethod")
 	}
-	
+
 	// Since registration panics, MustValidateAllRegistered should not be called
 	// But if it were called with valid models, it should not panic
 	registeredModels = nil
 	RegisterModel[*ValidUser]()
-	
+
 	defer func() {
 		if r := recover(); r != nil {
 			t.Errorf("MustValidateAllRegistered should not panic for valid models, panicked with: %v", r)
 		}
 	}()
-	
+
 	MustValidateAllRegistered()
 }
 
