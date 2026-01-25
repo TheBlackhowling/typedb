@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.32] - 2026-01-25
+
+**Commit:** [`2aafa41`](https://github.com/TheBlackhowling/typedb/commit/2aafa414b6548181d0ec38868c33d75d0a5e4773)
+**Pull Request:** [#39](https://github.com/TheBlackhowling/typedb/pull/39)
+
+**Summary:** Add configuration options to prevent information leakage in logs by allowing users to disable query and argument logging
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.32.md](versions/0.1.32.md)
+
+
 ## [0.1.31] - 2026-01-23
 
 **Commit:** [`055c664`](https://github.com/TheBlackhowling/typedb/commit/055c664e21def76f5ea90b697ce2d8a3e3cc78e7)
