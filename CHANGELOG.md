@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.37] - 2026-01-25
+
+**Commit:** [`6371d90`](https://github.com/TheBlackhowling/typedb/commit/6371d90db930bda7a5e4824a3788451f65121325)
+**Pull Request:** [#45](https://github.com/TheBlackhowling/typedb/pull/45)
+
+**Summary:** Add integration test for Oracle InsertAndGetId with RETURNING ... INTO clause
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.37.md](versions/0.1.37.md)
+
+
 ## [0.1.36] - 2026-01-25
 
 **Commit:** [`1a62fa1`](https://github.com/TheBlackhowling/typedb/commit/1a62fa1ab84e3891df82bba3a3316418d568be7e)
