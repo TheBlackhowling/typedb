@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.34] - 2026-01-25
+
+**Commit:** [`2c1929b`](https://github.com/TheBlackhowling/typedb/commit/2c1929b908816d700d61b21014e172a7dcd6b785)
+**Pull Request:** [#41](https://github.com/TheBlackhowling/typedb/pull/41)
+
+**Summary:** Refactor test files to meet project file size standards
+
+**Key Changes:**
+- ... and 9 more files
+
+**Detailed Changes:** See [versions/0.1.34.md](versions/0.1.34.md)
+
+
 ## [0.1.33] - 2026-01-25
 
 **Commit:** [`74106b6`](https://github.com/TheBlackhowling/typedb/commit/74106b69f623e8cf37b4e91d1a7cccbc6542d6d4)
