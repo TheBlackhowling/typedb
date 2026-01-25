@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.47] - 2026-01-25
+
+**Commit:** [`549dd83`](https://github.com/TheBlackhowling/typedb/commit/549dd832bb3ef0d45774be2ac53a1119d4268e93)
+**Pull Request:** [#60](https://github.com/TheBlackhowling/typedb/pull/60)
+
+**Summary:** Fix shadow variable warning in executor.go:226
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.47.md](versions/0.1.47.md)
+
+
 ## [0.1.46] - 2026-01-25
 
 **Commit:** [`beb7883`](https://github.com/TheBlackhowling/typedb/commit/beb7883ac9b156389620a4e156273c72ff674d75)
