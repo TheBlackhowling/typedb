@@ -124,7 +124,7 @@ func saveOriginalCopyIfEnabled(model ModelInterface) error {
 				// Use unsafe to set unexported field
 				modelFieldPtr := unsafe.Pointer(modelFieldValue.UnsafeAddr())
 				originalCopyFieldType := field.Type.Field(0) // Model.originalCopy field
-				originalCopyFieldPtr := unsafe.Pointer(uintptr(modelFieldPtr) + uintptr(originalCopyFieldType.Offset))
+				originalCopyFieldPtr := unsafe.Pointer(uintptr(modelFieldPtr) + originalCopyFieldType.Offset)
 				*(*interface{})(originalCopyFieldPtr) = originalCopy
 				return nil
 			}
@@ -192,7 +192,7 @@ func buildFieldMapFromPtr(ptrValue reflect.Value, structValue reflect.Value) map
 
 			// Calculate field address using unsafe pointer arithmetic
 			fieldOffset := field.Offset
-			fieldPtr := unsafe.Pointer(uintptr(basePtr) + uintptr(fieldOffset))
+			fieldPtr := unsafe.Pointer(uintptr(basePtr) + fieldOffset)
 
 			// Create reflect.Value for the field using reflect.NewAt
 			// This gives us a pointer to the field (*fieldType)

@@ -282,7 +282,7 @@ func extractOriginalCopy(structValue reflect.Value) (interface{}, error) {
 			modelFieldValue := structValue.Field(i)
 			modelFieldPtr := unsafe.Pointer(modelFieldValue.UnsafeAddr())
 			originalCopyFieldType := field.Type.Field(0) // Model.originalCopy field
-			originalCopyFieldPtr := unsafe.Pointer(uintptr(modelFieldPtr) + uintptr(originalCopyFieldType.Offset))
+			originalCopyFieldPtr := unsafe.Pointer(uintptr(modelFieldPtr) + originalCopyFieldType.Offset)
 			originalCopy := *(*interface{})(originalCopyFieldPtr)
 			if originalCopy != nil {
 				return originalCopy, nil
