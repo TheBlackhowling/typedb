@@ -59,110 +59,58 @@ func getDriverName(exec Executor) string {
 //	id, err := typedb.InsertAndGetId(ctx, db,
 //		"INSERT INTO users (name, email) VALUES (?, ?)",
 //		"John", "john@example.com")
-func InsertAndGetId(ctx context.Context, exec Executor, insertQuery string, args ...any) (int64, error) {
-	// Check if query has RETURNING/OUTPUT clause
+// insertAndGetIdOracle handles Oracle-specific insert and get ID logic
+func insertAndGetIdOracle(ctx context.Context, exec Executor, insertQuery string, args []any) (int64, error) {
 	queryUpper := strings.ToUpper(insertQuery)
-	hasReturning := strings.Contains(queryUpper, "RETURNING") || strings.Contains(queryUpper, "OUTPUT")
-
-	if !hasReturning {
-		// Check if driver supports LastInsertId() (MySQL and SQLite only)
-		driverName := getDriverName(exec)
-		if !supportsLastInsertId(driverName) {
-			return 0, fmt.Errorf("typedb: InsertAndGetId requires RETURNING or OUTPUT clause for %s. Only MySQL and SQLite support LastInsertId() without RETURNING/OUTPUT", driverName)
-		}
-
-		// MySQL/SQLite case: use sql.Result.LastInsertId() which is safe because it uses
-		// the same connection as the Exec() call, avoiding race conditions.
-		result, err := exec.Exec(ctx, insertQuery, args...)
-		if err != nil {
-			return 0, fmt.Errorf("typedb: InsertAndGetId INSERT failed: %w", err)
-		}
-
-		id, err := result.LastInsertId()
-		if err != nil {
-			return 0, fmt.Errorf("typedb: InsertAndGetId LastInsertId failed: %w", err)
-		}
-
-		return id, nil
+	returningIdx := strings.Index(queryUpper, "RETURNING")
+	if returningIdx == -1 {
+		return 0, fmt.Errorf("typedb: InsertAndGetId Oracle query must contain RETURNING clause")
 	}
 
-	// Handle Oracle specially - it requires RETURNING ... INTO syntax with sql.Out
-	driverName := getDriverName(exec)
-	driverNameLower := strings.ToLower(driverName)
-	if driverNameLower == "oracle" {
-		// Oracle requires RETURNING ... INTO :bindvar syntax
-		// Find RETURNING clause using the already-computed uppercase query
-		returningIdx := strings.Index(queryUpper, "RETURNING")
-		if returningIdx == -1 {
-			return 0, fmt.Errorf("typedb: InsertAndGetId Oracle query must contain RETURNING clause")
-		}
+	returningPart := insertQuery[returningIdx+9:]
+	returningPart = strings.TrimLeft(returningPart, " \t\n\r")
 
-		// Extract the RETURNING part (everything after "RETURNING")
-		// Skip "RETURNING" (9 chars) and any following whitespace
-		returningPart := insertQuery[returningIdx+9:]
-		returningPart = strings.TrimLeft(returningPart, " \t\n\r")
-
-		// Find where RETURNING clause ends (before INTO, or end of query)
-		intoIdx := strings.Index(strings.ToUpper(returningPart), " INTO ")
-		if intoIdx != -1 {
-			// Already has INTO clause, use as-is but need to handle sql.Out
-			var id int64
-			outParam := sql.Out{Dest: &id}
-			argsWithOut := make([]any, len(args)+1)
-			copy(argsWithOut, args)
-			argsWithOut[len(args)] = outParam
-
-			_, err := exec.Exec(ctx, insertQuery, argsWithOut...)
-			if err != nil {
-				return 0, fmt.Errorf("typedb: InsertAndGetId failed: %w", err)
-			}
-			return id, nil
-		}
-
-		// Need to add INTO clause - extract what's being returned (usually just "id")
-		returningFields := returningPart
-		// Remove any trailing parts (like FROM, WHERE, etc. shouldn't be there in INSERT RETURNING)
-		if spaceIdx := strings.Index(returningFields, " "); spaceIdx != -1 {
-			returningFields = returningFields[:spaceIdx]
-		}
-
-		// Build new query with INTO clause
-		// Get everything up to and including "RETURNING" (9 chars) from original query
-		queryBeforeReturning := insertQuery[:returningIdx+9]
-		returningPlaceholder := fmt.Sprintf(":%d", len(args)+1)
-		// Add space, field name, space, INTO, space, placeholder
-		newQuery := queryBeforeReturning + " " + returningFields + " INTO " + returningPlaceholder
-
+	intoIdx := strings.Index(strings.ToUpper(returningPart), " INTO ")
+	if intoIdx != -1 {
+		// Already has INTO clause
 		var id int64
 		outParam := sql.Out{Dest: &id}
 		argsWithOut := make([]any, len(args)+1)
 		copy(argsWithOut, args)
 		argsWithOut[len(args)] = outParam
 
-		_, err := exec.Exec(ctx, newQuery, argsWithOut...)
+		_, err := exec.Exec(ctx, insertQuery, argsWithOut...)
 		if err != nil {
 			return 0, fmt.Errorf("typedb: InsertAndGetId failed: %w", err)
 		}
 		return id, nil
 	}
 
-	// For databases with RETURNING/OUTPUT, use QueryRowMap to get the ID directly
-	row, err := exec.QueryRowMap(ctx, insertQuery, args...)
+	// Need to add INTO clause
+	returningFields := returningPart
+	if spaceIdx := strings.Index(returningFields, " "); spaceIdx != -1 {
+		returningFields = returningFields[:spaceIdx]
+	}
+
+	queryBeforeReturning := insertQuery[:returningIdx+9]
+	returningPlaceholder := fmt.Sprintf(":%d", len(args)+1)
+	newQuery := queryBeforeReturning + " " + returningFields + " INTO " + returningPlaceholder
+
+	var id int64
+	outParam := sql.Out{Dest: &id}
+	argsWithOut := make([]any, len(args)+1)
+	copy(argsWithOut, args)
+	argsWithOut[len(args)] = outParam
+
+	_, err := exec.Exec(ctx, newQuery, argsWithOut...)
 	if err != nil {
 		return 0, fmt.Errorf("typedb: InsertAndGetId failed: %w", err)
 	}
+	return id, nil
+}
 
-	// Extract ID from the returned row
-	idValue, ok := row["id"]
-	if !ok {
-		// Try uppercase (SQL Server sometimes)
-		idValue, ok = row["ID"]
-		if !ok {
-			return 0, fmt.Errorf("typedb: InsertAndGetId RETURNING/OUTPUT clause did not return 'id' column")
-		}
-	}
-
-	// Convert to int64
+// convertIdToInt64 converts various ID types to int64
+func convertIdToInt64(idValue any) (int64, error) {
 	switch v := idValue.(type) {
 	case int64:
 		return v, nil
@@ -173,11 +121,66 @@ func InsertAndGetId(ctx context.Context, exec Executor, insertQuery string, args
 	case int:
 		return int64(v), nil
 	case float64:
-		// Handle JSON number deserialization
 		return int64(v), nil
 	default:
 		return 0, fmt.Errorf("typedb: InsertAndGetId returned non-integer ID type: %T", idValue)
 	}
+}
+
+// extractIdFromRow extracts ID value from QueryRowMap result
+func extractIdFromRow(row map[string]any) (any, error) {
+	idValue, ok := row["id"]
+	if !ok {
+		idValue, ok = row["ID"]
+		if !ok {
+			return nil, fmt.Errorf("typedb: InsertAndGetId RETURNING/OUTPUT clause did not return 'id' column")
+		}
+	}
+	return idValue, nil
+}
+
+func InsertAndGetId(ctx context.Context, exec Executor, insertQuery string, args ...any) (int64, error) {
+	queryUpper := strings.ToUpper(insertQuery)
+	hasReturning := strings.Contains(queryUpper, "RETURNING") || strings.Contains(queryUpper, "OUTPUT")
+
+	if !hasReturning {
+		// MySQL/SQLite path
+		driverName := getDriverName(exec)
+		if !supportsLastInsertId(driverName) {
+			return 0, fmt.Errorf("typedb: InsertAndGetId requires RETURNING or OUTPUT clause for %s. Only MySQL and SQLite support LastInsertId() without RETURNING/OUTPUT", driverName)
+		}
+
+		result, err := exec.Exec(ctx, insertQuery, args...)
+		if err != nil {
+			return 0, fmt.Errorf("typedb: InsertAndGetId INSERT failed: %w", err)
+		}
+
+		id, err := result.LastInsertId()
+		if err != nil {
+			return 0, fmt.Errorf("typedb: InsertAndGetId LastInsertId failed: %w", err)
+		}
+		return id, nil
+	}
+
+	// Oracle path
+	driverName := getDriverName(exec)
+	driverNameLower := strings.ToLower(driverName)
+	if driverNameLower == "oracle" {
+		return insertAndGetIdOracle(ctx, exec, insertQuery, args)
+	}
+
+	// Standard RETURNING/OUTPUT path
+	row, err := exec.QueryRowMap(ctx, insertQuery, args...)
+	if err != nil {
+		return 0, fmt.Errorf("typedb: InsertAndGetId failed: %w", err)
+	}
+
+	idValue, err := extractIdFromRow(row)
+	if err != nil {
+		return 0, err
+	}
+
+	return convertIdToInt64(idValue)
 }
 
 // getTableName gets the table name from a model using TableName() method.
