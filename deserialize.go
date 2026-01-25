@@ -192,7 +192,7 @@ func buildFieldMapFromPtr(ptrValue, structValue reflect.Value) map[string]reflec
 
 			// Calculate field address using unsafe pointer arithmetic
 			fieldOffset := field.Offset
-			fieldPtr := unsafe.Pointer(uintptr(basePtr) + fieldOffset)
+			fieldPtr := unsafe.Add(basePtr, fieldOffset)
 
 			// Create reflect.Value for the field using reflect.NewAt
 			// This gives us a pointer to the field (*fieldType)
