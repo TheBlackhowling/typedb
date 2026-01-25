@@ -524,6 +524,111 @@ func isZeroOrNil(v reflect.Value) bool {
 //	user := &User{Name: "John", Email: "john@example.com"}
 //	err := typedb.Insert(ctx, db, user)
 //	// user.ID is now set with the inserted ID
+// buildInsertQueryParts builds the common INSERT query parts (quoted table name, quoted columns, placeholders)
+func buildInsertQueryParts(driverName string, tableName string, columns []string, values []any) (string, []string, []string) {
+	quotedTableName := quoteIdentifier(driverName, tableName)
+	quotedColumns := make([]string, len(columns))
+	for i, col := range columns {
+		quotedColumns[i] = quoteIdentifier(driverName, col)
+	}
+
+	placeholders := make([]string, len(values))
+	for i := 1; i <= len(values); i++ {
+		placeholders[i-1] = generatePlaceholder(driverName, i)
+	}
+
+	return quotedTableName, quotedColumns, placeholders
+}
+
+// insertMySQL handles MySQL-specific insert logic (uses LastInsertId instead of RETURNING)
+func insertMySQL[T ModelInterface](ctx context.Context, exec Executor, model T,
+	quotedTableName string, quotedColumns []string, placeholders []string, values []any,
+	primaryField *reflect.StructField) error {
+	insertQuery := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
+		quotedTableName,
+		strings.Join(quotedColumns, ", "),
+		strings.Join(placeholders, ", "))
+
+	result, err := exec.Exec(ctx, insertQuery, values...)
+	if err != nil {
+		return fmt.Errorf("typedb: Insert failed: %w", err)
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return fmt.Errorf("typedb: Insert failed to get last insert ID: %w", err)
+	}
+
+	return setFieldValue(model, primaryField.Name, id)
+}
+
+// insertOracle handles Oracle-specific insert logic (uses RETURNING ... INTO with sql.Out)
+func insertOracle[T ModelInterface](ctx context.Context, exec Executor, model T,
+	driverName string, quotedTableName string, quotedColumns []string, placeholders []string,
+	values []any, primaryKeyColumn string, primaryField *reflect.StructField) error {
+	quotedPK := quoteIdentifier(driverName, primaryKeyColumn)
+	returningPlaceholder := fmt.Sprintf(":%d", len(values)+1)
+	insertQuery := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s) RETURNING %s INTO %s",
+		quotedTableName,
+		strings.Join(quotedColumns, ", "),
+		strings.Join(placeholders, ", "),
+		quotedPK,
+		returningPlaceholder)
+
+	var id int64
+	outParam := sql.Out{Dest: &id}
+	args := make([]any, len(values)+1)
+	copy(args, values)
+	args[len(values)] = outParam
+
+	result, err := exec.Exec(ctx, insertQuery, args...)
+	if err != nil {
+		return fmt.Errorf("typedb: Insert failed: %w", err)
+	}
+
+	if result == nil {
+		return fmt.Errorf("typedb: Insert returned nil result")
+	}
+
+	return setFieldValue(model, primaryField.Name, id)
+}
+
+// insertWithReturning handles standard RETURNING/OUTPUT path (PostgreSQL, SQLite, SQL Server)
+func insertWithReturning[T ModelInterface](ctx context.Context, exec Executor, model T,
+	driverName string, quotedTableName string, quotedColumns []string, placeholders []string,
+	values []any, returningClause string, primaryKeyColumn string, primaryField *reflect.StructField) error {
+	driverNameLower := strings.ToLower(driverName)
+	var insertQuery string
+	if driverNameLower == "sqlserver" || driverNameLower == "mssql" {
+		insertQuery = fmt.Sprintf("INSERT INTO %s (%s)%s VALUES (%s)",
+			quotedTableName,
+			strings.Join(quotedColumns, ", "),
+			returningClause,
+			strings.Join(placeholders, ", "))
+	} else {
+		insertQuery = fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)%s",
+			quotedTableName,
+			strings.Join(quotedColumns, ", "),
+			strings.Join(placeholders, ", "),
+			returningClause)
+	}
+
+	row, err := exec.QueryRowMap(ctx, insertQuery, values...)
+	if err != nil {
+		return fmt.Errorf("typedb: Insert failed: %w", err)
+	}
+
+	idValue, ok := row[primaryKeyColumn]
+	if !ok {
+		idValue, ok = row[strings.ToUpper(primaryKeyColumn)]
+		if !ok {
+			return fmt.Errorf("typedb: Insert RETURNING clause did not return primary key column %s", primaryKeyColumn)
+		}
+	}
+
+	return setFieldValue(model, primaryField.Name, idValue)
+}
+
 func Insert[T ModelInterface](ctx context.Context, exec Executor, model T) error {
 	// Validate model has TableName() method
 	tableName, err := getTableName(model)
@@ -572,116 +677,20 @@ func Insert[T ModelInterface](ctx context.Context, exec Executor, model T) error
 	// Get driver name for database-specific SQL generation
 	driverName := getDriverName(exec)
 
-	// Build INSERT query
-	quotedTableName := quoteIdentifier(driverName, tableName)
-	var quotedColumns []string
-	for _, col := range columns {
-		quotedColumns = append(quotedColumns, quoteIdentifier(driverName, col))
-	}
+	// Build common query parts
+	quotedTableName, quotedColumns, placeholders := buildInsertQueryParts(driverName, tableName, columns, values)
 
-	// Build placeholders
-	var placeholders []string
-	for i := 1; i <= len(values); i++ {
-		placeholders = append(placeholders, generatePlaceholder(driverName, i))
-	}
-
-	// Build RETURNING clause (database-specific)
-	returningClause := buildReturningClause(driverName, primaryKeyColumn)
+	// Route to database-specific handler
 	driverNameLower := strings.ToLower(driverName)
-
-	// Handle MySQL (no RETURNING, use LastInsertId)
-	if driverNameLower == "mysql" {
-		insertQuery := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
-			quotedTableName,
-			strings.Join(quotedColumns, ", "),
-			strings.Join(placeholders, ", "))
-
-		result, err := exec.Exec(ctx, insertQuery, values...)
-		if err != nil {
-			return fmt.Errorf("typedb: Insert failed: %w", err)
-		}
-
-		id, err := result.LastInsertId()
-		if err != nil {
-			return fmt.Errorf("typedb: Insert failed to get last insert ID: %w", err)
-		}
-
-		// Set primary key on model
-		return setFieldValue(model, primaryField.Name, id)
+	switch driverNameLower {
+	case "mysql":
+		return insertMySQL(ctx, exec, model, quotedTableName, quotedColumns, placeholders, values, primaryField)
+	case "oracle":
+		return insertOracle(ctx, exec, model, driverName, quotedTableName, quotedColumns, placeholders, values, primaryKeyColumn, primaryField)
+	default:
+		returningClause := buildReturningClause(driverName, primaryKeyColumn)
+		return insertWithReturning(ctx, exec, model, driverName, quotedTableName, quotedColumns, placeholders, values, returningClause, primaryKeyColumn, primaryField)
 	}
-
-	// Handle Oracle (go-ora driver requires special RETURNING INTO syntax)
-	// Use RETURNING ... INTO with sql.Out for bind variable
-	if driverNameLower == "oracle" {
-		quotedPK := quoteIdentifier(driverName, primaryKeyColumn)
-		// Oracle requires RETURNING ... INTO :N where N is the next positional placeholder
-		// Use sql.Out to capture the returned ID
-		returningPlaceholder := fmt.Sprintf(":%d", len(values)+1)
-		insertQuery := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s) RETURNING %s INTO %s",
-			quotedTableName,
-			strings.Join(quotedColumns, ", "),
-			strings.Join(placeholders, ", "),
-			quotedPK,
-			returningPlaceholder)
-
-		// Create sql.Out parameter for the RETURNING INTO bind variable
-		var id int64
-		outParam := sql.Out{Dest: &id}
-
-		// Append sql.Out to values for the RETURNING INTO clause
-		args := make([]any, len(values)+1)
-		copy(args, values)
-		args[len(values)] = outParam
-
-		result, err := exec.Exec(ctx, insertQuery, args...)
-		if err != nil {
-			return fmt.Errorf("typedb: Insert failed: %w", err)
-		}
-
-		// Verify the operation succeeded
-		if result == nil {
-			return fmt.Errorf("typedb: Insert returned nil result")
-		}
-
-		// The ID is now in the id variable from sql.Out
-		// Set primary key on model
-		return setFieldValue(model, primaryField.Name, id)
-	}
-
-	// For databases with RETURNING support (PostgreSQL, SQLite, SQL Server)
-	// SQL Server OUTPUT clause comes BEFORE VALUES, not after
-	var insertQuery string
-	if driverNameLower == "sqlserver" || driverNameLower == "mssql" {
-		insertQuery = fmt.Sprintf("INSERT INTO %s (%s)%s VALUES (%s)",
-			quotedTableName,
-			strings.Join(quotedColumns, ", "),
-			returningClause,
-			strings.Join(placeholders, ", "))
-	} else {
-		insertQuery = fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)%s",
-			quotedTableName,
-			strings.Join(quotedColumns, ", "),
-			strings.Join(placeholders, ", "),
-			returningClause)
-	}
-
-	row, err := exec.QueryRowMap(ctx, insertQuery, values...)
-	if err != nil {
-		return fmt.Errorf("typedb: Insert failed: %w", err)
-	}
-
-	// Extract primary key value from returned row
-	idValue, ok := row[primaryKeyColumn]
-	if !ok {
-		// Try uppercase (SQL Server sometimes)
-		idValue, ok = row[strings.ToUpper(primaryKeyColumn)]
-		if !ok {
-			return fmt.Errorf("typedb: Insert RETURNING clause did not return primary key column %s", primaryKeyColumn)
-		}
-	}
-
-	// Set primary key on model
-	return setFieldValue(model, primaryField.Name, idValue)
 }
 
 // InsertAndLoad inserts a model and then loads the full object from the database.
