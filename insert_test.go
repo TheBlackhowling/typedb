@@ -387,6 +387,188 @@ func TestInsertAndGetId_Transaction_Success(t *testing.T) {
 	}
 }
 
+func TestInsertAndGetId_Oracle_WithInto_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "oracle", 5*time.Second)
+	ctx := context.Background()
+
+	// Oracle query that already has RETURNING ... INTO clause
+	// sqlmock doesn't populate sql.Out automatically, so we wrap the DB
+	// to intercept Exec calls and manually populate the sql.Out value
+	result := sqlmock.NewResult(0, 1)
+	mock.ExpectExec(`INSERT INTO users \(name, email\) VALUES \(:1, :2\) RETURNING id INTO :3`).
+		WithArgs("John Doe", "john@example.com", sqlmock.AnyArg()).
+		WillReturnResult(result)
+
+	// Wrap the DB to intercept Exec calls and populate sql.Out
+	wrappedDB := &oracleTestWrapper{DB: typedbDB, testID: 123}
+
+	id, err := InsertAndGetId(ctx, wrappedDB,
+		"INSERT INTO users (name, email) VALUES (:1, :2) RETURNING id INTO :3",
+		"John Doe", "john@example.com")
+
+	if err != nil {
+		t.Fatalf("InsertAndGetId failed: %v", err)
+	}
+
+	if id != 123 {
+		t.Errorf("Expected ID 123, got %d", id)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestInsertAndGetId_Oracle_WithoutInto_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "oracle", 5*time.Second)
+	ctx := context.Background()
+
+	// Oracle query with RETURNING but no INTO clause
+	// Function should dynamically add INTO :3 clause
+	result := sqlmock.NewResult(0, 1)
+	mock.ExpectExec(`INSERT INTO users \(name, email\) VALUES \(:1, :2\) RETURNING id INTO :3`).
+		WithArgs("John Doe", "john@example.com", sqlmock.AnyArg()).
+		WillReturnResult(result)
+
+	// Wrap the DB to intercept Exec calls and populate sql.Out
+	wrappedDB := &oracleTestWrapper{DB: typedbDB, testID: 456}
+
+	id, err := InsertAndGetId(ctx, wrappedDB,
+		"INSERT INTO users (name, email) VALUES (:1, :2) RETURNING id",
+		"John Doe", "john@example.com")
+
+	if err != nil {
+		t.Fatalf("InsertAndGetId failed: %v", err)
+	}
+
+	if id != 456 {
+		t.Errorf("Expected ID 456, got %d", id)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestInsertAndGetId_Oracle_MissingReturning_Error(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "oracle", 5*time.Second)
+	ctx := context.Background()
+
+	// Oracle query without RETURNING clause should return error
+	// Note: This error occurs before Oracle-specific code because Oracle doesn't support LastInsertId
+	id, err := InsertAndGetId(ctx, typedbDB,
+		"INSERT INTO users (name, email) VALUES (:1, :2)",
+		"John Doe", "john@example.com")
+
+	if err == nil {
+		t.Fatal("Expected error for Oracle query without RETURNING clause")
+	}
+
+	// Oracle doesn't support LastInsertId, so it returns error about requiring RETURNING/OUTPUT
+	expectedErrorMsg := "typedb: InsertAndGetId requires RETURNING or OUTPUT clause for oracle"
+	if !strings.Contains(err.Error(), expectedErrorMsg) {
+		t.Errorf("Expected error message containing %q, got: %v", expectedErrorMsg, err)
+	}
+
+	if id != 0 {
+		t.Errorf("Expected ID 0 on error, got %d", id)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestInsertAndGetId_Oracle_ExecError_WithInto(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "oracle", 5*time.Second)
+	ctx := context.Background()
+
+	// Oracle query with RETURNING ... INTO that fails on Exec
+	mock.ExpectExec(`INSERT INTO users \(name, email\) VALUES \(:1, :2\) RETURNING id INTO :3`).
+		WithArgs("John Doe", "john@example.com", sqlmock.AnyArg()).
+		WillReturnError(errors.New("database error"))
+
+	id, err := InsertAndGetId(ctx, typedbDB,
+		"INSERT INTO users (name, email) VALUES (:1, :2) RETURNING id INTO :3",
+		"John Doe", "john@example.com")
+
+	if err == nil {
+		t.Fatal("Expected error from Exec")
+	}
+
+	if id != 0 {
+		t.Errorf("Expected ID 0 on error, got %d", id)
+	}
+
+	if !strings.Contains(err.Error(), "InsertAndGetId failed") {
+		t.Errorf("Expected error message to contain 'InsertAndGetId failed', got: %v", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+func TestInsertAndGetId_Oracle_ExecError_WithoutInto(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	typedbDB := NewDB(db, "oracle", 5*time.Second)
+	ctx := context.Background()
+
+	// Oracle query with RETURNING (no INTO) that fails on Exec after adding INTO clause
+	mock.ExpectExec(`INSERT INTO users \(name, email\) VALUES \(:1, :2\) RETURNING id INTO :3`).
+		WithArgs("John Doe", "john@example.com", sqlmock.AnyArg()).
+		WillReturnError(errors.New("database error"))
+
+	id, err := InsertAndGetId(ctx, typedbDB,
+		"INSERT INTO users (name, email) VALUES (:1, :2) RETURNING id",
+		"John Doe", "john@example.com")
+
+	if err == nil {
+		t.Fatal("Expected error from Exec")
+	}
+
+	if id != 0 {
+		t.Errorf("Expected ID 0 on error, got %d", id)
+	}
+
+	if !strings.Contains(err.Error(), "InsertAndGetId failed") {
+		t.Errorf("Expected error message to contain 'InsertAndGetId failed', got: %v", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
 func TestInsertAndLoad_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
