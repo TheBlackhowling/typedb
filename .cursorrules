@@ -1,0 +1,306 @@
+# typedb Cursor Rules
+
+This file contains rules and guidelines for AI assistants working on the typedb codebase.
+
+## Test Modification Rules
+
+### ⚠️ CRITICAL: Test Modification Policy
+
+**DO NOT modify existing tests without explicit user consent - EVER.**
+
+- **Absolute Rule**: No test modifications without explicit user approval, regardless of circumstances
+- Existing tests are considered stable and should never be changed without user discussion
+
+- **If a test is broken:**
+  1. **DO NOT** fix it automatically
+  2. **DO** discuss the issue with the user first
+  3. **DO** explain what's broken and why
+  4. **DO** propose a fix approach
+  5. **DO** wait for explicit user consent before making any changes
+
+- **If you think a test needs modification:**
+  1. Ask the user for permission first
+  2. Explain why the modification is necessary
+  3. Propose the specific changes you want to make
+  4. Wait for explicit approval before making changes
+
+- **NO EXCEPTIONS**: Even fixing obvious typos or formatting issues requires user consent
+
+## Test Addition Workflow
+
+### ⚠️ MANDATORY: Test Requirements for All Changes
+
+**Any code change MUST include comprehensive testing:**
+
+1. **Unit Tests:**
+   - Add unit tests for all new functionality
+   - Use `sqlmock` for database mocking
+   - Test all code paths and error cases
+   - Ensure tests are isolated and don't depend on external state
+
+2. **Integration Tests:**
+   - Add integration tests for ALL supported database types:
+     - PostgreSQL
+     - MySQL
+     - SQLite
+     - Oracle
+     - MSSQL
+   - Use `integration_tests/*/` directory structure
+   - Test with real database connections (via docker-compose)
+
+3. **Test Coverage:**
+   - New code must have ≥ 90% coverage
+   - Overall coverage must remain ≥ 80%
+   - Document coverage changes in PR
+
+### Test Plan Document Generation
+
+**When adding new tests, you MUST:**
+
+1. **Before writing tests:**
+   - Create a test plan document in `docs/backlog/` or appropriate location
+   - Document what will be tested, why, and how
+   - Include test cases, expected outcomes, and acceptance criteria
+   - Specify which database types will be tested
+
+2. **After tests are completed:**
+   - Update the test plan document with:
+     - Actual tests implemented
+     - Coverage achieved
+     - Test results for each database type
+     - Any deviations from the original plan
+     - Test results summary
+   - Mark the plan as ready for review
+
+3. **Before creating PR:**
+   - Ensure test plan document is complete and accurate
+   - Include link to test plan in PR description
+   - Verify all database types have been tested
+
+### Test Plan Document Format
+
+Test plan documents should include:
+- **Purpose**: Why these tests are needed
+- **Scope**: What functionality is being tested
+- **Test Cases**: List of test cases with descriptions
+- **Implementation**: How tests will be implemented (sqlmock, integration, etc.)
+- **Coverage Goals**: Expected coverage improvement
+- **Acceptance Criteria**: What constitutes completion
+- **Status**: Progress tracking (planned, in progress, completed, reviewed)
+
+## Impact Analysis Requirements
+
+### ⚠️ MANDATORY: Before Making Any Changes
+
+**You MUST analyze the impact of your changes:**
+
+1. **Impact on Existing Tests:**
+   - Review all existing unit tests that might be affected
+   - Review all existing integration tests that might be affected
+   - Identify which tests may need updates (but DO NOT modify without user consent)
+   - Document potential test impacts in your plan
+
+2. **Impact on Examples:**
+   - Review all examples in `examples/` directory
+   - Identify examples that use changed APIs
+   - If examples need updates due to API changes:
+     - **DO NOT** update examples automatically
+     - **DO** prompt the user to discuss example updates
+     - **DO** explain what changed and why examples need updates
+     - **DO** propose specific example changes for user review
+     - **DO** wait for user approval before updating examples
+
+3. **Impact on Documentation:**
+   - Check if `API.md` needs updates
+   - Check if `README.md` needs updates
+   - Check if any other documentation needs updates
+
+4. **Impact on Database Compatibility:**
+   - Ensure changes work with all database types
+   - Test database-specific behavior
+   - Document any database-specific considerations
+
+## Pre-PR Checklist
+
+### ⚠️ MANDATORY: Before Creating Any PR
+
+**You MUST complete these steps before creating a PR:**
+
+1. **Run Unit Tests:**
+   ```bash
+   go test ./... -v
+   ```
+   - All unit tests must pass
+   - No test failures allowed
+   - All database types should be covered in unit tests
+
+2. **Run Integration Tests:**
+   ```bash
+   # Use docker-compose for integration tests
+   cd integration_tests
+   docker-compose up -d
+   go test ./... -v
+   docker-compose down
+   ```
+   - All integration tests must pass
+   - Verify ALL database types (PostgreSQL, MySQL, SQLite, Oracle, MSSQL)
+   - Test with real database connections
+
+3. **Verify Code Coverage:**
+   ```bash
+   go test -coverprofile=coverage.out -covermode=atomic ./...
+   go tool cover -func coverage.out
+   ```
+   - Overall coverage must be ≥ 80%
+   - New code coverage should be ≥ 90%
+   - If coverage drops below 80%, add tests to bring it back up
+   - Document coverage changes in PR
+
+4. **Check for Linter Issues:**
+   ```bash
+   go vet ./...
+   golangci-lint run
+   ```
+   - Fix any critical linter errors
+   - Document any warnings that are acceptable
+
+5. **Verify No Breaking Changes:**
+   - Check that existing functionality still works
+   - Review API changes if any
+   - Verify examples still work (or discuss updates with user)
+
+6. **Impact Analysis Summary:**
+   - Document which tests were added/modified
+   - Document which database types were tested
+   - Document any example impacts (and user discussion if needed)
+   - Document any documentation updates made
+
+## Code Coverage Requirements
+
+### Minimum Coverage Threshold
+
+**Maintain code coverage above 80% at all times.**
+
+- **Current Target**: ≥ 80% overall coverage
+- **New Code**: Should aim for ≥ 90% coverage
+- **Critical Functions**: Should have 100% coverage (e.g., security-sensitive code)
+
+### Coverage Monitoring
+
+- Run coverage before and after changes
+- Document coverage changes in PR description
+- If coverage drops below 80%, add tests before merging
+
+### Coverage Exclusions
+
+- Test files themselves don't need coverage
+- Generated code doesn't need coverage
+- Integration test helpers may have lower coverage requirements
+
+## Change Impact Checklist
+
+### Before Making Any Code Change
+
+**You MUST consider:**
+
+- [ ] How will this change affect existing unit tests?
+- [ ] How will this change affect existing integration tests?
+- [ ] Do I need to add unit tests for all database types?
+- [ ] Do I need to add integration tests for all database types?
+- [ ] Will this change break any examples?
+- [ ] Do examples need updates? (Prompt user for discussion)
+- [ ] Does API.md need updates?
+- [ ] Does README.md need updates?
+- [ ] Will this work with all database types?
+- [ ] Is code coverage maintained ≥ 80%?
+
+## General Guidelines
+
+### Code Style
+
+- Follow Go standard formatting (`go fmt`)
+- Use meaningful variable and function names
+- Add comments for complex logic
+- Keep functions focused and under 1000 lines (project standard)
+
+### Error Handling
+
+- Always check and handle errors appropriately
+- Use wrapped errors with context (`fmt.Errorf("...: %w", err)`)
+- Provide clear, actionable error messages
+
+### Documentation
+
+- Update API.md when adding new public APIs
+- Update README.md for user-facing changes
+- Add inline comments for complex algorithms
+- Document any non-obvious design decisions
+
+### Database Portability
+
+- Code should work with all supported databases (PostgreSQL, MySQL, SQLite, MSSQL, Oracle)
+- **MANDATORY**: Test with ALL database types for any change
+- Add both unit tests (sqlmock) and integration tests (real DB) for all database types
+- Document database-specific behavior
+- If a feature doesn't work with a database type, document it clearly
+
+### Security
+
+- Never log sensitive data (use `nolog` tag)
+- Validate and sanitize user inputs
+- Use parameterized queries (never string concatenation)
+- Follow security best practices from security audit
+
+## Workflow Guidelines
+
+### Branch Naming
+
+- `test/` - For test additions/modifications
+- `fix/` - For bug fixes
+- `feat/` - For new features
+- `refactor/` - For refactoring
+- `docs/` - For documentation changes
+- `chore/` - For maintenance tasks
+
+### Commit Messages
+
+- Use conventional commit format: `type: description`
+- Types: `test`, `fix`, `feat`, `refactor`, `docs`, `chore`
+- Be descriptive but concise
+- Reference issue numbers if applicable
+
+### PR Creation
+
+- Use `/create-pr` command format with metadata block
+- Include test plan document link if adding tests
+- Document coverage changes
+- List all changes clearly
+- Do NOT modify `versions/unreleased.md` or `CHANGELOG.md` (workflow handles this)
+
+## File Organization
+
+### Test Files
+
+- Unit tests: `*_test.go` in same package
+- Integration tests: `integration_tests/*/`
+- Test files should be under 1000 lines (split if needed)
+- Group related tests in same file
+
+### Documentation
+
+- API documentation: `API.md` (root)
+- Internal docs: `docs/` (not checked in)
+- Backlog/plans: `docs/backlog/` (not checked in)
+- Examples: `examples/`
+
+## When in Doubt
+
+- **Ask the user** before making significant changes
+- **Preserve existing behavior** unless explicitly changing it
+- **Add tests** for new functionality (unit + integration for all DB types)
+- **Document** non-obvious decisions
+- **Verify** changes work across all database types
+- **Discuss** example updates with user if API changes
+- **Never modify** tests without explicit user consent
+- **Always consider** impact on existing tests and examples before making changes
+- **Analyze impact** on unit tests, integration tests, examples, and documentation
