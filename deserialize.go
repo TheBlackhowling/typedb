@@ -25,14 +25,24 @@ func deserializeForType[T ModelInterface](row map[string]any) (T, error) {
 	// Create a new instance of the underlying type
 	elemType := modelType.Elem()
 	modelPtr := reflect.New(elemType)
-	modelInterface := modelPtr.Interface().(ModelInterface)
+	modelInterface, ok := modelPtr.Interface().(ModelInterface)
+	if !ok {
+		var zero T
+		return zero, fmt.Errorf("typedb: type %T does not implement ModelInterface", modelPtr.Interface())
+	}
 
 	if err := deserialize(row, modelInterface); err != nil {
 		var zero T
 		return zero, err
 	}
 
-	return modelPtr.Interface().(T), nil
+	result, ok := modelPtr.Interface().(T)
+	if !ok {
+		var zero T
+		return zero, fmt.Errorf("typedb: failed to convert %T to %T", modelPtr.Interface(), *new(T))
+	}
+
+	return result, nil
 }
 
 // deserialize deserializes a row into an existing model.
