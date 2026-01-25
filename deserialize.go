@@ -591,6 +591,22 @@ func deserializeInt64(value any) (int64, error) {
 	}
 }
 
+// convertSignedToUint64 converts signed integers to uint64 with validation
+func convertSignedToUint64(value int64) (uint64, error) {
+	if value < 0 {
+		return 0, fmt.Errorf("typedb: cannot convert negative int64 to uint64")
+	}
+	return uint64(value), nil
+}
+
+// convertFloatToUint64 converts floats to uint64 with validation
+func convertFloatToUint64(value float64) (uint64, error) {
+	if value < 0 {
+		return 0, fmt.Errorf("typedb: cannot convert negative float64 to uint64")
+	}
+	return uint64(value), nil
+}
+
 // deserializeUint64 converts a value to uint64
 // Handles MySQL unsigned BIGINT which is returned as string to avoid overflow
 func deserializeUint64(value any) (uint64, error) {
@@ -606,32 +622,17 @@ func deserializeUint64(value any) (uint64, error) {
 	case uint8:
 		return uint64(v), nil
 	case int64:
-		if v < 0 {
-			return 0, fmt.Errorf("typedb: cannot convert negative int64 to uint64")
-		}
-		return uint64(v), nil
+		return convertSignedToUint64(v)
 	case int:
-		if v < 0 {
-			return 0, fmt.Errorf("typedb: cannot convert negative int to uint64")
-		}
-		return uint64(v), nil
+		return convertSignedToUint64(int64(v))
 	case int32:
-		if v < 0 {
-			return 0, fmt.Errorf("typedb: cannot convert negative int32 to uint64")
-		}
-		return uint64(v), nil
+		return convertSignedToUint64(int64(v))
 	case string:
 		return strconv.ParseUint(v, 10, 64)
 	case float64:
-		if v < 0 {
-			return 0, fmt.Errorf("typedb: cannot convert negative float64 to uint64")
-		}
-		return uint64(v), nil
+		return convertFloatToUint64(v)
 	case float32:
-		if v < 0 {
-			return 0, fmt.Errorf("typedb: cannot convert negative float32 to uint64")
-		}
-		return uint64(v), nil
+		return convertFloatToUint64(float64(v))
 	default:
 		return strconv.ParseUint(fmt.Sprintf("%v", value), 10, 64)
 	}
