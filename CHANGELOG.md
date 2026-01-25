@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.42] - 2026-01-25
+
+**Commit:** [`2cdeea6`](https://github.com/TheBlackhowling/typedb/commit/2cdeea6ecadce9e64686a6079ec9155c4ea28939)
+**Pull Request:** [#54](https://github.com/TheBlackhowling/typedb/pull/54)
+
+**Summary:** Reduce cyclomatic complexity of InsertAndGetId function from 20 to below 15
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/0.1.42.md](versions/0.1.42.md)
+
+
 ## [0.1.41] - 2026-01-25
 
 **Commit:** [`5b90789`](https://github.com/TheBlackhowling/typedb/commit/5b9078940caec0f8b008da67adc6a01a8b815609)
