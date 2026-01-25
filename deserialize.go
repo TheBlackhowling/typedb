@@ -231,6 +231,166 @@ func buildFieldMapFromPtr(ptrValue reflect.Value, structValue reflect.Value) map
 	return fieldMap
 }
 
+// deserializeBasicType handles basic types: *int, *int64, *int32, *bool, *string
+func deserializeBasicType(target any, value any) error {
+	switch ptr := target.(type) {
+	case *int:
+		val, err := deserializeInt(value)
+		if err != nil {
+			return err
+		}
+		*ptr = val
+		return nil
+	case *int64:
+		val, err := deserializeInt64(value)
+		if err != nil {
+			return err
+		}
+		*ptr = val
+		return nil
+	case *int32:
+		val, err := deserializeInt32(value)
+		if err != nil {
+			return err
+		}
+		*ptr = val
+		return nil
+	case *bool:
+		val, err := deserializeBool(value)
+		if err != nil {
+			return err
+		}
+		*ptr = val
+		return nil
+	case *string:
+		*ptr = deserializeString(value)
+		return nil
+	default:
+		return errNotMyType
+	}
+}
+
+// deserializeUintType handles unsigned integer types: *uint64, *uint32, *uint
+func deserializeUintType(target any, value any) error {
+	switch ptr := target.(type) {
+	case *uint64:
+		val, err := deserializeUint64(value)
+		if err != nil {
+			return err
+		}
+		*ptr = val
+		return nil
+	case *uint32:
+		val, err := deserializeUint32(value)
+		if err != nil {
+			return err
+		}
+		*ptr = val
+		return nil
+	case *uint:
+		val, err := deserializeUint(value)
+		if err != nil {
+			return err
+		}
+		*ptr = val
+		return nil
+	default:
+		return errNotMyType
+	}
+}
+
+// deserializePointerType handles pointer-to-pointer types: **int, **bool, **string, **time.Time
+func deserializePointerType(target any, value any) error {
+	switch ptr := target.(type) {
+	case **int:
+		val, err := deserializeInt(value)
+		if err != nil {
+			return err
+		}
+		*ptr = &val
+		return nil
+	case **bool:
+		val, err := deserializeBool(value)
+		if err != nil {
+			return err
+		}
+		*ptr = &val
+		return nil
+	case **string:
+		str := deserializeString(value)
+		*ptr = &str
+		return nil
+	case **time.Time:
+		val, err := deserializeTime(value)
+		if err != nil {
+			return err
+		}
+		*ptr = &val
+		return nil
+	default:
+		return errNotMyType
+	}
+}
+
+// deserializeTimeType handles time.Time type: *time.Time
+func deserializeTimeType(target any, value any) error {
+	switch ptr := target.(type) {
+	case *time.Time:
+		val, err := deserializeTime(value)
+		if err != nil {
+			return err
+		}
+		*ptr = val
+		return nil
+	default:
+		return errNotMyType
+	}
+}
+
+// deserializeArrayType handles array types: *[]int, *[]string
+func deserializeArrayType(target any, value any) error {
+	switch ptr := target.(type) {
+	case *[]int:
+		arr, err := deserializeIntArray(value)
+		if err != nil {
+			return err
+		}
+		*ptr = arr
+		return nil
+	case *[]string:
+		arr, err := deserializeStringArray(value)
+		if err != nil {
+			return err
+		}
+		*ptr = arr
+		return nil
+	default:
+		return errNotMyType
+	}
+}
+
+// deserializeMapType handles map types: *map[string]any, *map[string]string
+func deserializeMapType(target any, value any) error {
+	switch ptr := target.(type) {
+	case *map[string]any:
+		jsonb, err := deserializeJSONB(value)
+		if err != nil {
+			return err
+		}
+		*ptr = jsonb
+		return nil
+	case *map[string]string:
+		m, err := deserializeMap(value)
+		if err != nil {
+			return err
+		}
+		*ptr = m
+		return nil
+	default:
+		return errNotMyType
+	}
+}
+
 // deserializeToField deserializes a value to the appropriate type.
 // Handles type conversion for common Go types and uses reflection for complex types.
 func deserializeToField(target any, value any) error {
@@ -254,109 +414,38 @@ func deserializeToField(target any, value any) error {
 		return nil
 	}
 
-	// Type switch for common types
-	switch ptr := target.(type) {
-	case *int:
-		val, err := deserializeInt(value)
-		if err != nil {
-			return err
-		}
-		*ptr = val
-	case *int64:
-		val, err := deserializeInt64(value)
-		if err != nil {
-			return err
-		}
-		*ptr = val
-	case *uint64:
-		val, err := deserializeUint64(value)
-		if err != nil {
-			return err
-		}
-		*ptr = val
-	case *uint32:
-		val, err := deserializeUint32(value)
-		if err != nil {
-			return err
-		}
-		*ptr = val
-	case *uint:
-		val, err := deserializeUint(value)
-		if err != nil {
-			return err
-		}
-		*ptr = val
-	case *int32:
-		val, err := deserializeInt32(value)
-		if err != nil {
-			return err
-		}
-		*ptr = val
-	case *bool:
-		val, err := deserializeBool(value)
-		if err != nil {
-			return err
-		}
-		*ptr = val
-	case *string:
-		*ptr = deserializeString(value)
-	case *time.Time:
-		val, err := deserializeTime(value)
-		if err != nil {
-			return err
-		}
-		*ptr = val
-	case **int:
-		val, err := deserializeInt(value)
-		if err != nil {
-			return err
-		}
-		*ptr = &val
-	case **bool:
-		val, err := deserializeBool(value)
-		if err != nil {
-			return err
-		}
-		*ptr = &val
-	case **string:
-		str := deserializeString(value)
-		*ptr = &str
-	case **time.Time:
-		val, err := deserializeTime(value)
-		if err != nil {
-			return err
-		}
-		*ptr = &val
-	case *[]int:
-		arr, err := deserializeIntArray(value)
-		if err != nil {
-			return err
-		}
-		*ptr = arr
-	case *[]string:
-		arr, err := deserializeStringArray(value)
-		if err != nil {
-			return err
-		}
-		*ptr = arr
-	case *map[string]any:
-		jsonb, err := deserializeJSONB(value)
-		if err != nil {
-			return err
-		}
-		*ptr = jsonb
-	case *map[string]string:
-		m, err := deserializeMap(value)
-		if err != nil {
-			return err
-		}
-		*ptr = m
-	default:
-		// Use reflection for other types
-		return deserializeWithReflection(targetValue, targetElem, value)
+	// Try basic types first
+	if err := deserializeBasicType(target, value); err != errNotMyType {
+		return err
 	}
 
-	return nil
+	// Try uint types
+	if err := deserializeUintType(target, value); err != errNotMyType {
+		return err
+	}
+
+	// Try pointer types
+	if err := deserializePointerType(target, value); err != errNotMyType {
+		return err
+	}
+
+	// Try time type
+	if err := deserializeTimeType(target, value); err != errNotMyType {
+		return err
+	}
+
+	// Try array types
+	if err := deserializeArrayType(target, value); err != errNotMyType {
+		return err
+	}
+
+	// Try map types
+	if err := deserializeMapType(target, value); err != errNotMyType {
+		return err
+	}
+
+	// Fallback to reflection for other types
+	return deserializeWithReflection(targetValue, targetElem, value)
 }
 
 // deserializeToFieldValue deserializes a value directly using reflect.Value.
