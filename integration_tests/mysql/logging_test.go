@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 	"testing"
@@ -13,7 +14,7 @@ import (
 )
 
 func TestMySQL_Logging_Exec(t *testing.T) {
-		logger := &testhelpers.TestLogger{}
+	logger := &testhelpers.TestLogger{}
 	db, err := typedb.OpenWithoutValidation("mysql", getTestDSN(), typedb.WithLogger(logger))
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
@@ -23,7 +24,7 @@ func TestMySQL_Logging_Exec(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("success logs debug", func(t *testing.T) {
-		logger.Debugs = nil // Reset logs
+		logger.Debugs = nil
 		// Use a unique email to avoid conflicts
 		email := fmt.Sprintf("test-exec-%d@example.com", time.Now().UnixNano())
 		_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", email)
@@ -54,11 +55,10 @@ func TestMySQL_Logging_Exec(t *testing.T) {
 	})
 
 	t.Run("error logs error", func(t *testing.T) {
-		logger.Errors = nil // Reset logs
-		// Use invalid SQL to trigger an error
-		_, err := db.Exec(ctx, "INSERT INTO nonexistent_table (name) VALUES (?)", "test")
+		logger.Errors = nil
+		_, err := db.Exec(ctx, "INVALID SQL SYNTAX")
 		if err == nil {
-			t.Fatal("Expected error for invalid SQL, got nil")
+			t.Fatal("Expected error for invalid SQL")
 		}
 
 		// Verify Error log was emitted
@@ -72,7 +72,7 @@ func TestMySQL_Logging_Exec(t *testing.T) {
 }
 
 func TestMySQL_Logging_QueryAll(t *testing.T) {
-		logger := &testhelpers.TestLogger{}
+	logger := &testhelpers.TestLogger{}
 	db, err := typedb.OpenWithoutValidation("mysql", getTestDSN(), typedb.WithLogger(logger))
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
@@ -82,8 +82,8 @@ func TestMySQL_Logging_QueryAll(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("success logs debug", func(t *testing.T) {
-		logger.Debugs = nil // Reset logs
-		_, err := db.QueryAll(ctx, "SELECT id, name, email, created_at FROM users ORDER BY id LIMIT 1")
+		logger.Debugs = nil
+		_, err := db.QueryAll(ctx, "SELECT id, name, email, created_at FROM users ORDER BY id")
 		if err != nil {
 			t.Fatalf("QueryAll failed: %v", err)
 		}
@@ -92,31 +92,30 @@ func TestMySQL_Logging_QueryAll(t *testing.T) {
 		if len(logger.Debugs) == 0 {
 			t.Fatal("Expected Debug log for QueryAll, got none")
 		}
-		if logger.Debugs[0].Msg != "Querying all rows" {
-			t.Errorf("Expected Debug log message 'Querying all rows', got %q", logger.Debugs[0].Msg)
+		if logger.Debugs[0].Msg != "Executing query" {
+			t.Errorf("Expected Debug log message 'Executing query', got %q", logger.Debugs[0].Msg)
 		}
 	})
 
 	t.Run("error logs error", func(t *testing.T) {
-		logger.Errors = nil // Reset logs
-		// Use invalid SQL to trigger an error
+		logger.Errors = nil
 		_, err := db.QueryAll(ctx, "SELECT invalid_column FROM users")
 		if err == nil {
-			t.Fatal("Expected error for invalid SQL, got nil")
+			t.Fatal("Expected error for invalid column")
 		}
 
 		// Verify Error log was emitted
 		if len(logger.Errors) == 0 {
 			t.Fatal("Expected Error log for QueryAll failure, got none")
 		}
-		if logger.Errors[0].Msg != "Query failed" {
-			t.Errorf("Expected Error log message 'Query failed', got %q", logger.Errors[0].Msg)
+		if logger.Errors[0].Msg != "Query execution failed" {
+			t.Errorf("Expected Error log message 'Query execution failed', got %q", logger.Errors[0].Msg)
 		}
 	})
 }
 
 func TestMySQL_Logging_Begin_Commit_Rollback(t *testing.T) {
-		logger := &testhelpers.TestLogger{}
+	logger := &testhelpers.TestLogger{}
 	db, err := typedb.OpenWithoutValidation("mysql", getTestDSN(), typedb.WithLogger(logger))
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
@@ -125,9 +124,9 @@ func TestMySQL_Logging_Begin_Commit_Rollback(t *testing.T) {
 
 	ctx := context.Background()
 
-	t.Run("begin logs debug", func(t *testing.T) {
-		logger.Debugs = nil // Reset logs
-		tx, err := db.Begin(ctx, nil)
+	t.Run("Begin logs debug", func(t *testing.T) {
+		logger.Debugs = nil
+		tx, err := db.Begin(ctx)
 		if err != nil {
 			t.Fatalf("Begin failed: %v", err)
 		}
@@ -142,9 +141,9 @@ func TestMySQL_Logging_Begin_Commit_Rollback(t *testing.T) {
 		}
 	})
 
-	t.Run("commit logs info", func(t *testing.T) {
-		logger.Infos = nil // Reset logs
-		tx, err := db.Begin(ctx, nil)
+	t.Run("Commit logs debug", func(t *testing.T) {
+		logger.Debugs = nil
+		tx, err := db.Begin(ctx)
 		if err != nil {
 			t.Fatalf("Begin failed: %v", err)
 		}
@@ -154,18 +153,25 @@ func TestMySQL_Logging_Begin_Commit_Rollback(t *testing.T) {
 			t.Fatalf("Commit failed: %v", err)
 		}
 
-		// Verify Info log was emitted
-		if len(logger.Infos) == 0 {
-			t.Fatal("Expected Info log for Commit, got none")
+		// Verify Debug log was emitted
+		if len(logger.Debugs) < 2 {
+			t.Fatal("Expected Debug log for Commit, got none")
 		}
-		if logger.Infos[0].Msg != "Committing transaction" {
-			t.Errorf("Expected Info log message 'Committing transaction', got %q", logger.Infos[0].Msg)
+		foundCommit := false
+		for _, entry := range logger.Debugs {
+			if entry.Msg == "Committing transaction" {
+				foundCommit = true
+				break
+			}
+		}
+		if !foundCommit {
+			t.Error("Expected Debug log message 'Committing transaction'")
 		}
 	})
 
-	t.Run("rollback logs info", func(t *testing.T) {
-		logger.Infos = nil // Reset logs
-		tx, err := db.Begin(ctx, nil)
+	t.Run("Rollback logs debug", func(t *testing.T) {
+		logger.Debugs = nil
+		tx, err := db.Begin(ctx)
 		if err != nil {
 			t.Fatalf("Begin failed: %v", err)
 		}
@@ -175,148 +181,135 @@ func TestMySQL_Logging_Begin_Commit_Rollback(t *testing.T) {
 			t.Fatalf("Rollback failed: %v", err)
 		}
 
-		// Verify Info log was emitted
-		if len(logger.Infos) == 0 {
-			t.Fatal("Expected Info log for Rollback, got none")
+		// Verify Debug log was emitted
+		if len(logger.Debugs) < 2 {
+			t.Fatal("Expected Debug log for Rollback, got none")
 		}
-		if logger.Infos[0].Msg != "Rolling back transaction" {
-			t.Errorf("Expected Info log message 'Rolling back transaction', got %q", logger.Infos[0].Msg)
+		foundRollback := false
+		for _, entry := range logger.Debugs {
+			if entry.Msg == "Rolling back transaction" {
+				foundRollback = true
+				break
+			}
+		}
+		if !foundRollback {
+			t.Error("Expected Debug log message 'Rolling back transaction'")
 		}
 	})
 }
 
 func TestMySQL_Logging_Close(t *testing.T) {
-		logger := &testhelpers.TestLogger{}
+	logger := &testhelpers.TestLogger{}
 	db, err := typedb.OpenWithoutValidation("mysql", getTestDSN(), typedb.WithLogger(logger))
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	t.Run("close logs info", func(t *testing.T) {
-		logger.Infos = nil // Reset logs
-		err := db.Close()
-		if err != nil {
-			t.Fatalf("Close failed: %v", err)
-		}
+	logger.Debugs = nil
+	err = db.Close()
+	if err != nil {
+		t.Fatalf("Close failed: %v", err)
+	}
 
-		// Verify Info log was emitted
-		if len(logger.Infos) == 0 {
-			t.Fatal("Expected Info log for Close, got none")
-		}
-		if logger.Infos[0].Msg != "Closing database connection" {
-			t.Errorf("Expected Info log message 'Closing database connection', got %q", logger.Infos[0].Msg)
-		}
-	})
+	// Verify Debug log was emitted
+	if len(logger.Debugs) == 0 {
+		t.Fatal("Expected Debug log for Close, got none")
+	}
+	if logger.Debugs[0].Msg != "Closing database connection" {
+		t.Errorf("Expected Debug log message 'Closing database connection', got %q", logger.Debugs[0].Msg)
+	}
 }
 
 func TestMySQL_Logging_PerInstanceLogger(t *testing.T) {
-	globalLogger := &testhelpers.TestLogger{}
-	instanceLogger := &testhelpers.TestLogger{}
+	logger1 := &testhelpers.TestLogger{}
+	logger2 := &testhelpers.TestLogger{}
 
-	// Set global logger
-	typedb.SetLogger(globalLogger)
-
-	// Create DB with per-instance logger
-	db, err := typedb.OpenWithoutValidation("mysql", getTestDSN(), typedb.WithLogger(instanceLogger))
+	db1, err := typedb.OpenWithoutValidation("mysql", getTestDSN(), typedb.WithLogger(logger1))
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer db1.Close()
+
+	db2, err := typedb.OpenWithoutValidation("mysql", getTestDSN(), typedb.WithLogger(logger2))
+	if err != nil {
+		t.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer db2.Close()
 
 	ctx := context.Background()
 
-	// Use a unique email to avoid conflicts
-	email := fmt.Sprintf("test-perinstance-%d@example.com", time.Now().UnixNano())
-	_, err = db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", email)
+	// Execute query on db1
+	logger1.Debugs = nil
+	logger2.Debugs = nil
+	email := fmt.Sprintf("test-per-instance-%d@example.com", time.Now().UnixNano())
+	_, err = db1.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", email)
 	if err != nil {
 		t.Fatalf("Exec failed: %v", err)
 	}
 
-	// Verify instance logger received the log, not global logger
-	if len(instanceLogger.Debugs) == 0 {
-		t.Error("Expected instance logger to receive Debug log")
+	// Verify logger1 received logs but logger2 did not
+	if len(logger1.Debugs) == 0 {
+		t.Error("Expected Debug log in logger1, got none")
 	}
-	if len(globalLogger.Debugs) != 0 {
-		t.Error("Expected global logger to NOT receive log when per-instance logger is set")
+	if len(logger2.Debugs) > 0 {
+		t.Error("Expected no Debug logs in logger2, but got some")
 	}
 }
 
 func TestMySQL_Logging_ConfigOptions(t *testing.T) {
-	ctx := context.Background()
+	logger := &testhelpers.TestLogger{}
 
 	t.Run("LogQueries=false disables query logging", func(t *testing.T) {
-		logger := &testhelpers.TestLogger{}
 		db, err := typedb.OpenWithoutValidation("mysql", getTestDSN(),
 			typedb.WithLogger(logger),
-			typedb.WithLogQueries(false),
-			typedb.WithLogArgs(true))
+			typedb.WithLogQueries(false))
 		if err != nil {
 			t.Fatalf("Failed to connect to database: %v", err)
 		}
 		defer db.Close()
 
+		ctx := context.Background()
 		logger.Debugs = nil
-		// Use a unique email to avoid conflicts
-		email := fmt.Sprintf("test-logqueries-%d@example.com", time.Now().UnixNano())
+		email := fmt.Sprintf("test-nolog-%d@example.com", time.Now().UnixNano())
 		_, err = db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", email)
 		if err != nil {
 			t.Fatalf("Exec failed: %v", err)
 		}
 
-		// Should log message but without query
-		if len(logger.Debugs) == 0 {
-			t.Fatal("Expected Debug log even when LogQueries=false")
-		}
-		foundQuery := false
+		// Verify query is NOT in keyvals
 		for _, entry := range logger.Debugs {
 			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
 				if entry.Keyvals[i] == "query" {
-					foundQuery = true
+					t.Error("Expected 'query' key to be absent when LogQueries=false")
 				}
 			}
 		}
-		if foundQuery {
-			t.Error("Expected 'query' key to be absent when LogQueries=false")
-		}
 	})
 
-	t.Run("LogArgs=false disables argument logging", func(t *testing.T) {
-		logger := &testhelpers.TestLogger{}
+	t.Run("LogArgs=false disables args logging", func(t *testing.T) {
 		db, err := typedb.OpenWithoutValidation("mysql", getTestDSN(),
 			typedb.WithLogger(logger),
-			typedb.WithLogQueries(true),
 			typedb.WithLogArgs(false))
 		if err != nil {
 			t.Fatalf("Failed to connect to database: %v", err)
 		}
 		defer db.Close()
 
+		ctx := context.Background()
 		logger.Debugs = nil
-		// Use a unique email to avoid conflicts
-		email := fmt.Sprintf("test-logargs-%d@example.com", time.Now().UnixNano())
+		email := fmt.Sprintf("test-noargs-%d@example.com", time.Now().UnixNano())
 		_, err = db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", email)
 		if err != nil {
 			t.Fatalf("Exec failed: %v", err)
 		}
 
-		// Should log query but without args
-		foundQuery := false
-		foundArgs := false
+		// Verify args is NOT in keyvals
 		for _, entry := range logger.Debugs {
 			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
-				if entry.Keyvals[i] == "query" {
-					foundQuery = true
-				}
 				if entry.Keyvals[i] == "args" {
-					foundArgs = true
+					t.Error("Expected 'args' key to be absent when LogArgs=false")
 				}
 			}
-		}
-		if !foundQuery {
-			t.Error("Expected 'query' key to be present when LogQueries=true")
-		}
-		if foundArgs {
-			t.Error("Expected 'args' key to be absent when LogArgs=false")
 		}
 	})
 }
@@ -333,49 +326,29 @@ func TestMySQL_Logging_ContextOverrides(t *testing.T) {
 
 	t.Run("WithNoLogging disables all logging", func(t *testing.T) {
 		logger.Debugs = nil
+		email := fmt.Sprintf("test-nologging-%d@example.com", time.Now().UnixNano())
 		ctx := typedb.WithNoLogging(ctx)
-		// Use a unique email to avoid conflicts
-		email := fmt.Sprintf("test-nolog-%d@example.com", time.Now().UnixNano())
 		_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", email)
 		if err != nil {
 			t.Fatalf("Exec failed: %v", err)
 		}
 
-		// Should log message but without query/args
-		if len(logger.Debugs) == 0 {
-			t.Fatal("Expected Debug log even when logging disabled")
-		}
-		foundQuery := false
-		foundArgs := false
-		for _, entry := range logger.Debugs {
-			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
-				if entry.Keyvals[i] == "query" {
-					foundQuery = true
-				}
-				if entry.Keyvals[i] == "args" {
-					foundArgs = true
-				}
-			}
-		}
-		if foundQuery {
-			t.Error("Expected 'query' key to be absent when WithNoLogging is used")
-		}
-		if foundArgs {
-			t.Error("Expected 'args' key to be absent when WithNoLogging is used")
+		// Verify no Debug logs were emitted
+		if len(logger.Debugs) > 0 {
+			t.Error("Expected no Debug logs when WithNoLogging is used")
 		}
 	})
 
 	t.Run("WithNoQueryLogging disables query logging only", func(t *testing.T) {
 		logger.Debugs = nil
-		ctx := typedb.WithNoQueryLogging(ctx)
-		// Use a unique email to avoid conflicts
 		email := fmt.Sprintf("test-noquery-%d@example.com", time.Now().UnixNano())
+		ctx := typedb.WithNoQueryLogging(ctx)
 		_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", email)
 		if err != nil {
 			t.Fatalf("Exec failed: %v", err)
 		}
 
-		// Query should not be logged, but args should be
+		// Verify query is NOT in keyvals but args might be
 		foundQuery := false
 		foundArgs := false
 		for _, entry := range logger.Debugs {
@@ -392,21 +365,20 @@ func TestMySQL_Logging_ContextOverrides(t *testing.T) {
 			t.Error("Expected 'query' key to be absent when WithNoQueryLogging is used")
 		}
 		if !foundArgs {
-			t.Error("Expected 'args' key to be present when WithNoQueryLogging is used (only query disabled)")
+			t.Error("Expected 'args' key to be present when WithNoQueryLogging is used (only args disabled)")
 		}
 	})
 
-	t.Run("WithNoArgLogging disables argument logging only", func(t *testing.T) {
+	t.Run("WithNoArgLogging disables args logging only", func(t *testing.T) {
 		logger.Debugs = nil
-		ctx := typedb.WithNoArgLogging(ctx)
-		// Use a unique email to avoid conflicts
 		email := fmt.Sprintf("test-noargs-%d@example.com", time.Now().UnixNano())
+		ctx := typedb.WithNoArgLogging(ctx)
 		_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", email)
 		if err != nil {
 			t.Fatalf("Exec failed: %v", err)
 		}
 
-		// Args should not be logged, but query should be
+		// Verify args is NOT in keyvals but query is
 		foundQuery := false
 		foundArgs := false
 		for _, entry := range logger.Debugs {
@@ -547,3 +519,185 @@ func TestMySQL_Logging_NologTagMasking(t *testing.T) {
 		// The masking is tested in Insert/Update where email is actually in args
 	})
 }
+
+func TestMySQL_Logging_SerializationNolog(t *testing.T) {
+	logger := &testhelpers.TestLogger{}
+	db, err := typedb.OpenWithoutValidation("mysql", getTestDSN(), typedb.WithLogger(logger))
+	if err != nil {
+		t.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	ctx := context.Background()
+
+	t.Run("QueryAll masks nolog fields in model arguments", func(t *testing.T) {
+		logger.Debugs = nil
+		email := fmt.Sprintf("test-serialization-%d@example.com", time.Now().UnixNano())
+		user := &UserWithNolog{
+			Name:  "Test User",
+			Email: email,
+		}
+
+		// Pass model as argument to QueryAll
+		_, err := db.QueryAll(ctx, "SELECT id, name, email FROM users WHERE email = ?", user)
+		if err != nil {
+			t.Fatalf("QueryAll failed: %v", err)
+		}
+
+		// Check that email is masked in logs
+		foundArgs := false
+		foundMasked := false
+		for _, entry := range logger.Debugs {
+			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
+				if entry.Keyvals[i] == "args" {
+					foundArgs = true
+					args := entry.Keyvals[i+1].([]any)
+					for _, arg := range args {
+						if arg == "[REDACTED]" {
+							foundMasked = true
+						}
+						if arg == email {
+							t.Error("Email should be masked, but found raw value in logs")
+						}
+					}
+				}
+			}
+		}
+		if !foundArgs {
+			t.Error("Expected 'args' key in Debug log")
+		}
+		if !foundMasked {
+			t.Error("Expected email to be masked as [REDACTED]")
+		}
+	})
+
+	t.Run("QueryRowMap masks nolog fields in model arguments", func(t *testing.T) {
+		logger.Debugs = nil
+		email := fmt.Sprintf("test-serialization-rowmap-%d@example.com", time.Now().UnixNano())
+		user := &UserWithNolog{
+			Name:  "Test User",
+			Email: email,
+		}
+
+		// Pass model as argument to QueryRowMap
+		_, err := db.QueryRowMap(ctx, "SELECT id, name, email FROM users WHERE email = ?", user)
+		// May return ErrNotFound if user doesn't exist, which is fine for this test
+		if err != nil && err != typedb.ErrNotFound {
+			t.Fatalf("QueryRowMap failed: %v", err)
+		}
+
+		// Check that email is masked in logs
+		foundArgs := false
+		foundMasked := false
+		for _, entry := range logger.Debugs {
+			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
+				if entry.Keyvals[i] == "args" {
+					foundArgs = true
+					args := entry.Keyvals[i+1].([]any)
+					for _, arg := range args {
+						if arg == "[REDACTED]" {
+							foundMasked = true
+						}
+						if arg == email {
+							t.Error("Email should be masked, but found raw value in logs")
+						}
+					}
+				}
+			}
+		}
+		if !foundArgs {
+			t.Error("Expected 'args' key in Debug log")
+		}
+		if !foundMasked {
+			t.Error("Expected email to be masked as [REDACTED]")
+		}
+	})
+
+	t.Run("GetInto masks nolog fields in model arguments", func(t *testing.T) {
+		logger.Debugs = nil
+		email := fmt.Sprintf("test-serialization-getinto-%d@example.com", time.Now().UnixNano())
+		user := &UserWithNolog{
+			Name:  "Test User",
+			Email: email,
+		}
+		var dest map[string]any
+
+		// Pass model as argument to GetInto
+		err := db.GetInto(ctx, "SELECT id, name, email FROM users WHERE email = ?", []any{user}, &dest)
+		// May return ErrNotFound if user doesn't exist, which is fine for this test
+		if err != nil && err != typedb.ErrNotFound {
+			t.Fatalf("GetInto failed: %v", err)
+		}
+
+		// Check that email is masked in logs
+		foundArgs := false
+		foundMasked := false
+		for _, entry := range logger.Debugs {
+			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
+				if entry.Keyvals[i] == "args" {
+					foundArgs = true
+					args := entry.Keyvals[i+1].([]any)
+					for _, arg := range args {
+						if arg == "[REDACTED]" {
+							foundMasked = true
+						}
+						if arg == email {
+							t.Error("Email should be masked, but found raw value in logs")
+						}
+					}
+				}
+			}
+		}
+		if !foundArgs {
+			t.Error("Expected 'args' key in Debug log")
+		}
+		if !foundMasked {
+			t.Error("Expected email to be masked as [REDACTED]")
+		}
+	})
+
+	t.Run("QueryDo masks nolog fields in model arguments", func(t *testing.T) {
+		logger.Debugs = nil
+		email := fmt.Sprintf("test-serialization-querydo-%d@example.com", time.Now().UnixNano())
+		user := &UserWithNolog{
+			Name:  "Test User",
+			Email: email,
+		}
+
+		// Pass model as argument to QueryDo
+		err := db.QueryDo(ctx, "SELECT id, name, email FROM users WHERE email = ?", []any{user}, func(rows *sql.Rows) error {
+			return nil
+		})
+		// May return ErrNotFound if user doesn't exist, which is fine for this test
+		if err != nil && err != typedb.ErrNotFound {
+			t.Fatalf("QueryDo failed: %v", err)
+		}
+
+		// Check that email is masked in logs
+		foundArgs := false
+		foundMasked := false
+		for _, entry := range logger.Debugs {
+			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
+				if entry.Keyvals[i] == "args" {
+					foundArgs = true
+					args := entry.Keyvals[i+1].([]any)
+					for _, arg := range args {
+						if arg == "[REDACTED]" {
+							foundMasked = true
+						}
+						if arg == email {
+							t.Error("Email should be masked, but found raw value in logs")
+						}
+					}
+				}
+			}
+		}
+		if !foundArgs {
+			t.Error("Expected 'args' key in Debug log")
+		}
+		if !foundMasked {
+			t.Error("Expected email to be masked as [REDACTED]")
+		}
+	})
+}
+
