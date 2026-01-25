@@ -120,7 +120,3 @@ func TestInsert_AllZeroFields_Error(t *testing.T) {
 		t.Errorf("Expected error about non-nil field, got: %v", err)
 	}
 }
-
-
-
-

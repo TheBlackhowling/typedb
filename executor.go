@@ -87,10 +87,10 @@ func (d *DB) withTimeout(ctx context.Context) (context.Context, context.CancelFu
 // execHelper executes a query that doesn't return rows, with logging and timeout handling.
 func execHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger, timeout time.Duration, logQueries, logArgs bool, query string, args ...any) (sql.Result, error) {
 	logger = getLoggerHelper(logger)
-	
+
 	// Get effective logging flags and masked args
 	logQueries, logArgs, logArgsCopy := getLoggingFlagsAndArgs(ctx, logQueries, logArgs, args)
-	
+
 	if logQueries {
 		if logArgs {
 			logger.Debug("Executing query", "query", query, "args", logArgsCopy)
@@ -132,10 +132,10 @@ func (d *DB) Exec(ctx context.Context, query string, args ...any) (sql.Result, e
 // queryAllHelper executes a query and returns all rows as []map[string]any, with logging and timeout handling.
 func queryAllHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger, timeout time.Duration, logQueries, logArgs bool, query string, args ...any) ([]map[string]any, error) {
 	logger = getLoggerHelper(logger)
-	
+
 	// Get effective logging flags and masked args
 	logQueries, logArgs, logArgsCopy := getLoggingFlagsAndArgs(ctx, logQueries, logArgs, args)
-	
+
 	if logQueries {
 		if logArgs {
 			logger.Debug("Querying all rows", "query", query, "args", logArgsCopy)
@@ -185,10 +185,10 @@ func (d *DB) QueryAll(ctx context.Context, query string, args ...any) ([]map[str
 // queryRowMapHelper executes a query and returns the first row as map[string]any, with logging and timeout handling.
 func queryRowMapHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger, timeout time.Duration, logQueries, logArgs bool, query string, args ...any) (map[string]any, error) {
 	logger = getLoggerHelper(logger)
-	
+
 	// Get effective logging flags and masked args
 	logQueries, logArgs, logArgsCopy := getLoggingFlagsAndArgs(ctx, logQueries, logArgs, args)
-	
+
 	if logQueries {
 		if logArgs {
 			logger.Debug("Querying row map", "query", query, "args", logArgsCopy)
@@ -203,7 +203,7 @@ func queryRowMapHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger
 			logger.Debug("Querying row map")
 		}
 	}
-	
+
 	ctx, cancel := withTimeoutHelper(ctx, timeout)
 	defer cancel()
 
@@ -268,10 +268,10 @@ func (d *DB) QueryRowMap(ctx context.Context, query string, args ...any) (map[st
 // getIntoHelper scans a single row into dest pointers, with logging and timeout handling.
 func getIntoHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger, timeout time.Duration, logQueries, logArgs bool, query string, args []any, dest ...any) error {
 	logger = getLoggerHelper(logger)
-	
+
 	// Get effective logging flags and masked args
 	logQueries, logArgs, logArgsCopy := getLoggingFlagsAndArgs(ctx, logQueries, logArgs, args)
-	
+
 	if logQueries {
 		if logArgs {
 			logger.Debug("Scanning row into destination", "query", query, "args", logArgsCopy)
@@ -323,10 +323,10 @@ func (d *DB) GetInto(ctx context.Context, query string, args []any, dest ...any)
 // queryDoHelper executes a query and calls scan for each row (streaming), with logging and timeout handling.
 func queryDoHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger, timeout time.Duration, logQueries, logArgs bool, query string, args []any, scan func(rows *sql.Rows) error) error {
 	logger = getLoggerHelper(logger)
-	
+
 	// Get effective logging flags and masked args
 	logQueries, logArgs, logArgsCopy := getLoggingFlagsAndArgs(ctx, logQueries, logArgs, args)
-	
+
 	if logQueries {
 		if logArgs {
 			logger.Debug("Executing streaming query", "query", query, "args", logArgsCopy)
@@ -766,7 +766,7 @@ func maskArgs(args []any, maskIndices []int) []any {
 	if len(maskIndices) == 0 {
 		return args
 	}
-	
+
 	// Create a map for O(1) lookup
 	maskMap := make(map[int]bool)
 	for _, idx := range maskIndices {
@@ -774,7 +774,7 @@ func maskArgs(args []any, maskIndices []int) []any {
 			maskMap[idx] = true
 		}
 	}
-	
+
 	// Create a copy of args with masked values
 	masked := make([]any, len(args))
 	copy(masked, args)
@@ -783,7 +783,7 @@ func maskArgs(args []any, maskIndices []int) []any {
 			masked[idx] = "[REDACTED]"
 		}
 	}
-	
+
 	return masked
 }
 
@@ -800,7 +800,7 @@ func getLoggingFlagsAndArgs(ctx context.Context, logQueries, logArgs bool, args 
 			logArgs = false
 		}
 	}
-	
+
 	// Check for mask indices and apply masking if needed
 	logArgsCopy := args
 	if logArgs {
@@ -808,6 +808,6 @@ func getLoggingFlagsAndArgs(ctx context.Context, logQueries, logArgs bool, args 
 			logArgsCopy = maskArgs(args, maskIndices)
 		}
 	}
-	
+
 	return logQueries, logArgs, logArgsCopy
 }

@@ -892,8 +892,8 @@ func TestUpdate_AutoTimestamp_PostgreSQL(t *testing.T) {
 
 	// UpdatedAt should be auto-populated with CURRENT_TIMESTAMP, not included in args
 	user := &UpdateModelWithAutoTimestamp{
-		ID:   123,
-		Name: "John Updated",
+		ID:    123,
+		Name:  "John Updated",
 		Email: "john.updated@example.com",
 		// UpdatedAt is not set - should be auto-populated
 	}
@@ -955,7 +955,7 @@ func TestUpdate_AutoTimestamp_SQLite(t *testing.T) {
 	ctx := context.Background()
 
 	user := &UpdateModelWithAutoTimestamp{
-		ID:   123,
+		ID:    123,
 		Email: "updated@example.com",
 		// UpdatedAt is not set - should be auto-populated
 	}
@@ -986,8 +986,8 @@ func TestUpdate_AutoTimestamp_SQLServer(t *testing.T) {
 	ctx := context.Background()
 
 	user := &UpdateModelWithAutoTimestamp{
-		ID:   123,
-		Name: "John Updated",
+		ID:    123,
+		Name:  "John Updated",
 		Email: "john.updated@example.com",
 		// UpdatedAt is not set - should be auto-populated
 	}
@@ -1080,8 +1080,8 @@ func TestUpdate_AutoTimestamp_WithRegularFields(t *testing.T) {
 	ctx := context.Background()
 
 	user := &UpdateModelWithAutoTimestamp{
-		ID:   123,
-		Name: "John Updated",
+		ID:    123,
+		Name:  "John Updated",
 		Email: "john.updated@example.com",
 		// UpdatedAt is auto-populated
 	}

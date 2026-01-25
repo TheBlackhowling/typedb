@@ -601,4 +601,3 @@ type SerializeModelWithUnexported struct {
 	Name string `db:"name"`
 	age  int    `db:"age"` // unexported
 }
-
