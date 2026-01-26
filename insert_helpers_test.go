@@ -387,10 +387,10 @@ func TestGeneratePlaceholder(t *testing.T) {
 		{name: "oracle_mixed_case", driverName: "Oracle", position: 6, expected: ":6"},
 
 		// Default/Unknown (defaults to PostgreSQL style)
-		{"unknown_driver_1", "unknown", 1, "$1"},
-		{"unknown_driver_2", "unknown", 2, "$2"},
-		{"empty_driver_1", "", 1, "$1"},
-		{"empty_driver_5", "", 5, "$5"},
+		{name: "unknown_driver_1", driverName: "unknown", position: 1, expected: "$1"},
+		{name: "unknown_driver_2", driverName: "unknown", position: 2, expected: "$2"},
+		{name: "empty_driver_1", driverName: "", position: 1, expected: "$1"},
+		{name: "empty_driver_5", driverName: "", position: 5, expected: "$5"},
 		{"custom_driver_1", "customdb", 1, "$1"},
 		{"custom_driver_10", "customdb", 10, "$10"},
 	}
