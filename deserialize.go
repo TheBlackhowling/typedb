@@ -539,6 +539,9 @@ func deserializeInt(value any) (int, error) {
 	case int:
 		return v, nil
 	case int64:
+		if v < ^int(^uint(0)>>1) || v > int64(^uint(0)>>1) {
+			return 0, fmt.Errorf("typedb: int64 value %d overflows int", v)
+		}
 		return int(v), nil
 	case int32:
 		return int(v), nil
@@ -547,8 +550,14 @@ func deserializeInt(value any) (int, error) {
 	case int8:
 		return int(v), nil
 	case uint:
+		if v > uint(^uint(0)>>1) {
+			return 0, fmt.Errorf("typedb: uint value %d overflows int", v)
+		}
 		return int(v), nil
 	case uint64:
+		if v > uint64(^uint(0)>>1) {
+			return 0, fmt.Errorf("typedb: uint64 value %d overflows int", v)
+		}
 		return int(v), nil
 	case uint32:
 		return int(v), nil
@@ -581,8 +590,14 @@ func deserializeInt64(value any) (int64, error) {
 	case int8:
 		return int64(v), nil
 	case uint64:
+		if v > uint64(^uint64(0)>>1) {
+			return 0, fmt.Errorf("typedb: uint64 value %d overflows int64", v)
+		}
 		return int64(v), nil
 	case uint:
+		if v > uint(^uint(0)>>1) {
+			return 0, fmt.Errorf("typedb: uint value %d overflows int64", v)
+		}
 		return int64(v), nil
 	case uint32:
 		return int64(v), nil
@@ -654,6 +669,9 @@ func deserializeUint32(value any) (uint32, error) {
 	case uint32:
 		return v, nil
 	case uint:
+		if v > uint(^uint32(0)) {
+			return 0, fmt.Errorf("typedb: uint value %d overflows uint32", v)
+		}
 		return uint32(v), nil
 	case uint16:
 		return uint32(v), nil
@@ -667,6 +685,9 @@ func deserializeUint32(value any) (uint32, error) {
 	case int:
 		if v < 0 {
 			return 0, fmt.Errorf("typedb: cannot convert negative int to uint32")
+		}
+		if v > int(^uint32(0)) {
+			return 0, fmt.Errorf("typedb: int value %d overflows uint32", v)
 		}
 		return uint32(v), nil
 	case string:
@@ -736,16 +757,28 @@ func deserializeInt32(value any) (int32, error) {
 	case int32:
 		return v, nil
 	case int:
+		if v < ^int32(^uint32(0)>>1) || v > int(^uint32(0)>>1) {
+			return 0, fmt.Errorf("typedb: int value %d overflows int32", v)
+		}
 		return int32(v), nil
 	case int64:
+		if v < ^int32(^uint32(0)>>1) || v > int64(^uint32(0)>>1) {
+			return 0, fmt.Errorf("typedb: int64 value %d overflows int32", v)
+		}
 		return int32(v), nil
 	case int16:
 		return int32(v), nil
 	case int8:
 		return int32(v), nil
 	case uint32:
+		if v > uint32(^uint32(0)>>1) {
+			return 0, fmt.Errorf("typedb: uint32 value %d overflows int32", v)
+		}
 		return int32(v), nil
 	case uint:
+		if v > uint(^uint32(0)>>1) {
+			return 0, fmt.Errorf("typedb: uint value %d overflows int32", v)
+		}
 		return int32(v), nil
 	case uint16:
 		return int32(v), nil
@@ -1048,6 +1081,11 @@ func convertInt8Slice(v []int8) []int {
 func convertUintSlice(v []uint) []int {
 	result := make([]int, len(v))
 	for i, val := range v {
+		if val > uint(^uint(0)>>1) {
+			// Skip overflow values or use 0 - this shouldn't happen in practice
+			result[i] = 0
+			continue
+		}
 		result[i] = int(val)
 	}
 	return result
@@ -1057,6 +1095,11 @@ func convertUintSlice(v []uint) []int {
 func convertUint64Slice(v []uint64) []int {
 	result := make([]int, len(v))
 	for i, val := range v {
+		if val > uint64(^uint(0)>>1) {
+			// Skip overflow values or use 0 - this shouldn't happen in practice
+			result[i] = 0
+			continue
+		}
 		result[i] = int(val)
 	}
 	return result
