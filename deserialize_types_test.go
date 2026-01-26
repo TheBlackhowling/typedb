@@ -14,10 +14,10 @@ func TestDeserialize_TimeFormats(t *testing.T) {
 		name  string
 		value string
 	}{
-		{"RFC3339", "2023-01-01T12:00:00Z"},
-		{"RFC3339Nano", "2023-01-01T12:00:00.123456789Z"},
-		{"SQL format", "2023-01-02 15:04:05"},
-		{"Date only", "2023-01-02"},
+		{name: "RFC3339", value: "2023-01-01T12:00:00Z"},
+		{name: "RFC3339Nano", value: "2023-01-01T12:00:00.123456789Z"},
+		{name: "SQL format", value: "2023-01-02 15:04:05"},
+		{name: "Date only", value: "2023-01-02"},
 	}
 
 	for _, tt := range tests {
