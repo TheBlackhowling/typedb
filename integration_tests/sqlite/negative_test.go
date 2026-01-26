@@ -11,7 +11,7 @@ import (
 
 func TestSQLite_Negative_InvalidQuery(t *testing.T) {
 	db := setupTestDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
@@ -25,7 +25,7 @@ func TestSQLite_Negative_InvalidQuery(t *testing.T) {
 
 func TestSQLite_Negative_ConstraintViolation(t *testing.T) {
 	db := setupTestDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()

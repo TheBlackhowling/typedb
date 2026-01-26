@@ -230,7 +230,7 @@ func TestOracle_RegistrationValidation_ValidModelCanBeUsed(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	if err := db.Ping(ctx); err != nil {
 		t.Fatalf("Database ping failed: %v", err)

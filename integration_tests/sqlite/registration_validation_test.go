@@ -65,7 +65,7 @@ func (m *InvalidRegistrationModelMissingCompositeQueryBy) TableName() string {
 func TestSQLite_RegistrationValidation_ValidModel(t *testing.T) {
 	// Reset registry for isolated test
 	typedb.ResetValidation()
-	
+
 	// This should not panic - valid model with QueryByID method
 	panicked := false
 	func() {
@@ -74,10 +74,10 @@ func TestSQLite_RegistrationValidation_ValidModel(t *testing.T) {
 				panicked = true
 			}
 		}()
-		
+
 		typedb.RegisterModel[*ValidRegistrationModel]()
 	}()
-	
+
 	if panicked {
 		t.Error("RegisterModel should not panic for valid model with QueryByID method")
 	}
@@ -86,7 +86,7 @@ func TestSQLite_RegistrationValidation_ValidModel(t *testing.T) {
 func TestSQLite_RegistrationValidation_MissingPrimaryQueryBy(t *testing.T) {
 	// Reset registry for isolated test
 	typedb.ResetValidation()
-	
+
 	// This should panic - missing QueryByID method
 	panicked := false
 	var panicMsg string
@@ -97,18 +97,18 @@ func TestSQLite_RegistrationValidation_MissingPrimaryQueryBy(t *testing.T) {
 				panicMsg = fmt.Sprintf("%v", r)
 			}
 		}()
-		
+
 		typedb.RegisterModel[*InvalidRegistrationModelMissingQueryBy]()
 	}()
-	
+
 	if !panicked {
 		t.Error("RegisterModel should panic for model missing QueryByID method")
 	}
-	
+
 	if !strings.Contains(panicMsg, "validation failed") {
 		t.Errorf("Expected panic message to contain 'validation failed', got: %s", panicMsg)
 	}
-	
+
 	if !strings.Contains(panicMsg, "QueryByID") {
 		t.Errorf("Expected panic message to mention QueryByID, got: %s", panicMsg)
 	}
@@ -117,7 +117,7 @@ func TestSQLite_RegistrationValidation_MissingPrimaryQueryBy(t *testing.T) {
 func TestSQLite_RegistrationValidation_MissingUniqueQueryBy(t *testing.T) {
 	// Reset registry for isolated test
 	typedb.ResetValidation()
-	
+
 	// This should panic - missing QueryByEmail method for unique field
 	panicked := false
 	var panicMsg string
@@ -128,18 +128,18 @@ func TestSQLite_RegistrationValidation_MissingUniqueQueryBy(t *testing.T) {
 				panicMsg = fmt.Sprintf("%v", r)
 			}
 		}()
-		
+
 		typedb.RegisterModel[*InvalidRegistrationModelMissingUniqueQueryBy]()
 	}()
-	
+
 	if !panicked {
 		t.Error("RegisterModel should panic for model missing QueryByEmail method for unique field")
 	}
-	
+
 	if !strings.Contains(panicMsg, "validation failed") {
 		t.Errorf("Expected panic message to contain 'validation failed', got: %s", panicMsg)
 	}
-	
+
 	if !strings.Contains(panicMsg, "QueryByEmail") {
 		t.Errorf("Expected panic message to mention QueryByEmail, got: %s", panicMsg)
 	}
@@ -148,7 +148,7 @@ func TestSQLite_RegistrationValidation_MissingUniqueQueryBy(t *testing.T) {
 func TestSQLite_RegistrationValidation_MissingCompositeQueryBy(t *testing.T) {
 	// Reset registry for isolated test
 	typedb.ResetValidation()
-	
+
 	// This should panic - missing QueryByPostIDUserID method for composite key
 	panicked := false
 	var panicMsg string
@@ -159,18 +159,18 @@ func TestSQLite_RegistrationValidation_MissingCompositeQueryBy(t *testing.T) {
 				panicMsg = fmt.Sprintf("%v", r)
 			}
 		}()
-		
+
 		typedb.RegisterModel[*InvalidRegistrationModelMissingCompositeQueryBy]()
 	}()
-	
+
 	if !panicked {
 		t.Error("RegisterModel should panic for model missing QueryByPostIDUserID method for composite key")
 	}
-	
+
 	if !strings.Contains(panicMsg, "validation failed") {
 		t.Errorf("Expected panic message to contain 'validation failed', got: %s", panicMsg)
 	}
-	
+
 	if !strings.Contains(panicMsg, "QueryByPostIDUserID") {
 		t.Errorf("Expected panic message to mention QueryByPostIDUserID, got: %s", panicMsg)
 	}
@@ -179,7 +179,7 @@ func TestSQLite_RegistrationValidation_MissingCompositeQueryBy(t *testing.T) {
 func TestSQLite_RegistrationValidation_RegisterModelWithOptions_ValidModel(t *testing.T) {
 	// Reset registry for isolated test
 	typedb.ResetValidation()
-	
+
 	// This should not panic - valid model with QueryByID method
 	panicked := false
 	func() {
@@ -188,10 +188,10 @@ func TestSQLite_RegistrationValidation_RegisterModelWithOptions_ValidModel(t *te
 				panicked = true
 			}
 		}()
-		
+
 		typedb.RegisterModelWithOptions[*ValidRegistrationModel](typedb.ModelOptions{PartialUpdate: true})
 	}()
-	
+
 	if panicked {
 		t.Error("RegisterModelWithOptions should not panic for valid model with QueryByID method")
 	}
@@ -200,7 +200,7 @@ func TestSQLite_RegistrationValidation_RegisterModelWithOptions_ValidModel(t *te
 func TestSQLite_RegistrationValidation_RegisterModelWithOptions_InvalidModel(t *testing.T) {
 	// Reset registry for isolated test
 	typedb.ResetValidation()
-	
+
 	// This should panic - missing QueryByID method
 	panicked := false
 	var panicMsg string
@@ -211,14 +211,14 @@ func TestSQLite_RegistrationValidation_RegisterModelWithOptions_InvalidModel(t *
 				panicMsg = fmt.Sprintf("%v", r)
 			}
 		}()
-		
+
 		typedb.RegisterModelWithOptions[*InvalidRegistrationModelMissingQueryBy](typedb.ModelOptions{PartialUpdate: true})
 	}()
-	
+
 	if !panicked {
 		t.Error("RegisterModelWithOptions should panic for model missing QueryByID method")
 	}
-	
+
 	if !strings.Contains(panicMsg, "validation failed") {
 		t.Errorf("Expected panic message to contain 'validation failed', got: %s", panicMsg)
 	}
@@ -226,11 +226,11 @@ func TestSQLite_RegistrationValidation_RegisterModelWithOptions_InvalidModel(t *
 
 func TestSQLite_RegistrationValidation_ValidModelCanBeUsed(t *testing.T) {
 	db := setupTestDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
-	
+
 	// Verify that a valid registered model can be used
 	// Note: This test verifies that registration-time validation doesn't break normal usage
 	user := &User{ID: 1}

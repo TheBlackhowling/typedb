@@ -192,7 +192,8 @@ func findFieldByNameRecursive(t reflect.Type, fieldName string) (*reflect.Struct
 				adjustedField := *foundField
 				adjustedIndex := make([]int, len(field.Index), len(field.Index)+len(foundField.Index))
 				copy(adjustedIndex, field.Index)
-				adjustedField.Index = append(adjustedIndex, foundField.Index...)
+				adjustedIndex = append(adjustedIndex, foundField.Index...)
+				adjustedField.Index = adjustedIndex
 				return &adjustedField, true
 			}
 		}

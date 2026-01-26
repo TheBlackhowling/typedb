@@ -11,7 +11,7 @@ import (
 
 func TestSQLite_QueryAll(t *testing.T) {
 	db := setupTestDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
@@ -34,7 +34,7 @@ func TestSQLite_QueryAll(t *testing.T) {
 
 func TestSQLite_QueryFirst(t *testing.T) {
 	db := setupTestDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
@@ -54,7 +54,7 @@ func TestSQLite_QueryFirst(t *testing.T) {
 
 func TestSQLite_QueryOne(t *testing.T) {
 	db := setupTestDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
@@ -70,7 +70,7 @@ func TestSQLite_QueryOne(t *testing.T) {
 
 func TestSQLite_QueryFirst_NoRows(t *testing.T) {
 	db := setupTestDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
@@ -88,7 +88,7 @@ func TestSQLite_QueryFirst_NoRows(t *testing.T) {
 
 func TestSQLite_QueryOne_NoRows(t *testing.T) {
 	db := setupTestDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
@@ -110,7 +110,7 @@ func TestSQLite_QueryOne_NoRows(t *testing.T) {
 
 func TestSQLite_QueryOne_MultipleRows(t *testing.T) {
 	db := setupTestDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()

@@ -90,7 +90,7 @@ func TestDB_Exec_Logging(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	typedbDB := NewDBWithLogger(db, "test", 5*time.Second, logger)
@@ -170,7 +170,7 @@ func TestDB_QueryAll_Logging(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	typedbDB := NewDBWithLogger(db, "test", 5*time.Second, logger)
@@ -225,7 +225,7 @@ func TestDB_Begin_Logging(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	typedbDB := NewDBWithLogger(db, "test", 5*time.Second, logger)
@@ -278,7 +278,7 @@ func TestTx_Commit_Logging(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 
@@ -350,7 +350,7 @@ func TestTx_Rollback_Logging(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 
@@ -391,7 +391,7 @@ func TestDB_Close_Logging(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	typedbDB := NewDBWithLogger(db, "test", 5*time.Second, logger)
@@ -421,7 +421,7 @@ func TestPerInstanceLogger(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	globalLogger := &testLogger{}
 	instanceLogger := &testLogger{}

@@ -531,14 +531,14 @@ func isZeroOrNil(v reflect.Value) bool {
 //	// user.ID is now set with the inserted ID
 //
 // buildInsertQueryParts builds the common INSERT query parts (quoted table name, quoted columns, placeholders)
-func buildInsertQueryParts(driverName, tableName string, columns []string, values []any) (string, []string, []string) {
-	quotedTableName := quoteIdentifier(driverName, tableName)
-	quotedColumns := make([]string, len(columns))
+func buildInsertQueryParts(driverName, tableName string, columns []string, values []any) (quotedTableName string, quotedColumns, placeholders []string) {
+	quotedTableName = quoteIdentifier(driverName, tableName)
+	quotedColumns = make([]string, len(columns))
 	for i, col := range columns {
 		quotedColumns[i] = quoteIdentifier(driverName, col)
 	}
 
-	placeholders := make([]string, len(values))
+	placeholders = make([]string, len(values))
 	for i := 1; i <= len(values); i++ {
 		placeholders[i-1] = generatePlaceholder(driverName, i)
 	}

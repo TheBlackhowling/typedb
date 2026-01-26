@@ -60,7 +60,7 @@ func TestInsert_PrimaryKeyNoDbTag_Error(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -82,7 +82,7 @@ func TestInsert_PrimaryKeyDashTag_Error(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -104,7 +104,7 @@ func TestInsert_AllZeroFields_Error(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()

@@ -548,7 +548,7 @@ func convertInt64ToInt(v int64) (int, error) {
 
 // convertUintToInt safely converts uint to int with overflow check
 func convertUintToInt(v uint) (int, error) {
-	if v > uint(^uint(0)>>1) {
+	if v > ^uint(0)>>1 {
 		return 0, fmt.Errorf("typedb: uint value %d overflows int", v)
 	}
 	return int(v), nil
@@ -598,7 +598,7 @@ func deserializeInt(value any) (int, error) {
 
 // convertUint64ToInt64 safely converts uint64 to int64 with overflow check
 func convertUint64ToInt64(v uint64) (int64, error) {
-	if v > uint64(^uint64(0)>>1) {
+	if v > ^uint64(0)>>1 {
 		return 0, fmt.Errorf("typedb: uint64 value %d overflows int64", v)
 	}
 	return int64(v), nil
@@ -606,7 +606,7 @@ func convertUint64ToInt64(v uint64) (int64, error) {
 
 // convertUintToInt64 safely converts uint to int64 with overflow check
 func convertUintToInt64(v uint) (int64, error) {
-	if v > uint(^uint(0)>>1) {
+	if v > ^uint(0)>>1 {
 		return 0, fmt.Errorf("typedb: uint value %d overflows int64", v)
 	}
 	return int64(v), nil
@@ -679,9 +679,9 @@ func deserializeUint64(value any) (uint64, error) {
 	case int64:
 		return convertSignedToUint64(v)
 	case int:
-		return convertSignedToUint64(int64(v)) //nolint:unconvert // int must be converted to int64 for function signature
+		return convertSignedToUint64(int64(v)) // int must be converted to int64 for function signature
 	case int32:
-		return convertSignedToUint64(int64(v)) //nolint:unconvert // int32 must be converted to int64 for function signature
+		return convertSignedToUint64(int64(v)) // int32 must be converted to int64 for function signature
 	case string:
 		return strconv.ParseUint(v, 10, 64)
 	case float64:
@@ -807,6 +807,8 @@ func convertIntToInt32(v int) (int32, error) {
 	if v64 < minInt32 || v64 > maxInt32 {
 		return 0, fmt.Errorf("typedb: int value %d overflows int32", v)
 	}
+	// Bounds check ensures v fits in int32, safe to convert
+	//nolint:gosec // G115: integer overflow conversion - bounds checked above
 	return int32(v), nil
 }
 
@@ -822,7 +824,7 @@ func convertInt64ToInt32(v int64) (int32, error) {
 
 // convertUint32ToInt32 safely converts uint32 to int32 with overflow check
 func convertUint32ToInt32(v uint32) (int32, error) {
-	if v > uint32(^uint32(0)>>1) {
+	if v > ^uint32(0)>>1 {
 		return 0, fmt.Errorf("typedb: uint32 value %d overflows int32", v)
 	}
 	return int32(v), nil
@@ -1153,7 +1155,7 @@ func convertInt8Slice(v []int8) []int {
 func convertUintSlice(v []uint) []int {
 	result := make([]int, len(v))
 	for i, val := range v {
-		if val > uint(^uint(0)>>1) {
+		if val > ^uint(0)>>1 {
 			// Skip overflow values or use 0 - this shouldn't happen in practice
 			result[i] = 0
 			continue

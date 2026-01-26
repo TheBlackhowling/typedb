@@ -167,7 +167,12 @@ func queryAllHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger, t
 		}
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			// Log error but don't fail - rows may already be closed
+			logger.Error("Failed to close rows", "error", closeErr)
+		}
+	}()
 
 	result, err := scanRowsToMaps(rows)
 	if err != nil {
@@ -221,7 +226,12 @@ func queryRowMapHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger
 		}
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			// Log error but don't fail - rows may already be closed
+			logger.Error("Failed to close rows", "error", closeErr)
+		}
+	}()
 
 	if !rows.Next() {
 		if iterErr := rows.Err(); iterErr != nil {
@@ -358,7 +368,12 @@ func queryDoHelper(ctx context.Context, exec sqlQueryExecutor, logger Logger, ti
 		}
 		return err
 	}
-	defer rows.Close()
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			// Log error but don't fail - rows may already be closed
+			logger.Error("Failed to close rows", "error", closeErr)
+		}
+	}()
 
 	for rows.Next() {
 		if err := scan(rows); err != nil {

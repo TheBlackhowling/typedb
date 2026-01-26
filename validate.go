@@ -216,7 +216,7 @@ func ValidateAllRegistered() error {
 		if !ok {
 			validationErrors = append(validationErrors, &ValidationError{
 				ModelName: modelType.Name(),
-				Errors:    []string{fmt.Sprintf("model does not implement modelInterface")},
+				Errors:    []string{"model does not implement modelInterface"},
 			})
 			continue
 		}

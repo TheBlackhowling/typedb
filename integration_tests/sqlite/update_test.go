@@ -11,7 +11,7 @@ import (
 
 func TestSQLite_Update(t *testing.T) {
 	db := setupTestDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
@@ -55,7 +55,7 @@ func TestSQLite_Update(t *testing.T) {
 
 func TestSQLite_Update_AutoTimestamp(t *testing.T) {
 	db := setupTestDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
@@ -117,7 +117,7 @@ func TestSQLite_Update_AutoTimestamp(t *testing.T) {
 
 func TestSQLite_Update_PartialUpdate(t *testing.T) {
 	db := setupTestDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
@@ -204,7 +204,7 @@ func TestSQLite_Update_PartialUpdate(t *testing.T) {
 
 func TestSQLite_Update_NonPartialUpdate(t *testing.T) {
 	db := setupTestDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()

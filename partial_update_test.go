@@ -47,8 +47,8 @@ func TestGetChangedFields_StringFields(t *testing.T) {
 		"name":  "John",
 		"email": "john@example.com",
 	}
-	if err := deserialize(row, current); err != nil {
-		t.Fatalf("Failed to deserialize: %v", err)
+	if deserializeErr := deserialize(row, current); deserializeErr != nil {
+		t.Fatalf("Failed to deserialize: %v", deserializeErr)
 	}
 
 	// Now modify the model
@@ -124,8 +124,8 @@ func TestGetChangedFields_JSONBFields(t *testing.T) {
 		"name":     "John",
 		"metadata": metadataCopy1,
 	}
-	if err := deserialize(row1, current1); err != nil {
-		t.Fatalf("Failed to deserialize: %v", err)
+	if deserializeErr := deserialize(row1, current1); deserializeErr != nil {
+		t.Fatalf("Failed to deserialize: %v", deserializeErr)
 	}
 
 	// Don't modify metadata - keep it the same
@@ -158,8 +158,8 @@ func TestGetChangedFields_JSONBFields(t *testing.T) {
 		"name":     "John",
 		"metadata": originalMetadata,
 	}
-	if err := deserialize(row2, current2); err != nil {
-		t.Fatalf("Failed to deserialize: %v", err)
+	if deserializeErr := deserialize(row2, current2); deserializeErr != nil {
+		t.Fatalf("Failed to deserialize: %v", deserializeErr)
 	}
 
 	current2.Metadata = map[string]any{
@@ -189,8 +189,8 @@ func TestGetChangedFields_JSONBFields(t *testing.T) {
 		"name":     "John",
 		"metadata": originalMetadata,
 	}
-	if err := deserialize(row3, current3); err != nil {
-		t.Fatalf("Failed to deserialize: %v", err)
+	if deserializeErr := deserialize(row3, current3); deserializeErr != nil {
+		t.Fatalf("Failed to deserialize: %v", deserializeErr)
 	}
 
 	current3.Metadata = map[string]any{
@@ -221,8 +221,8 @@ func TestGetChangedFields_JSONBFields(t *testing.T) {
 		"name":     "John",
 		"metadata": originalMetadata,
 	}
-	if err := deserialize(row4, current4); err != nil {
-		t.Fatalf("Failed to deserialize: %v", err)
+	if deserializeErr := deserialize(row4, current4); deserializeErr != nil {
+		t.Fatalf("Failed to deserialize: %v", deserializeErr)
 	}
 
 	current4.Metadata = map[string]any{
@@ -257,8 +257,8 @@ func TestGetChangedFields_ArrayFields(t *testing.T) {
 		"name": "John",
 		"tags": originalTags,
 	}
-	if err := deserialize(row1, current1); err != nil {
-		t.Fatalf("Failed to deserialize: %v", err)
+	if deserializeErr := deserialize(row1, current1); deserializeErr != nil {
+		t.Fatalf("Failed to deserialize: %v", deserializeErr)
 	}
 
 	// Keep tags the same
@@ -285,8 +285,8 @@ func TestGetChangedFields_ArrayFields(t *testing.T) {
 		"name": "John",
 		"tags": originalTags,
 	}
-	if err := deserialize(row2, current2); err != nil {
-		t.Fatalf("Failed to deserialize: %v", err)
+	if deserializeErr := deserialize(row2, current2); deserializeErr != nil {
+		t.Fatalf("Failed to deserialize: %v", deserializeErr)
 	}
 
 	current2.Tags = []string{"tag3", "tag2", "tag1"} // Different order
@@ -312,8 +312,8 @@ func TestGetChangedFields_ArrayFields(t *testing.T) {
 		"name": "John",
 		"tags": originalTags,
 	}
-	if err := deserialize(row3, current3); err != nil {
-		t.Fatalf("Failed to deserialize: %v", err)
+	if deserializeErr := deserialize(row3, current3); deserializeErr != nil {
+		t.Fatalf("Failed to deserialize: %v", deserializeErr)
 	}
 
 	current3.Tags = []string{"tag1", "tag2", "tag4"} // Different content
@@ -339,8 +339,8 @@ func TestGetChangedFields_ArrayFields(t *testing.T) {
 		"name": "John",
 		"tags": originalTags,
 	}
-	if err := deserialize(row4, current4); err != nil {
-		t.Fatalf("Failed to deserialize: %v", err)
+	if deserializeErr := deserialize(row4, current4); deserializeErr != nil {
+		t.Fatalf("Failed to deserialize: %v", deserializeErr)
 	}
 
 	current4.Tags = []string{"tag1", "tag2"} // Shorter
@@ -369,8 +369,8 @@ func TestGetChangedFields_NilAndEmptyValues(t *testing.T) {
 		"name":     "John",
 		"metadata": nil,
 	}
-	if err := deserialize(row1, current1); err != nil {
-		t.Fatalf("Failed to deserialize: %v", err)
+	if deserializeErr := deserialize(row1, current1); deserializeErr != nil {
+		t.Fatalf("Failed to deserialize: %v", deserializeErr)
 	}
 
 	current1.Metadata = map[string]any{"key": "value"}
@@ -396,8 +396,8 @@ func TestGetChangedFields_NilAndEmptyValues(t *testing.T) {
 		"name":     "John",
 		"metadata": map[string]any{"key": "value"},
 	}
-	if err := deserialize(row2, current2); err != nil {
-		t.Fatalf("Failed to deserialize: %v", err)
+	if deserializeErr := deserialize(row2, current2); deserializeErr != nil {
+		t.Fatalf("Failed to deserialize: %v", deserializeErr)
 	}
 
 	current2.Metadata = nil
@@ -423,8 +423,8 @@ func TestGetChangedFields_NilAndEmptyValues(t *testing.T) {
 		"name":     "John",
 		"metadata": map[string]any{},
 	}
-	if err := deserialize(row3, current3); err != nil {
-		t.Fatalf("Failed to deserialize: %v", err)
+	if deserializeErr := deserialize(row3, current3); deserializeErr != nil {
+		t.Fatalf("Failed to deserialize: %v", deserializeErr)
 	}
 
 	current3.Metadata = map[string]any{"key": "value"}
@@ -455,8 +455,8 @@ func TestGetChangedFields_NumericFields(t *testing.T) {
 		"age":   30,
 		"score": 95.5,
 	}
-	if err := deserialize(row1, current1); err != nil {
-		t.Fatalf("Failed to deserialize: %v", err)
+	if deserializeErr := deserialize(row1, current1); deserializeErr != nil {
+		t.Fatalf("Failed to deserialize: %v", deserializeErr)
 	}
 
 	current1.Age = 31 // Changed
@@ -488,8 +488,8 @@ func TestGetChangedFields_NumericFields(t *testing.T) {
 		"age":   30,
 		"score": 95.5,
 	}
-	if err := deserialize(row2, current2); err != nil {
-		t.Fatalf("Failed to deserialize: %v", err)
+	if deserializeErr := deserialize(row2, current2); deserializeErr != nil {
+		t.Fatalf("Failed to deserialize: %v", deserializeErr)
 	}
 
 	current2.Score = 98.7 // Changed
@@ -521,8 +521,8 @@ func TestGetChangedFields_BoolFields(t *testing.T) {
 		"name":      "John",
 		"is_active": true,
 	}
-	if err := deserialize(row, current); err != nil {
-		t.Fatalf("Failed to deserialize: %v", err)
+	if deserializeErr := deserialize(row, current); deserializeErr != nil {
+		t.Fatalf("Failed to deserialize: %v", deserializeErr)
 	}
 
 	current.IsActive = false // Changed
@@ -560,8 +560,8 @@ func TestGetChangedFields_MultipleFields(t *testing.T) {
 		"tags":      []string{"tag1", "tag2"},
 		"score":     95.5,
 	}
-	if err := deserialize(row, current); err != nil {
-		t.Fatalf("Failed to deserialize: %v", err)
+	if deserializeErr := deserialize(row, current); deserializeErr != nil {
+		t.Fatalf("Failed to deserialize: %v", deserializeErr)
 	}
 
 	// Change some fields, keep others unchanged

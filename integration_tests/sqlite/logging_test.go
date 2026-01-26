@@ -16,7 +16,7 @@ import (
 func TestSQLite_Logging_Exec(t *testing.T) {
 	logger := &testhelpers.TestLogger{}
 	db := setupTestDBWithLogger(t, logger)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
@@ -73,7 +73,7 @@ func TestSQLite_Logging_Exec(t *testing.T) {
 func TestSQLite_Logging_QueryAll(t *testing.T) {
 	logger := &testhelpers.TestLogger{}
 	db := setupTestDBWithLogger(t, logger)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
@@ -115,7 +115,7 @@ func TestSQLite_Logging_QueryAll(t *testing.T) {
 func TestSQLite_Logging_Begin_Commit_Rollback(t *testing.T) {
 	logger := &testhelpers.TestLogger{}
 	db := setupTestDBWithLogger(t, logger)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
@@ -211,7 +211,7 @@ func TestSQLite_Logging_PerInstanceLogger(t *testing.T) {
 
 	// Create DB with per-instance logger
 	db := setupTestDBWithLogger(t, instanceLogger)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
@@ -245,7 +245,7 @@ func TestSQLite_Logging_ConfigOptions(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to connect to database: %v", err)
 		}
-		defer db.Close()
+		defer closeDB(t, db)
 		defer os.Remove(getTestDSN())
 
 		// Run migrations manually
@@ -287,7 +287,7 @@ func TestSQLite_Logging_ConfigOptions(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to connect to database: %v", err)
 		}
-		defer db.Close()
+		defer closeDB(t, db)
 		defer os.Remove(getTestDSN())
 
 		// Run migrations manually
@@ -326,7 +326,7 @@ func TestSQLite_Logging_ConfigOptions(t *testing.T) {
 func TestSQLite_Logging_ContextOverrides(t *testing.T) {
 	logger := &testhelpers.TestLogger{}
 	db := setupTestDBWithLogger(t, logger)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
@@ -452,7 +452,7 @@ func init() {
 func TestSQLite_Logging_NologTagMasking(t *testing.T) {
 	logger := &testhelpers.TestLogger{}
 	db := setupTestDBWithLogger(t, logger)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
@@ -549,7 +549,7 @@ func TestSQLite_Logging_NologTagMasking(t *testing.T) {
 func TestSQLite_Logging_SerializationNolog(t *testing.T) {
 	logger := &testhelpers.TestLogger{}
 	db := setupTestDBWithLogger(t, logger)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()

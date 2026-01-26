@@ -16,7 +16,7 @@ func TestOracle_ComprehensiveTypes(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	if err := db.Ping(ctx); err != nil {
 		t.Fatalf("Database ping failed: %v", err)
@@ -65,7 +65,7 @@ func TestOracle_ComprehensiveTypesRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	if err := db.Ping(ctx); err != nil {
 		t.Fatalf("Database ping failed: %v", err)
@@ -93,29 +93,29 @@ func TestOracle_ComprehensiveTypesRoundTrip(t *testing.T) {
 
 	// Insert test data
 	_, err = db.Exec(ctx, insertSQL,
-		testID,                      // id
-		"1234.56",                   // number_col
-		"9876.54",                   // number_precision_col
-		"1111.22",                   // number_scale_col
-		3.14159,                     // float_col
-		123.4567,                    // float_precision_col
-		2.71828,                     // binary_float_col
-		1.41421,                     // binary_double_col
-		"test_char ",                // char_col (padded)
-		"test_varchar2",             // varchar2_col
-		"test_varchar",              // varchar_col
-		"test_nchar",                // nchar_col (NCHAR(10), will be padded)
-		"test_nvarchar2",            // nvarchar2_col
-		"test clob content",         // clob_col
-		"test nclob content",        // nclob_col
-		"test long content",         // long_col
+		testID,                         // id
+		"1234.56",                      // number_col
+		"9876.54",                      // number_precision_col
+		"1111.22",                      // number_scale_col
+		3.14159,                        // float_col
+		123.4567,                       // float_precision_col
+		2.71828,                        // binary_float_col
+		1.41421,                        // binary_double_col
+		"test_char ",                   // char_col (padded)
+		"test_varchar2",                // varchar2_col
+		"test_varchar",                 // varchar_col
+		"test_nchar",                   // nchar_col (NCHAR(10), will be padded)
+		"test_nvarchar2",               // nvarchar2_col
+		"test clob content",            // clob_col
+		"test nclob content",           // nclob_col
+		"test long content",            // long_col
 		[]byte{0xDE, 0xAD, 0xBE, 0xEF}, // raw_col
 		[]byte{0x01, 0x02, 0x03, 0x04}, // blob_col
-		"2024-12-25",                // date_col (used in TO_DATE)
-		"2024-12-25 15:30:45",       // timestamp_col (used in TO_TIMESTAMP)
-		"2024-12-25 15:30:45.123456", // timestamp_precision_col (used in TO_TIMESTAMP)
-		"2024-12-25 15:30:45 +00:00", // timestamp_tz_col (used in TO_TIMESTAMP_TZ)
-		"2024-12-25 15:30:45",       // timestamp_ltz_col (used in TO_TIMESTAMP)
+		"2024-12-25",                   // date_col (used in TO_DATE)
+		"2024-12-25 15:30:45",          // timestamp_col (used in TO_TIMESTAMP)
+		"2024-12-25 15:30:45.123456",   // timestamp_precision_col (used in TO_TIMESTAMP)
+		"2024-12-25 15:30:45 +00:00",   // timestamp_tz_col (used in TO_TIMESTAMP_TZ)
+		"2024-12-25 15:30:45",          // timestamp_ltz_col (used in TO_TIMESTAMP)
 		// interval_year_col and interval_day_col are hardcoded in SQL (can't parameterize INTERVAL literals)
 		"<root><test>roundtrip</test></root>", // xmltype_col (used in XMLTYPE)
 	)
@@ -222,7 +222,7 @@ func TestOracle_LongRawType(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	if err := db.Ping(ctx); err != nil {
 		t.Fatalf("Database ping failed: %v", err)

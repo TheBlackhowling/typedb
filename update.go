@@ -58,6 +58,7 @@ import (
 //	// Modify only name
 //	user.Name = "New Name"
 //	typedb.Update(ctx, db, user) // Only updates name field, not email
+//
 // validateUpdateModel validates model for update operation
 func validateUpdateModel[T ModelInterface](model T) (tableName string, primaryKeyField *reflect.StructField, primaryKeyColumn string, err error) {
 	tableName, err = getTableName(model)
@@ -90,7 +91,7 @@ func validateUpdateModel[T ModelInterface](model T) (tableName string, primaryKe
 
 // buildUpdateQuery builds the UPDATE query with SET clause
 func buildUpdateQuery(driverName string, tableName string, primaryKeyColumn string,
-	columns []string, values []any, autoUpdateColumns []string) (string, []any) {
+	columns []string, values []any, autoUpdateColumns []string) (query string, allValues []any) {
 	quotedTableName := quoteIdentifier(driverName, tableName)
 	quotedPrimaryKeyColumn := quoteIdentifier(driverName, primaryKeyColumn)
 
@@ -113,13 +114,15 @@ func buildUpdateQuery(driverName string, tableName string, primaryKeyColumn stri
 	}
 
 	wherePlaceholder := generatePlaceholder(driverName, len(values)+1)
-	query := fmt.Sprintf("UPDATE %s SET %s WHERE %s = %s",
+	query = fmt.Sprintf("UPDATE %s SET %s WHERE %s = %s",
 		quotedTableName,
 		strings.Join(setClauses, ", "),
 		quotedPrimaryKeyColumn,
 		wherePlaceholder)
 
-	allValues := append(values, nil) // Placeholder for primary key value
+	allValues = make([]any, len(values)+1)
+	copy(allValues, values)
+	allValues[len(values)] = nil // Placeholder for primary key value
 	return query, allValues
 }
 

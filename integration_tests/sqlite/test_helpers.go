@@ -49,13 +49,35 @@ func setupTestDBWithLogger(t *testing.T, logger typedb.Logger) *typedb.DB {
 	return db
 }
 
+// closeDB safely closes a typedb.DB instance, logging any errors.
+// Use this in defer statements to handle Close() errors properly.
+func closeDB(t *testing.T, db *typedb.DB) {
+	if db == nil {
+		return
+	}
+	if err := db.Close(); err != nil {
+		t.Logf("Warning: failed to close typedb.DB: %v", err)
+	}
+}
+
+// closeSQLDB safely closes a *sql.DB instance, logging any errors.
+// Use this in defer statements to handle Close() errors properly.
+func closeSQLDB(t *testing.T, db *sql.DB) {
+	if db == nil {
+		return
+	}
+	if err := db.Close(); err != nil {
+		t.Logf("Warning: failed to close *sql.DB: %v", err)
+	}
+}
+
 func runMigrationsIfNeeded(t *testing.T, dsn string) {
 	// Open raw database connection for migrations
 	sqlDB, err := sql.Open("sqlite3", dsn)
 	if err != nil {
 		t.Fatalf("Failed to open database: %v", err)
 	}
-	defer sqlDB.Close()
+	defer closeSQLDB(t, sqlDB)
 
 	// Check if migrations are needed by checking if users table exists
 	var tableExists int
