@@ -339,7 +339,7 @@ Test plan documents should include:
    ```
 
 2. **All checks must pass:**
-   - `go vet` - Built-in Go static analyzer (MUST pass)
+   - `go vet` - Built-in Go static analyzer (MUST pass, fieldalignment disabled as optimization suggestion)
    - `golangci-lint` - Comprehensive linter aggregator (errors MUST be fixed, warnings acceptable)
    - `staticcheck` - Advanced static analysis (MUST pass)
    - `gosec` - Security checker (security issues MUST be fixed)
