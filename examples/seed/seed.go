@@ -79,7 +79,7 @@ func ClearDatabase(ctx context.Context, db typedb.Executor) error {
 	// Use TRUNCATE TABLE for better performance, but fall back to DELETE if tables don't exist
 	// Note: MSSQL requires TRUNCATE to be on its own line, and it doesn't work with foreign keys
 	// So we'll use DELETE for all databases for consistency
-	
+
 	// Try to delete posts (ignore error if table doesn't exist)
 	if _, err := db.Exec(ctx, "DELETE FROM posts"); err != nil {
 		// Check if error is about table not existing - if so, that's okay

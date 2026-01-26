@@ -150,12 +150,3 @@ func TestMySQL_InsertAndGetId(t *testing.T) {
 		t.Errorf("Expected title 'Test Post ID', got '%s'", loaded.Title)
 	}
 }
-
-func TestMySQL_InsertAndGetId_MissingIdColumn(t *testing.T) {
-	// MySQL doesn't support RETURNING clause in INSERT statements (or uses LastInsertId by default)
-	// The "missing ID column" error only applies to databases that use RETURNING/OUTPUT clauses.
-	// MySQL uses LastInsertId() path which doesn't have this error case.
-	// MySQL 8.0.19+ supports RETURNING, but the test environment may not have it,
-	// and even if it does, MySQL would throw a SQL syntax error before reaching the missing ID check.
-	t.Skip("MySQL uses LastInsertId() path without RETURNING clause, so missing ID column error doesn't apply")
-}

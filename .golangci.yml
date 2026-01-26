@@ -75,6 +75,7 @@ linters-settings:
   govet:
     check-shadowing: true
     enable-all: true
+    disable: [] # Field alignment checks enabled - core structs optimized
   
   misspell:
     locale: US

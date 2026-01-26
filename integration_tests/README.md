@@ -63,11 +63,11 @@ Integration tests verify:
 ## CI/CD Integration
 
 All integration tests are designed to:
-- **Skip gracefully** if database is unavailable
+- **Fail clearly** if database is unavailable (ensures proper CI/CD setup)
 - **Clean up** after themselves (where applicable)
 - **Work independently** without affecting other tests
 
-This makes them suitable for CI/CD pipelines where databases may or may not be available.
+This ensures CI/CD pipelines properly configure databases before running tests.
 
 ## Running All Tests
 
@@ -83,7 +83,7 @@ for dir in */; do
 done
 ```
 
-**Note:** Tests will skip if database connections fail, making them safe to run in CI/CD environments.
+**Note:** Tests will fail if database connections fail, ensuring databases are properly configured in CI/CD environments.
 
 ## Contributing
 
@@ -97,7 +97,7 @@ When adding integration tests for a new database:
    - `migrations/` - Database migration files
    - `README.md` - Setup and usage instructions
 3. Follow the patterns established in existing tests
-4. Ensure tests skip gracefully if database is unavailable
+4. Ensure tests fail clearly if database is unavailable (for proper CI/CD validation)
 5. Cover both happy and negative paths
 
 ## License

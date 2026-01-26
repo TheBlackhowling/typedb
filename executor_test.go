@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	_ "github.com/mattn/go-sqlite3" // SQLite driver for Open* tests
 )
 
 func TestNewDB(t *testing.T) {
@@ -37,8 +38,8 @@ func TestDB_WithTimeout(t *testing.T) {
 	if !ok {
 		t.Error("Expected context to have deadline")
 	}
-	if deadline.Sub(time.Now()) > 6*time.Second || deadline.Sub(time.Now()) < 4*time.Second {
-		t.Errorf("Expected deadline around 5s, got %v", deadline.Sub(time.Now()))
+	if time.Until(deadline) > 6*time.Second || time.Until(deadline) < 4*time.Second {
+		t.Errorf("Expected deadline around 5s, got %v", time.Until(deadline))
 	}
 	cancel()
 
@@ -59,45 +60,51 @@ func TestDB_WithTimeout(t *testing.T) {
 	if !ok {
 		t.Error("Expected context to have deadline")
 	}
-	if deadline3.Sub(time.Now()) > 6*time.Second || deadline3.Sub(time.Now()) < 4*time.Second {
-		t.Errorf("Expected default deadline around 5s, got %v", deadline3.Sub(time.Now()))
+	if time.Until(deadline3) > 6*time.Second || time.Until(deadline3) < 4*time.Second {
+		t.Errorf("Expected default deadline around 5s, got %v", time.Until(deadline3))
 	}
 	cancel3()
 }
 
 func TestDB_Close(t *testing.T) {
-	// Test Close with a real database connection
-	sqlDB, err := sql.Open("sqlite3", ":memory:")
+	// Test Close with a mock database connection
+	sqlDB, mock, err := sqlmock.New()
 	if err != nil {
-		t.Skipf("sqlite3 driver not available: %v", err)
-	}
-	if sqlDB == nil {
-		t.Skip("sqlite3 driver not available")
+		t.Fatalf("Failed to create mock: %v", err)
 	}
 
-	db := NewDB(sqlDB, "sqlite3", 5*time.Second)
+	mock.ExpectClose()
+
+	db := NewDB(sqlDB, "test", 5*time.Second)
 	err = db.Close()
 	if err != nil {
 		t.Fatalf("Close failed: %v", err)
 	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet expectations: %v", err)
+	}
 }
 
 func TestDB_Ping(t *testing.T) {
-	// Test Ping with a real database connection
-	sqlDB, err := sql.Open("sqlite3", ":memory:")
+	// Test Ping with a mock database connection
+	sqlDB, mock, err := sqlmock.New(sqlmock.MonitorPingsOption(true))
 	if err != nil {
-		t.Skipf("sqlite3 driver not available: %v", err)
-	}
-	if sqlDB == nil {
-		t.Skip("sqlite3 driver not available")
+		t.Fatalf("Failed to create mock: %v", err)
 	}
 	defer sqlDB.Close()
+
+	mock.ExpectPing()
 
 	db := NewDB(sqlDB, "test", 5*time.Second)
 	ctx := context.Background()
 	err = db.Ping(ctx)
 	if err != nil {
 		t.Fatalf("Ping failed: %v", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet expectations: %v", err)
 	}
 }
 
@@ -113,14 +120,10 @@ func TestScanRowsToMaps(t *testing.T) {
 
 func TestOpen(t *testing.T) {
 	// Test that Open creates a DB with default config
-	// Note: This requires a real database connection, so we'll test with sqlite in-memory
-	// Skip if sqlite3 driver is not available
+	// Uses sqlite in-memory database for testing
 	typedbDB, err := OpenWithoutValidation("sqlite3", ":memory:")
 	if err != nil {
-		t.Skipf("sqlite3 driver not available: %v", err)
-	}
-	if typedbDB == nil {
-		t.Skip("sqlite3 driver not available")
+		t.Fatalf("OpenWithoutValidation failed: %v", err)
 	}
 	defer typedbDB.Close()
 
@@ -133,16 +136,14 @@ func TestOpen(t *testing.T) {
 }
 
 func TestOpen_WithOptions(t *testing.T) {
+	// Test OpenWithOptions with sqlite in-memory database
 	db, err := OpenWithoutValidation("sqlite3", ":memory:",
 		WithMaxOpenConns(20),
 		WithMaxIdleConns(10),
 		WithTimeout(10*time.Second),
 	)
 	if err != nil {
-		t.Skipf("sqlite3 driver not available: %v", err)
-	}
-	if db == nil {
-		t.Skip("sqlite3 driver not available")
+		t.Fatalf("OpenWithoutValidation failed: %v", err)
 	}
 	defer db.Close()
 
@@ -152,12 +153,10 @@ func TestOpen_WithOptions(t *testing.T) {
 }
 
 func TestOpenWithoutValidation(t *testing.T) {
+	// Test OpenWithoutValidation with sqlite in-memory database
 	db, err := OpenWithoutValidation("sqlite3", ":memory:")
 	if err != nil {
-		t.Skipf("sqlite3 driver not available: %v", err)
-	}
-	if db == nil {
-		t.Skip("sqlite3 driver not available")
+		t.Fatalf("OpenWithoutValidation failed: %v", err)
 	}
 	defer db.Close()
 
@@ -216,8 +215,8 @@ func TestTx_WithTimeout(t *testing.T) {
 	if !ok {
 		t.Error("Expected context to have deadline")
 	}
-	if deadline.Sub(time.Now()) > 6*time.Second || deadline.Sub(time.Now()) < 4*time.Second {
-		t.Errorf("Expected deadline around 5s, got %v", deadline.Sub(time.Now()))
+	if time.Until(deadline) > 6*time.Second || time.Until(deadline) < 4*time.Second {
+		t.Errorf("Expected deadline around 5s, got %v", time.Until(deadline))
 	}
 	cancel()
 
@@ -232,14 +231,15 @@ func TestTx_WithTimeout(t *testing.T) {
 }
 
 func TestTx_Commit(t *testing.T) {
-	sqlDB, err := sql.Open("sqlite3", ":memory:")
+	// Test Commit with a mock database connection
+	sqlDB, mock, err := sqlmock.New()
 	if err != nil {
-		t.Skipf("sqlite3 driver not available: %v", err)
-	}
-	if sqlDB == nil {
-		t.Skip("sqlite3 driver not available")
+		t.Fatalf("Failed to create mock: %v", err)
 	}
 	defer sqlDB.Close()
+
+	mock.ExpectBegin()
+	mock.ExpectCommit()
 
 	tx, err := sqlDB.Begin()
 	if err != nil {
@@ -249,23 +249,29 @@ func TestTx_Commit(t *testing.T) {
 	typedbTx := &Tx{
 		tx:      tx,
 		timeout: 5 * time.Second,
+		logger:  GetLogger(),
 	}
 
 	err = typedbTx.Commit()
 	if err != nil {
 		t.Fatalf("Commit failed: %v", err)
 	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet expectations: %v", err)
+	}
 }
 
 func TestTx_Rollback(t *testing.T) {
-	sqlDB, err := sql.Open("sqlite3", ":memory:")
+	// Test Rollback with a mock database connection
+	sqlDB, mock, err := sqlmock.New()
 	if err != nil {
-		t.Skipf("sqlite3 driver not available: %v", err)
-	}
-	if sqlDB == nil {
-		t.Skip("sqlite3 driver not available")
+		t.Fatalf("Failed to create mock: %v", err)
 	}
 	defer sqlDB.Close()
+
+	mock.ExpectBegin()
+	mock.ExpectRollback()
 
 	tx, err := sqlDB.Begin()
 	if err != nil {
@@ -281,6 +287,10 @@ func TestTx_Rollback(t *testing.T) {
 	err = typedbTx.Rollback()
 	if err != nil {
 		t.Fatalf("Rollback failed: %v", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet expectations: %v", err)
 	}
 }
 

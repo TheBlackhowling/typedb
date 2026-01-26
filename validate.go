@@ -32,7 +32,7 @@ func (ve *ValidationErrors) Error() string {
 	if len(ve.Errors) == 0 {
 		return "typedb: validation failed"
 	}
-	var parts []string
+	parts := make([]string, 0, len(ve.Errors))
 	for _, err := range ve.Errors {
 		parts = append(parts, err.Error())
 	}

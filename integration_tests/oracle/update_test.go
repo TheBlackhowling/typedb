@@ -233,9 +233,25 @@ func TestOracle_Update_NonPartialUpdate(t *testing.T) {
 	}
 
 	// Use Post model which doesn't have partial update enabled
+	// Get first user to create post if needed
+	firstUser, err := typedb.QueryFirst[*User](ctx, db, "SELECT id, name, email, created_at FROM users WHERE ROWNUM <= 1 ORDER BY id")
+	if err != nil || firstUser == nil {
+		t.Fatal("Need at least one user in database for non-partial update test")
+	}
+
+	// Get or create a post for testing
 	firstPost, err := typedb.QueryFirst[*Post](ctx, db, "SELECT id, user_id, title, content, tags, metadata, created_at, updated_at FROM posts WHERE ROWNUM <= 1 ORDER BY id")
 	if err != nil || firstPost == nil {
-		t.Skip("Need at least one post in database for non-partial update test")
+		// Create a post if none exists
+		newPost := &Post{
+			UserID:  firstUser.ID,
+			Title:   "Test Post for Non-Partial Update",
+			Content: "Original content",
+		}
+		if err := typedb.Insert(ctx, db, newPost); err != nil {
+			t.Fatalf("Failed to create test post: %v", err)
+		}
+		firstPost = newPost
 	}
 
 	originalPostTitle := firstPost.Title

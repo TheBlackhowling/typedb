@@ -27,35 +27,51 @@ type Executor interface {
 
 // DB wraps *sql.DB and provides query execution with timeout handling.
 // DB implements the Executor interface.
+//
+// Fields are ordered for optimal memory alignment (largest to smallest):
+// - 16-byte types (interfaces, string)
+// - 8-byte types (pointers, time.Duration)
+// - 1-byte types (bool)
 type DB struct {
-	db         *sql.DB
-	driverName string
+	logger     Logger        // logger for this DB instance (interface = 16 bytes)
+	driverName string        // database driver name (e.g., "postgres", "mysql")
+	db         *sql.DB       // underlying database connection
 	timeout    time.Duration // default timeout for operations
-	logger     Logger        // logger for this DB instance
 	logQueries bool          // whether to log SQL queries
 	logArgs    bool          // whether to log query arguments
 }
 
 // Tx wraps *sql.Tx and provides transaction-scoped query execution.
 // Tx implements the Executor interface.
+//
+// Fields are ordered for optimal memory alignment (largest to smallest):
+// - 16-byte types (interfaces, string)
+// - 8-byte types (pointers, time.Duration)
+// - 1-byte types (bool)
 type Tx struct {
-	tx         *sql.Tx
-	driverName string
-	timeout    time.Duration
-	logger     Logger // logger for this transaction (inherited from DB)
-	logQueries bool   // whether to log SQL queries (inherited from DB)
-	logArgs    bool   // whether to log query arguments (inherited from DB)
+	logger     Logger        // logger for this transaction (inherited from DB) (interface = 16 bytes)
+	driverName string        // database driver name (inherited from DB)
+	tx         *sql.Tx       // underlying transaction
+	timeout    time.Duration // default timeout (inherited from DB)
+	logQueries bool          // whether to log SQL queries (inherited from DB)
+	logArgs    bool          // whether to log query arguments (inherited from DB)
 }
 
 // Config holds database connection and pool configuration.
+//
+// Fields are ordered for optimal memory alignment (largest to smallest):
+// - 16-byte types (interfaces, string)
+// - 8-byte types (time.Duration)
+// - 4-byte types (int)
+// - 1-byte types (bool)
 type Config struct {
+	Logger          Logger        // Logger instance (defaults to no-op logger) (interface = 16 bytes)
 	DSN             string        // Connection string
-	MaxOpenConns    int           // Default: 10
-	MaxIdleConns    int           // Default: 5
 	ConnMaxLifetime time.Duration // Default: 30m
 	ConnMaxIdleTime time.Duration // Default: 5m
 	OpTimeout       time.Duration // Default: 5s
-	Logger          Logger        // Logger instance (defaults to no-op logger)
+	MaxOpenConns    int           // Default: 10
+	MaxIdleConns    int           // Default: 5
 	LogQueries      bool          // Whether to log SQL queries (default: true)
 	LogArgs         bool          // Whether to log query arguments (default: true)
 }
