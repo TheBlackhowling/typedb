@@ -59,6 +59,7 @@ func getDriverName(exec Executor) string {
 //	id, err := typedb.InsertAndGetId(ctx, db,
 //		"INSERT INTO users (name, email) VALUES (?, ?)",
 //		"John", "john@example.com")
+//
 // insertAndGetIdOracle handles Oracle-specific insert and get ID logic
 func insertAndGetIdOracle(ctx context.Context, exec Executor, insertQuery string, args []any) (int64, error) {
 	queryUpper := strings.ToUpper(insertQuery)
@@ -368,6 +369,7 @@ func buildReturningClause(driverName, primaryKeyColumn string) string {
 //   - field: the struct field metadata
 //   - fieldValue: the field's reflect.Value
 //   - columnName: the extracted column name (handles dot notation)
+//
 // Returns: true if iteration should continue, false to stop
 type fieldVisitor func(field reflect.StructField, fieldValue reflect.Value, columnName string) bool
 
@@ -442,7 +444,7 @@ func iterateStructFields(structType reflect.Type, structValue reflect.Value, pri
 // Fields with db:"-" are excluded from all database operations (INSERT, UPDATE, SELECT).
 // Fields with dbInsert:"false" are excluded from INSERT but can still be used in UPDATE and SELECT.
 // Returns: column names, field values, and mask indices (for fields with nolog:"true" tag).
-func serializeModelFields(model ModelInterface, primaryKeyFieldName string) ([]string, []any, []int, error) {
+func serializeModelFields(model ModelInterface, primaryKeyFieldName string) (columns []string, values []any, maskIndices []int, err error) {
 	modelValue := reflect.ValueOf(model)
 	if modelValue.Kind() != reflect.Ptr || modelValue.IsNil() {
 		return nil, nil, nil, fmt.Errorf("typedb: model must be a non-nil pointer")
@@ -453,9 +455,9 @@ func serializeModelFields(model ModelInterface, primaryKeyFieldName string) ([]s
 		return nil, nil, nil, fmt.Errorf("typedb: model must be a pointer to struct")
 	}
 
-	var columns []string
-	var values []any
-	var maskIndices []int
+	columns = []string{}
+	values = []any{}
+	maskIndices = []int{}
 
 	iterateStructFields(modelValue.Type(), modelValue, primaryKeyFieldName, func(field reflect.StructField, fieldValue reflect.Value, columnName string) bool {
 		// Skip fields with dbInsert:"false" tag
@@ -527,6 +529,7 @@ func isZeroOrNil(v reflect.Value) bool {
 //	user := &User{Name: "John", Email: "john@example.com"}
 //	err := typedb.Insert(ctx, db, user)
 //	// user.ID is now set with the inserted ID
+//
 // buildInsertQueryParts builds the common INSERT query parts (quoted table name, quoted columns, placeholders)
 func buildInsertQueryParts(driverName, tableName string, columns []string, values []any) (string, []string, []string) {
 	quotedTableName := quoteIdentifier(driverName, tableName)
