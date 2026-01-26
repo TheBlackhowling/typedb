@@ -3,6 +3,7 @@ package typedb
 import (
 	"context"
 	"database/sql"
+	"strings"
 	"testing"
 )
 
@@ -109,9 +110,33 @@ func TestLoad(t *testing.T) {
 
 	t.Run("query method not found", func(t *testing.T) {
 		// This test verifies that Load returns an error when QueryByID method is missing
-		// We'll skip this test case since we can't easily create a type without methods in Go
-		// The validation system already ensures QueryByID exists, so this is tested in validate_test.go
-		t.Skip("Cannot test missing QueryByID method - validation ensures it exists")
+		// Even though validation ensures QueryByID exists at registration time,
+		// Load should still handle the case gracefully if called on an invalid model
+		mock := &MockExecutor{
+			QueryRowMapFunc: func(ctx context.Context, query string, args ...any) (map[string]any, error) {
+				return nil, nil
+			},
+		}
+
+		// Use a model type that doesn't have QueryByID method
+		// Note: This model would fail validation, but Load should handle it gracefully
+		type ModelWithoutQueryByID struct {
+			Model
+			ID int `db:"id" load:"primary"`
+		}
+		// Intentionally not implementing QueryByID method
+
+		model := &ModelWithoutQueryByID{ID: 1}
+		err := Load(ctx, mock, model)
+		if err == nil {
+			t.Fatal("Expected error for missing QueryByID method")
+		}
+		if !strings.Contains(err.Error(), "QueryByID") {
+			t.Errorf("Expected error to mention QueryByID, got: %v", err)
+		}
+		if !strings.Contains(err.Error(), "method not found") {
+			t.Errorf("Expected error to mention 'method not found', got: %v", err)
+		}
 	})
 
 	t.Run("ErrNotFound", func(t *testing.T) {

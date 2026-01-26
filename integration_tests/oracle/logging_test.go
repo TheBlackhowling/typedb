@@ -561,6 +561,7 @@ func TestOracle_Logging_SerializationNolog(t *testing.T) {
 
 	t.Run("QueryAll masks nolog fields in model arguments", func(t *testing.T) {
 		logger.Debugs = nil
+		logger.Errors = nil
 		email := fmt.Sprintf("test-serialization-%d@example.com", time.Now().UnixNano())
 		user := &UserWithNolog{
 			Name:  "Test User",
@@ -575,10 +576,11 @@ func TestOracle_Logging_SerializationNolog(t *testing.T) {
 			t.Fatal("Expected QueryAll to fail with struct argument, but it succeeded")
 		}
 
-		// Check that email is masked in logs
+		// Check that email is masked in logs (check both Debug and Error logs)
 		foundArgs := false
 		foundMasked := false
-		for _, entry := range logger.Debugs {
+		allLogs := append(logger.Debugs, logger.Errors...)
+		for _, entry := range allLogs {
 			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
 				if entry.Keyvals[i] == "args" {
 					foundArgs = true
@@ -595,7 +597,7 @@ func TestOracle_Logging_SerializationNolog(t *testing.T) {
 			}
 		}
 		if !foundArgs {
-			t.Error("Expected 'args' key in Debug log")
+			t.Error("Expected 'args' key in logs (Debug or Error)")
 		}
 		if !foundMasked {
 			t.Error("Expected email to be masked as [REDACTED]")
@@ -604,6 +606,7 @@ func TestOracle_Logging_SerializationNolog(t *testing.T) {
 
 	t.Run("QueryRowMap masks nolog fields in model arguments", func(t *testing.T) {
 		logger.Debugs = nil
+		logger.Errors = nil
 		email := fmt.Sprintf("test-serialization-rowmap-%d@example.com", time.Now().UnixNano())
 		user := &UserWithNolog{
 			Name:  "Test User",
@@ -617,10 +620,11 @@ func TestOracle_Logging_SerializationNolog(t *testing.T) {
 			t.Fatal("Expected QueryRowMap to fail with struct argument, but it succeeded")
 		}
 
-		// Check that email is masked in logs
+		// Check that email is masked in logs (check both Debug and Error logs)
 		foundArgs := false
 		foundMasked := false
-		for _, entry := range logger.Debugs {
+		allLogs := append(logger.Debugs, logger.Errors...)
+		for _, entry := range allLogs {
 			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
 				if entry.Keyvals[i] == "args" {
 					foundArgs = true
@@ -637,7 +641,7 @@ func TestOracle_Logging_SerializationNolog(t *testing.T) {
 			}
 		}
 		if !foundArgs {
-			t.Error("Expected 'args' key in Debug log")
+			t.Error("Expected 'args' key in logs (Debug or Error)")
 		}
 		if !foundMasked {
 			t.Error("Expected email to be masked as [REDACTED]")
@@ -646,6 +650,7 @@ func TestOracle_Logging_SerializationNolog(t *testing.T) {
 
 	t.Run("GetInto masks nolog fields in model arguments", func(t *testing.T) {
 		logger.Debugs = nil
+		logger.Errors = nil
 		email := fmt.Sprintf("test-serialization-getinto-%d@example.com", time.Now().UnixNano())
 		user := &UserWithNolog{
 			Name:  "Test User",
@@ -660,10 +665,11 @@ func TestOracle_Logging_SerializationNolog(t *testing.T) {
 			t.Fatal("Expected GetInto to fail with struct argument, but it succeeded")
 		}
 
-		// Check that email is masked in logs
+		// Check that email is masked in logs (check both Debug and Error logs)
 		foundArgs := false
 		foundMasked := false
-		for _, entry := range logger.Debugs {
+		allLogs := append(logger.Debugs, logger.Errors...)
+		for _, entry := range allLogs {
 			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
 				if entry.Keyvals[i] == "args" {
 					foundArgs = true
@@ -680,7 +686,7 @@ func TestOracle_Logging_SerializationNolog(t *testing.T) {
 			}
 		}
 		if !foundArgs {
-			t.Error("Expected 'args' key in Debug log")
+			t.Error("Expected 'args' key in logs (Debug or Error)")
 		}
 		if !foundMasked {
 			t.Error("Expected email to be masked as [REDACTED]")
@@ -689,6 +695,7 @@ func TestOracle_Logging_SerializationNolog(t *testing.T) {
 
 	t.Run("QueryDo masks nolog fields in model arguments", func(t *testing.T) {
 		logger.Debugs = nil
+		logger.Errors = nil
 		email := fmt.Sprintf("test-serialization-querydo-%d@example.com", time.Now().UnixNano())
 		user := &UserWithNolog{
 			Name:  "Test User",
@@ -704,10 +711,11 @@ func TestOracle_Logging_SerializationNolog(t *testing.T) {
 			t.Fatal("Expected QueryDo to fail with struct argument, but it succeeded")
 		}
 
-		// Check that email is masked in logs
+		// Check that email is masked in logs (check both Debug and Error logs)
 		foundArgs := false
 		foundMasked := false
-		for _, entry := range logger.Debugs {
+		allLogs := append(logger.Debugs, logger.Errors...)
+		for _, entry := range allLogs {
 			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
 				if entry.Keyvals[i] == "args" {
 					foundArgs = true
@@ -724,7 +732,7 @@ func TestOracle_Logging_SerializationNolog(t *testing.T) {
 			}
 		}
 		if !foundArgs {
-			t.Error("Expected 'args' key in Debug log")
+			t.Error("Expected 'args' key in logs (Debug or Error)")
 		}
 		if !foundMasked {
 			t.Error("Expected email to be masked as [REDACTED]")

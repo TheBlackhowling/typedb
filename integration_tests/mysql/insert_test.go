@@ -157,5 +157,6 @@ func TestMySQL_InsertAndGetId_MissingIdColumn(t *testing.T) {
 	// MySQL uses LastInsertId() path which doesn't have this error case.
 	// MySQL 8.0.19+ supports RETURNING, but the test environment may not have it,
 	// and even if it does, MySQL would throw a SQL syntax error before reaching the missing ID check.
-	t.Skip("MySQL uses LastInsertId() path without RETURNING clause, so missing ID column error doesn't apply")
+	// This test case doesn't apply to MySQL - fail with explanation instead of skipping
+	t.Fatal("This test case doesn't apply to MySQL: MySQL uses LastInsertId() path without RETURNING clause, so missing ID column error doesn't apply. This test should only run for databases that support RETURNING/OUTPUT clauses.")
 }
