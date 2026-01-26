@@ -534,18 +534,39 @@ func deserializeWithReflection(targetElem reflect.Value, value any) error {
 	return fmt.Errorf("typedb: cannot deserialize %T to %s", value, targetType)
 }
 
+// convertInt64ToInt safely converts int64 to int with overflow check
+func convertInt64ToInt(v int64) (int, error) {
+	maxInt := int64(^uint(0) >> 1)
+	minInt := ^maxInt
+	if v < minInt || v > maxInt {
+		return 0, fmt.Errorf("typedb: int64 value %d overflows int", v)
+	}
+	return int(v), nil
+}
+
+// convertUintToInt safely converts uint to int with overflow check
+func convertUintToInt(v uint) (int, error) {
+	if v > uint(^uint(0)>>1) {
+		return 0, fmt.Errorf("typedb: uint value %d overflows int", v)
+	}
+	return int(v), nil
+}
+
+// convertUint64ToInt safely converts uint64 to int with overflow check
+func convertUint64ToInt(v uint64) (int, error) {
+	if v > uint64(^uint(0)>>1) {
+		return 0, fmt.Errorf("typedb: uint64 value %d overflows int", v)
+	}
+	return int(v), nil
+}
+
 // deserializeInt converts a value to int
 func deserializeInt(value any) (int, error) {
 	switch v := value.(type) {
 	case int:
 		return v, nil
 	case int64:
-		maxInt := int64(^uint(0) >> 1)
-		minInt := ^maxInt
-		if v < minInt || v > maxInt {
-			return 0, fmt.Errorf("typedb: int64 value %d overflows int", v)
-		}
-		return int(v), nil
+		return convertInt64ToInt(v)
 	case int32:
 		return int(v), nil
 	case int16:
@@ -553,15 +574,9 @@ func deserializeInt(value any) (int, error) {
 	case int8:
 		return int(v), nil
 	case uint:
-		if v > uint(^uint(0)>>1) {
-			return 0, fmt.Errorf("typedb: uint value %d overflows int", v)
-		}
-		return int(v), nil
+		return convertUintToInt(v)
 	case uint64:
-		if v > uint64(^uint(0)>>1) {
-			return 0, fmt.Errorf("typedb: uint64 value %d overflows int", v)
-		}
-		return int(v), nil
+		return convertUint64ToInt(v)
 	case uint32:
 		return int(v), nil
 	case uint16:
@@ -579,6 +594,22 @@ func deserializeInt(value any) (int, error) {
 	}
 }
 
+// convertUint64ToInt64 safely converts uint64 to int64 with overflow check
+func convertUint64ToInt64(v uint64) (int64, error) {
+	if v > uint64(^uint64(0)>>1) {
+		return 0, fmt.Errorf("typedb: uint64 value %d overflows int64", v)
+	}
+	return int64(v), nil
+}
+
+// convertUintToInt64 safely converts uint to int64 with overflow check
+func convertUintToInt64(v uint) (int64, error) {
+	if v > uint(^uint(0)>>1) {
+		return 0, fmt.Errorf("typedb: uint value %d overflows int64", v)
+	}
+	return int64(v), nil
+}
+
 // deserializeInt64 converts a value to int64
 func deserializeInt64(value any) (int64, error) {
 	switch v := value.(type) {
@@ -593,15 +624,9 @@ func deserializeInt64(value any) (int64, error) {
 	case int8:
 		return int64(v), nil
 	case uint64:
-		if v > uint64(^uint64(0)>>1) {
-			return 0, fmt.Errorf("typedb: uint64 value %d overflows int64", v)
-		}
-		return int64(v), nil
+		return convertUint64ToInt64(v)
 	case uint:
-		if v > uint(^uint(0)>>1) {
-			return 0, fmt.Errorf("typedb: uint value %d overflows int64", v)
-		}
-		return int64(v), nil
+		return convertUintToInt64(v)
 	case uint32:
 		return int64(v), nil
 	case uint16:
@@ -666,46 +691,63 @@ func deserializeUint64(value any) (uint64, error) {
 	}
 }
 
+// convertUintToUint32 safely converts uint to uint32 with overflow check
+func convertUintToUint32(v uint) (uint32, error) {
+	if v > uint(^uint32(0)) {
+		return 0, fmt.Errorf("typedb: uint value %d overflows uint32", v)
+	}
+	return uint32(v), nil
+}
+
+// convertIntToUint32 safely converts int to uint32 with overflow check
+func convertIntToUint32(v int) (uint32, error) {
+	if v < 0 {
+		return 0, fmt.Errorf("typedb: cannot convert negative int to uint32")
+	}
+	if v > int(^uint32(0)) {
+		return 0, fmt.Errorf("typedb: int value %d overflows uint32", v)
+	}
+	return uint32(v), nil
+}
+
+// convertInt32ToUint32 safely converts int32 to uint32 with overflow check
+func convertInt32ToUint32(v int32) (uint32, error) {
+	if v < 0 {
+		return 0, fmt.Errorf("typedb: cannot convert negative int32 to uint32")
+	}
+	return uint32(v), nil
+}
+
+// convertFloatToUint32 safely converts float to uint32 with overflow check
+func convertFloatToUint32(v float64) (uint32, error) {
+	if v < 0 {
+		return 0, fmt.Errorf("typedb: cannot convert negative float64 to uint32")
+	}
+	return uint32(v), nil
+}
+
 // deserializeUint32 converts a value to uint32
 func deserializeUint32(value any) (uint32, error) {
 	switch v := value.(type) {
 	case uint32:
 		return v, nil
 	case uint:
-		if v > uint(^uint32(0)) {
-			return 0, fmt.Errorf("typedb: uint value %d overflows uint32", v)
-		}
-		return uint32(v), nil
+		return convertUintToUint32(v)
 	case uint16:
 		return uint32(v), nil
 	case uint8:
 		return uint32(v), nil
 	case int32:
-		if v < 0 {
-			return 0, fmt.Errorf("typedb: cannot convert negative int32 to uint32")
-		}
-		return uint32(v), nil
+		return convertInt32ToUint32(v)
 	case int:
-		if v < 0 {
-			return 0, fmt.Errorf("typedb: cannot convert negative int to uint32")
-		}
-		if v > int(^uint32(0)) {
-			return 0, fmt.Errorf("typedb: int value %d overflows uint32", v)
-		}
-		return uint32(v), nil
+		return convertIntToUint32(v)
 	case string:
 		val, err := strconv.ParseUint(v, 10, 32)
 		return uint32(val), err
 	case float64:
-		if v < 0 {
-			return 0, fmt.Errorf("typedb: cannot convert negative float64 to uint32")
-		}
-		return uint32(v), nil
+		return convertFloatToUint32(v)
 	case float32:
-		if v < 0 {
-			return 0, fmt.Errorf("typedb: cannot convert negative float32 to uint32")
-		}
-		return uint32(v), nil
+		return convertFloatToUint32(float64(v))
 	default:
 		val, err := strconv.ParseUint(fmt.Sprintf("%v", value), 10, 32)
 		return uint32(val), err
@@ -754,39 +796,59 @@ func deserializeUint(value any) (uint, error) {
 	}
 }
 
+// convertIntToInt32 safely converts int to int32 with overflow check
+func convertIntToInt32(v int) (int32, error) {
+	maxInt32 := int64(math.MaxInt32)
+	minInt32 := int64(math.MinInt32)
+	if int64(v) < minInt32 || int64(v) > maxInt32 {
+		return 0, fmt.Errorf("typedb: int value %d overflows int32", v)
+	}
+	return int32(v), nil
+}
+
+// convertInt64ToInt32 safely converts int64 to int32 with overflow check
+func convertInt64ToInt32(v int64) (int32, error) {
+	maxInt32 := int64(math.MaxInt32)
+	minInt32 := int64(math.MinInt32)
+	if v < minInt32 || v > maxInt32 {
+		return 0, fmt.Errorf("typedb: int64 value %d overflows int32", v)
+	}
+	return int32(v), nil
+}
+
+// convertUint32ToInt32 safely converts uint32 to int32 with overflow check
+func convertUint32ToInt32(v uint32) (int32, error) {
+	if v > uint32(^uint32(0)>>1) {
+		return 0, fmt.Errorf("typedb: uint32 value %d overflows int32", v)
+	}
+	return int32(v), nil
+}
+
+// convertUintToInt32 safely converts uint to int32 with overflow check
+func convertUintToInt32(v uint) (int32, error) {
+	if v > uint(^uint32(0)>>1) {
+		return 0, fmt.Errorf("typedb: uint value %d overflows int32", v)
+	}
+	return int32(v), nil
+}
+
 // deserializeInt32 converts a value to int32
 func deserializeInt32(value any) (int32, error) {
 	switch v := value.(type) {
 	case int32:
 		return v, nil
 	case int:
-		maxInt32 := int64(math.MaxInt32)
-		minInt32 := int64(math.MinInt32)
-		if int64(v) < minInt32 || int64(v) > maxInt32 {
-			return 0, fmt.Errorf("typedb: int value %d overflows int32", v)
-		}
-		return int32(v), nil
+		return convertIntToInt32(v)
 	case int64:
-		maxInt32 := int64(math.MaxInt32)
-		minInt32 := int64(math.MinInt32)
-		if v < minInt32 || v > maxInt32 {
-			return 0, fmt.Errorf("typedb: int64 value %d overflows int32", v)
-		}
-		return int32(v), nil
+		return convertInt64ToInt32(v)
 	case int16:
 		return int32(v), nil
 	case int8:
 		return int32(v), nil
 	case uint32:
-		if v > uint32(^uint32(0)>>1) {
-			return 0, fmt.Errorf("typedb: uint32 value %d overflows int32", v)
-		}
-		return int32(v), nil
+		return convertUint32ToInt32(v)
 	case uint:
-		if v > uint(^uint32(0)>>1) {
-			return 0, fmt.Errorf("typedb: uint value %d overflows int32", v)
-		}
-		return int32(v), nil
+		return convertUintToInt32(v)
 	case uint16:
 		return int32(v), nil
 	case uint8:
