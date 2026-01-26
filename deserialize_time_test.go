@@ -235,13 +235,13 @@ func TestParseTime_MoreFormats(t *testing.T) {
 		value string
 		want  bool
 	}{
-		{"RFC3339", "2023-01-01T12:00:00Z", true},
-		{"RFC3339Nano", "2023-01-01T12:00:00.123456789Z", true},
-		{"SQL format", "2023-01-02 15:04:05", true},
-		{"Date only", "2023-01-02", true},
-		{"SQL with microseconds", "2023-01-02 15:04:05.999999", true},
-		{"SQL with nanoseconds", "2023-01-02 15:04:05.999999999", true},
-		{"RFC3339 with timezone", "2023-01-01T12:00:00+05:00", true},
+		{name: "RFC3339", value: "2023-01-01T12:00:00Z", want: true},
+		{name: "RFC3339Nano", value: "2023-01-01T12:00:00.123456789Z", want: true},
+		{name: "SQL format", value: "2023-01-02 15:04:05", want: true},
+		{name: "Date only", value: "2023-01-02", want: true},
+		{name: "SQL with microseconds", value: "2023-01-02 15:04:05.999999", want: true},
+		{name: "SQL with nanoseconds", value: "2023-01-02 15:04:05.999999999", want: true},
+		{name: "RFC3339 with timezone", value: "2023-01-01T12:00:00+05:00", want: true},
 	}
 
 	for _, tt := range tests {
