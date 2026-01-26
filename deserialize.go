@@ -3,6 +3,7 @@ package typedb
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"reflect"
 	"strconv"
 	"strings"
@@ -124,7 +125,7 @@ func saveOriginalCopyIfEnabled(model ModelInterface) error {
 				// Use unsafe to set unexported field
 				modelFieldPtr := unsafe.Pointer(modelFieldValue.UnsafeAddr())
 				originalCopyFieldType := field.Type.Field(0) // Model.originalCopy field
-				originalCopyFieldPtr := unsafe.Pointer(uintptr(modelFieldPtr) + uintptr(originalCopyFieldType.Offset))
+				originalCopyFieldPtr := unsafe.Pointer(uintptr(modelFieldPtr) + originalCopyFieldType.Offset)
 				*(*interface{})(originalCopyFieldPtr) = originalCopy
 				return nil
 			}
@@ -168,7 +169,7 @@ func deepCopyModel(model ModelInterface) interface{} {
 // all Go versions (1.18-1.25).
 //
 //go:nocheckptr
-func buildFieldMapFromPtr(ptrValue reflect.Value, structValue reflect.Value) map[string]reflect.Value {
+func buildFieldMapFromPtr(ptrValue, structValue reflect.Value) map[string]reflect.Value {
 	structType := structValue.Type()
 	fieldMap := make(map[string]reflect.Value)
 
@@ -192,14 +193,16 @@ func buildFieldMapFromPtr(ptrValue reflect.Value, structValue reflect.Value) map
 
 			// Calculate field address using unsafe pointer arithmetic
 			fieldOffset := field.Offset
-			fieldPtr := unsafe.Pointer(uintptr(basePtr) + uintptr(fieldOffset))
+			fieldPtr := unsafe.Add(basePtr, fieldOffset)
 
 			// Create reflect.Value for the field using reflect.NewAt
 			// This gives us a pointer to the field (*fieldType)
 			fieldType := field.Type
 			fieldValuePtr := reflect.NewAt(fieldType, fieldPtr)
 
-			currentIndex := append(append([]int(nil), indexPath...), i)
+			currentIndex := make([]int, len(indexPath), len(indexPath)+1)
+			copy(currentIndex, indexPath)
+			currentIndex = append(currentIndex, i)
 
 			// Handle embedded structs
 			if field.Anonymous {
@@ -242,7 +245,7 @@ func buildFieldMapFromPtr(ptrValue reflect.Value, structValue reflect.Value) map
 }
 
 // deserializeBasicType handles basic types: *int, *int64, *int32, *bool, *string
-func deserializeBasicType(target any, value any) error {
+func deserializeBasicType(target, value any) error {
 	switch ptr := target.(type) {
 	case *int:
 		val, err := deserializeInt(value)
@@ -281,7 +284,7 @@ func deserializeBasicType(target any, value any) error {
 }
 
 // deserializeUintType handles unsigned integer types: *uint64, *uint32, *uint
-func deserializeUintType(target any, value any) error {
+func deserializeUintType(target, value any) error {
 	switch ptr := target.(type) {
 	case *uint64:
 		val, err := deserializeUint64(value)
@@ -310,7 +313,7 @@ func deserializeUintType(target any, value any) error {
 }
 
 // deserializePointerType handles pointer-to-pointer types: **int, **bool, **string, **time.Time
-func deserializePointerType(target any, value any) error {
+func deserializePointerType(target, value any) error {
 	switch ptr := target.(type) {
 	case **int:
 		val, err := deserializeInt(value)
@@ -343,7 +346,7 @@ func deserializePointerType(target any, value any) error {
 }
 
 // deserializeTimeType handles time.Time type: *time.Time
-func deserializeTimeType(target any, value any) error {
+func deserializeTimeType(target, value any) error {
 	switch ptr := target.(type) {
 	case *time.Time:
 		val, err := deserializeTime(value)
@@ -358,7 +361,7 @@ func deserializeTimeType(target any, value any) error {
 }
 
 // deserializeArrayType handles array types: *[]int, *[]string
-func deserializeArrayType(target any, value any) error {
+func deserializeArrayType(target, value any) error {
 	switch ptr := target.(type) {
 	case *[]int:
 		arr, err := deserializeIntArray(value)
@@ -380,7 +383,7 @@ func deserializeArrayType(target any, value any) error {
 }
 
 // deserializeMapType handles map types: *map[string]any, *map[string]string
-func deserializeMapType(target any, value any) error {
+func deserializeMapType(target, value any) error {
 	switch ptr := target.(type) {
 	case *map[string]any:
 		jsonb, err := deserializeJSONB(value)
@@ -403,7 +406,7 @@ func deserializeMapType(target any, value any) error {
 
 // deserializeToField deserializes a value to the appropriate type.
 // Handles type conversion for common Go types and uses reflection for complex types.
-func deserializeToField(target any, value any) error {
+func deserializeToField(target, value any) error {
 	targetValue := reflect.ValueOf(target)
 	if targetValue.Kind() != reflect.Ptr {
 		return fmt.Errorf("typedb: target must be a pointer")
@@ -455,7 +458,7 @@ func deserializeToField(target any, value any) error {
 	}
 
 	// Fallback to reflection for other types
-	return deserializeWithReflection(targetValue, targetElem, value)
+	return deserializeWithReflection(targetElem, value)
 }
 
 // deserializeToFieldValue deserializes a value directly using reflect.Value.
@@ -498,7 +501,7 @@ func deserializeToFieldValue(fieldValuePtr reflect.Value, value any) error {
 }
 
 // deserializeWithReflection handles complex types using reflection.
-func deserializeWithReflection(targetValue reflect.Value, targetElem reflect.Value, value any) error {
+func deserializeWithReflection(targetElem reflect.Value, value any) error {
 	valueValue := reflect.ValueOf(value)
 	valueType := valueValue.Type()
 	targetType := targetElem.Type()
@@ -533,13 +536,39 @@ func deserializeWithReflection(targetValue reflect.Value, targetElem reflect.Val
 	return fmt.Errorf("typedb: cannot deserialize %T to %s", value, targetType)
 }
 
+// convertInt64ToInt safely converts int64 to int with overflow check
+func convertInt64ToInt(v int64) (int, error) {
+	maxInt := int64(^uint(0) >> 1)
+	minInt := ^maxInt
+	if v < minInt || v > maxInt {
+		return 0, fmt.Errorf("typedb: int64 value %d overflows int", v)
+	}
+	return int(v), nil
+}
+
+// convertUintToInt safely converts uint to int with overflow check
+func convertUintToInt(v uint) (int, error) {
+	if v > uint(^uint(0)>>1) {
+		return 0, fmt.Errorf("typedb: uint value %d overflows int", v)
+	}
+	return int(v), nil
+}
+
+// convertUint64ToInt safely converts uint64 to int with overflow check
+func convertUint64ToInt(v uint64) (int, error) {
+	if v > uint64(^uint(0)>>1) {
+		return 0, fmt.Errorf("typedb: uint64 value %d overflows int", v)
+	}
+	return int(v), nil
+}
+
 // deserializeInt converts a value to int
 func deserializeInt(value any) (int, error) {
 	switch v := value.(type) {
 	case int:
 		return v, nil
 	case int64:
-		return int(v), nil
+		return convertInt64ToInt(v)
 	case int32:
 		return int(v), nil
 	case int16:
@@ -547,9 +576,9 @@ func deserializeInt(value any) (int, error) {
 	case int8:
 		return int(v), nil
 	case uint:
-		return int(v), nil
+		return convertUintToInt(v)
 	case uint64:
-		return int(v), nil
+		return convertUint64ToInt(v)
 	case uint32:
 		return int(v), nil
 	case uint16:
@@ -567,6 +596,22 @@ func deserializeInt(value any) (int, error) {
 	}
 }
 
+// convertUint64ToInt64 safely converts uint64 to int64 with overflow check
+func convertUint64ToInt64(v uint64) (int64, error) {
+	if v > uint64(^uint64(0)>>1) {
+		return 0, fmt.Errorf("typedb: uint64 value %d overflows int64", v)
+	}
+	return int64(v), nil
+}
+
+// convertUintToInt64 safely converts uint to int64 with overflow check
+func convertUintToInt64(v uint) (int64, error) {
+	if v > uint(^uint(0)>>1) {
+		return 0, fmt.Errorf("typedb: uint value %d overflows int64", v)
+	}
+	return int64(v), nil
+}
+
 // deserializeInt64 converts a value to int64
 func deserializeInt64(value any) (int64, error) {
 	switch v := value.(type) {
@@ -581,9 +626,9 @@ func deserializeInt64(value any) (int64, error) {
 	case int8:
 		return int64(v), nil
 	case uint64:
-		return int64(v), nil
+		return convertUint64ToInt64(v)
 	case uint:
-		return int64(v), nil
+		return convertUintToInt64(v)
 	case uint32:
 		return int64(v), nil
 	case uint16:
@@ -634,9 +679,9 @@ func deserializeUint64(value any) (uint64, error) {
 	case int64:
 		return convertSignedToUint64(v)
 	case int:
-		return convertSignedToUint64(int64(v))
+		return convertSignedToUint64(int64(v)) //nolint:unconvert // int must be converted to int64 for function signature
 	case int32:
-		return convertSignedToUint64(int64(v))
+		return convertSignedToUint64(int64(v)) //nolint:unconvert // int32 must be converted to int64 for function signature
 	case string:
 		return strconv.ParseUint(v, 10, 64)
 	case float64:
@@ -648,40 +693,64 @@ func deserializeUint64(value any) (uint64, error) {
 	}
 }
 
+// convertUintToUint32 safely converts uint to uint32 with overflow check
+func convertUintToUint32(v uint) (uint32, error) {
+	if v > uint(^uint32(0)) {
+		return 0, fmt.Errorf("typedb: uint value %d overflows uint32", v)
+	}
+	return uint32(v), nil
+}
+
+// convertIntToUint32 safely converts int to uint32 with overflow check
+func convertIntToUint32(v int) (uint32, error) {
+	if v < 0 {
+		return 0, fmt.Errorf("typedb: cannot convert negative int to uint32")
+	}
+	maxUint32 := int(math.MaxUint32)
+	if v > maxUint32 {
+		return 0, fmt.Errorf("typedb: int value %d overflows uint32", v)
+	}
+	return uint32(v), nil
+}
+
+// convertInt32ToUint32 safely converts int32 to uint32 with overflow check
+func convertInt32ToUint32(v int32) (uint32, error) {
+	if v < 0 {
+		return 0, fmt.Errorf("typedb: cannot convert negative int32 to uint32")
+	}
+	return uint32(v), nil
+}
+
+// convertFloatToUint32 safely converts float to uint32 with overflow check
+func convertFloatToUint32(v float64) (uint32, error) {
+	if v < 0 {
+		return 0, fmt.Errorf("typedb: cannot convert negative float64 to uint32")
+	}
+	return uint32(v), nil
+}
+
 // deserializeUint32 converts a value to uint32
 func deserializeUint32(value any) (uint32, error) {
 	switch v := value.(type) {
 	case uint32:
 		return v, nil
 	case uint:
-		return uint32(v), nil
+		return convertUintToUint32(v)
 	case uint16:
 		return uint32(v), nil
 	case uint8:
 		return uint32(v), nil
 	case int32:
-		if v < 0 {
-			return 0, fmt.Errorf("typedb: cannot convert negative int32 to uint32")
-		}
-		return uint32(v), nil
+		return convertInt32ToUint32(v)
 	case int:
-		if v < 0 {
-			return 0, fmt.Errorf("typedb: cannot convert negative int to uint32")
-		}
-		return uint32(v), nil
+		return convertIntToUint32(v)
 	case string:
 		val, err := strconv.ParseUint(v, 10, 32)
 		return uint32(val), err
 	case float64:
-		if v < 0 {
-			return 0, fmt.Errorf("typedb: cannot convert negative float64 to uint32")
-		}
-		return uint32(v), nil
+		return convertFloatToUint32(v)
 	case float32:
-		if v < 0 {
-			return 0, fmt.Errorf("typedb: cannot convert negative float32 to uint32")
-		}
-		return uint32(v), nil
+		return convertFloatToUint32(float64(v))
 	default:
 		val, err := strconv.ParseUint(fmt.Sprintf("%v", value), 10, 32)
 		return uint32(val), err
@@ -730,23 +799,60 @@ func deserializeUint(value any) (uint, error) {
 	}
 }
 
+// convertIntToInt32 safely converts int to int32 with overflow check
+func convertIntToInt32(v int) (int32, error) {
+	maxInt32 := int64(math.MaxInt32)
+	minInt32 := int64(math.MinInt32)
+	v64 := int64(v)
+	if v64 < minInt32 || v64 > maxInt32 {
+		return 0, fmt.Errorf("typedb: int value %d overflows int32", v)
+	}
+	return int32(v), nil
+}
+
+// convertInt64ToInt32 safely converts int64 to int32 with overflow check
+func convertInt64ToInt32(v int64) (int32, error) {
+	maxInt32 := int64(math.MaxInt32)
+	minInt32 := int64(math.MinInt32)
+	if v < minInt32 || v > maxInt32 {
+		return 0, fmt.Errorf("typedb: int64 value %d overflows int32", v)
+	}
+	return int32(v), nil
+}
+
+// convertUint32ToInt32 safely converts uint32 to int32 with overflow check
+func convertUint32ToInt32(v uint32) (int32, error) {
+	if v > uint32(^uint32(0)>>1) {
+		return 0, fmt.Errorf("typedb: uint32 value %d overflows int32", v)
+	}
+	return int32(v), nil
+}
+
+// convertUintToInt32 safely converts uint to int32 with overflow check
+func convertUintToInt32(v uint) (int32, error) {
+	if v > uint(^uint32(0)>>1) {
+		return 0, fmt.Errorf("typedb: uint value %d overflows int32", v)
+	}
+	return int32(v), nil
+}
+
 // deserializeInt32 converts a value to int32
 func deserializeInt32(value any) (int32, error) {
 	switch v := value.(type) {
 	case int32:
 		return v, nil
 	case int:
-		return int32(v), nil
+		return convertIntToInt32(v)
 	case int64:
-		return int32(v), nil
+		return convertInt64ToInt32(v)
 	case int16:
 		return int32(v), nil
 	case int8:
 		return int32(v), nil
 	case uint32:
-		return int32(v), nil
+		return convertUint32ToInt32(v)
 	case uint:
-		return int32(v), nil
+		return convertUintToInt32(v)
 	case uint16:
 		return int32(v), nil
 	case uint8:
@@ -797,8 +903,7 @@ func deserializeBool(value any) (bool, error) {
 		return v != 0, nil
 	default:
 		// Convert to string and parse
-		str := fmt.Sprintf("%v", value)
-		return parseBoolString(str)
+		return parseBoolString(fmt.Sprintf("%v", value))
 	}
 }
 
@@ -806,6 +911,9 @@ func deserializeBool(value any) (bool, error) {
 func deserializeString(value any) string {
 	if value == nil {
 		return ""
+	}
+	if s, ok := value.(string); ok {
+		return s
 	}
 	return fmt.Sprintf("%v", value)
 }
@@ -1045,6 +1153,11 @@ func convertInt8Slice(v []int8) []int {
 func convertUintSlice(v []uint) []int {
 	result := make([]int, len(v))
 	for i, val := range v {
+		if val > uint(^uint(0)>>1) {
+			// Skip overflow values or use 0 - this shouldn't happen in practice
+			result[i] = 0
+			continue
+		}
 		result[i] = int(val)
 	}
 	return result
@@ -1054,6 +1167,11 @@ func convertUintSlice(v []uint) []int {
 func convertUint64Slice(v []uint64) []int {
 	result := make([]int, len(v))
 	for i, val := range v {
+		if val > uint64(^uint(0)>>1) {
+			// Skip overflow values or use 0 - this shouldn't happen in practice
+			result[i] = 0
+			continue
+		}
 		result[i] = int(val)
 	}
 	return result

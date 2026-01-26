@@ -24,6 +24,7 @@ func getModelType(model any) reflect.Type {
 func findFieldByTag(model any, tagKey, tagValue string) (*reflect.StructField, bool) {
 	t := getModelType(model)
 	return findFieldByTagRecursive(t, tagKey, tagValue)
+	// tagKey parameter is kept for API flexibility even though currently always "load"
 }
 
 // findFieldByTagRecursive recursively searches for a field with the given tag.
@@ -151,7 +152,7 @@ func setFieldValue(model any, fieldName string, value any) error {
 		fieldValue.SetInt(valueV.Int())
 	} else if valueV.Kind() == reflect.Int && fieldValue.Kind() == reflect.Int64 {
 		// Convert int to int64
-		fieldValue.SetInt(int64(valueV.Int()))
+		fieldValue.SetInt(valueV.Int())
 	} else if valueV.Kind() == reflect.Float64 && fieldValue.Kind() == reflect.Float32 {
 		// Convert float64 to float32
 		fieldValue.SetFloat(valueV.Float())
@@ -189,7 +190,9 @@ func findFieldByNameRecursive(t reflect.Type, fieldName string) (*reflect.Struct
 			if foundField, found := findFieldByNameRecursive(embeddedType, fieldName); found {
 				// Create a new field with adjusted index
 				adjustedField := *foundField
-				adjustedField.Index = append(append([]int(nil), field.Index...), foundField.Index...)
+				adjustedIndex := make([]int, len(field.Index), len(field.Index)+len(foundField.Index))
+				copy(adjustedIndex, field.Index)
+				adjustedField.Index = append(adjustedIndex, foundField.Index...)
 				return &adjustedField, true
 			}
 		}

@@ -166,7 +166,7 @@ func TestBuildFieldMap_NonStructEmbedded(t *testing.T) {
 	// Test embedded non-struct type (should skip)
 	type ModelWithIntEmbedded struct {
 		Model
-		int         // unexported embedded int
+		int         //nolint:unused // unexported embedded int - intentionally unused for testing
 		Name string `db:"name"`
 	}
 

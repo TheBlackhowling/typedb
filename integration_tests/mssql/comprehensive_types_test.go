@@ -122,21 +122,21 @@ func TestMSSQL_ComprehensiveTypesRoundTrip(t *testing.T) {
 		"test text content",         // text_col
 		"test ntext content",        // ntext_col
 		[]byte{0xDE, 0xAD, 0xBE, 0xEF, 0xCA, 0xFE, 0xBA, 0xBE, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}, // binary_col
-		[]byte{0xCA, 0xFE, 0xBA, 0xBE}, // varbinary_col
-		[]byte{0x01, 0x02, 0x03, 0x04, 0x05}, // varbinary_max_col
+		[]byte{0xCA, 0xFE, 0xBA, 0xBE},             // varbinary_col
+		[]byte{0x01, 0x02, 0x03, 0x04, 0x05},       // varbinary_max_col
 		[]byte{0x10, 0x11, 0x12, 0x13, 0x14, 0x15}, // image_col
-		"2024-12-25",                // date_col
-		"15:30:45",                  // time_col
-		"2024-12-25 15:30:45",       // datetime_col
-		"2024-12-25 15:30:45.1234567", // datetime2_col
-		"2024-12-25 15:30:45 +00:00", // datetimeoffset_col
-		"2024-12-25 15:30:00",       // smalldatetime_col
+		"2024-12-25",                           // date_col
+		"15:30:45",                             // time_col
+		"2024-12-25 15:30:45",                  // datetime_col
+		"2024-12-25 15:30:45.1234567",          // datetime2_col
+		"2024-12-25 15:30:45 +00:00",           // datetimeoffset_col
+		"2024-12-25 15:30:00",                  // smalldatetime_col
 		"550e8400-e29b-41d4-a716-446655440000", // uniqueidentifier_col
-		"<root><test>roundtrip</test></root>", // xml_col
-		"/1/",                       // hierarchyid_col
-		"POINT(-122.4194 37.7749)",  // geography_col (San Francisco)
-		"POINT(10 20)",              // geometry_col
-		"SQL_VARIANT test",          // sql_variant_col
+		"<root><test>roundtrip</test></root>",  // xml_col
+		"/1/",                                  // hierarchyid_col
+		"POINT(-122.4194 37.7749)",             // geography_col (San Francisco)
+		"POINT(10 20)",                         // geometry_col
+		"SQL_VARIANT test",                     // sql_variant_col
 	)
 	if err != nil {
 		t.Fatalf("Failed to insert test data: %v", err)

@@ -26,6 +26,35 @@ This file contains rules and guidelines for AI assistants working on the typedb 
 
 - **NO EXCEPTIONS**: Even fixing obvious typos or formatting issues requires user consent
 
+### ⚠️ CRITICAL: Test Skipping Policy
+
+**DO NOT skip tests without explicit user permission - EVER.**
+
+- **Absolute Rule**: No test skipping (`t.Skip`, `t.Skipf`, `t.SkipNow`) without explicit user approval
+- All tests should run unless there's a documented, user-approved reason to skip them
+
+- **If you think a test should be skipped:**
+  1. **DO NOT** add `t.Skip()` automatically
+  2. **DO** discuss with the user first
+  3. **DO** explain why the test should be skipped
+  4. **DO** propose alternatives (e.g., conditional test, mock setup, etc.)
+  5. **DO** wait for explicit user approval before adding skip logic
+  6. **DO** document the reason for skipping in a comment if approved
+
+- **Acceptable skip scenarios (with user approval):**
+  - Missing test dependencies that cannot be mocked (e.g., database driver not available)
+  - Platform-specific tests that don't apply to current environment
+  - Tests that require external services that are unavailable
+  - Tests that are intentionally disabled pending a fix
+
+- **Unacceptable skip scenarios (fix instead of skip):**
+  - Tests that fail due to bugs in the code
+  - Tests that fail due to incorrect test setup
+  - Tests that are flaky (fix the flakiness instead)
+  - Tests that are slow (optimize instead of skip)
+
+- **NO EXCEPTIONS**: Even skipping tests for missing dependencies requires user discussion and approval
+
 ## Test Addition Workflow
 
 ### ⚠️ MANDATORY: Test Requirements for All Changes
@@ -293,6 +322,89 @@ Test plan documents should include:
 - `refactor/` - For refactoring
 - `docs/` - For documentation changes
 - `chore/` - For maintenance tasks
+
+### Static Analysis Requirements
+
+**⚠️ MANDATORY: Run Static Analysis Before PR**
+
+**You MUST run static analysis before creating any PR:**
+
+1. **Run the static analysis script:**
+   ```bash
+   # Windows (PowerShell):
+   .\scripts\static-analysis.ps1
+   
+   # Unix/Linux/Mac:
+   ./scripts/static-analysis.sh
+   ```
+
+2. **All checks must pass:**
+   - `go vet` - Built-in Go static analyzer (MUST pass, fieldalignment disabled as optimization suggestion)
+   - `golangci-lint` - Comprehensive linter aggregator (errors MUST be fixed, warnings acceptable)
+   - `staticcheck` - Advanced static analysis (MUST pass)
+   - `gosec` - Security checker (security issues MUST be fixed)
+   - `govulncheck` - Vulnerability checker (vulnerabilities MUST be fixed)
+   - `errcheck` - Unchecked error checker (SHOULD be fixed unless intentional)
+
+3. **Fix critical issues:**
+   - Security vulnerabilities (gosec, govulncheck) - **MUST be fixed**
+   - Errors from golangci-lint - **MUST be fixed**
+   - Unchecked errors (errcheck) - **SHOULD be fixed** unless intentional
+
+4. **Document intentional warnings:**
+   - Style suggestions (field alignment, etc.) can be deferred
+   - Document in PR description if warnings are intentional
+   - Explain why they are acceptable or deferred
+
+**NO EXCEPTIONS**: All static analysis checks must pass before creating a PR. The GitHub Actions workflow will also run these checks automatically on all PRs.
+
+### ⚠️ CRITICAL: Static Analysis Disabling Policy
+
+**DO NOT disable static analysis checks without explicit user permission - EVER.**
+
+- **Absolute Rule**: No disabling of static analysis tools, linters, or checks without explicit user approval
+- Static analysis checks are mandatory for code quality and security
+- All warnings and errors must be addressed, not suppressed
+
+- **If you encounter a static analysis warning/error:**
+  1. **DO NOT** add `//nolint`, `//nolint:linter-name`, or similar directives automatically
+  2. **DO NOT** disable checks in `.golangci.yml` or other config files
+  3. **DO NOT** add files to ignore lists without permission
+  4. **DO** fix the underlying issue instead of suppressing it
+  5. **DO** discuss with the user if the warning is a false positive
+  6. **DO** explain why suppression might be necessary if fixing is impossible
+  7. **DO** wait for explicit user approval before adding any suppression directives
+
+- **Acceptable suppression scenarios (with user approval):**
+   - False positives that cannot be fixed (e.g., linter bug)
+   - Intentional code patterns that trigger warnings but are correct
+   - Performance optimizations that require unsafe code
+   - Legacy code that cannot be refactored immediately (with plan to fix)
+
+- **Unacceptable suppression scenarios (fix instead of suppress):**
+   - Real bugs or code quality issues
+   - Warnings that can be fixed with code changes
+   - Style issues that can be addressed
+   - Security warnings (MUST be fixed, never suppressed)
+
+- **If suppression is approved:**
+  1. Add a clear comment explaining WHY suppression is necessary
+  2. Include the specific linter name: `//nolint:linter-name // reason`
+  3. Document the suppression in PR description
+  4. Create a backlog task to fix the underlying issue if temporary
+
+- **NO EXCEPTIONS**: Even suppressing false positives requires user discussion and explicit approval. The goal is to fix issues, not hide them.
+
+### Pre-PR Checklist
+
+**Before creating ANY PR, you MUST verify:**
+
+- [ ] Static analysis has been run and all checks pass (see Static Analysis Requirements above)
+- [ ] All tests pass locally
+- [ ] Code coverage is maintained ≥ 80%
+- [ ] Impact analysis completed (see Change Impact Checklist)
+- [ ] Documentation updated if needed (API.md, README.md)
+- [ ] PR description follows the required format (see PR Creation section)
 
 ### Commit Messages
 
