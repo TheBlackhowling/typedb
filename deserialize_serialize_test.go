@@ -274,12 +274,12 @@ func TestSerializeJSONB_MoreTypes(t *testing.T) {
 		value any
 		name  string
 	}{
-		{"struct", struct{ Name string }{"test"}},
-		{"slice of maps", []map[string]any{{"a": 1}, {"b": 2}}},
-		{"nested map", map[string]any{"nested": map[string]any{"key": "value"}}},
-		{"[]any", []any{"a", 1, true}},
-		{"[]string", []string{"a", "b", "c"}},
-		{"[]int", []int{1, 2, 3}},
+		{value: struct{ Name string }{"test"}, name: "struct"},
+		{value: []map[string]any{{"a": 1}, {"b": 2}}, name: "slice of maps"},
+		{value: map[string]any{"nested": map[string]any{"key": "value"}}, name: "nested map"},
+		{value: []any{"a", 1, true}, name: "[]any"},
+		{value: []string{"a", "b", "c"}, name: "[]string"},
+		{value: []int{1, 2, 3}, name: "[]int"},
 	}
 
 	for _, tt := range tests {
