@@ -19,7 +19,7 @@ func TestOracle_Logging_Exec(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	ctx := context.Background()
 
@@ -78,7 +78,7 @@ func TestOracle_Logging_QueryAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	ctx := context.Background()
 
@@ -122,7 +122,7 @@ func TestOracle_Logging_Begin_Commit_Rollback(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	ctx := context.Background()
 
@@ -222,7 +222,7 @@ func TestOracle_Logging_PerInstanceLogger(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	ctx := context.Background()
 
@@ -254,7 +254,7 @@ func TestOracle_Logging_ConfigOptions(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to connect to database: %v", err)
 		}
-		defer db.Close()
+		defer closeDB(t, db)
 
 		logger.Debugs = nil
 		// Use a unique email to avoid conflicts
@@ -290,7 +290,7 @@ func TestOracle_Logging_ConfigOptions(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to connect to database: %v", err)
 		}
-		defer db.Close()
+		defer closeDB(t, db)
 
 		logger.Debugs = nil
 		// Use a unique email to avoid conflicts
@@ -328,7 +328,7 @@ func TestOracle_Logging_ContextOverrides(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	ctx := context.Background()
 
@@ -456,7 +456,7 @@ func TestOracle_Logging_NologTagMasking(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	ctx := context.Background()
 
@@ -555,7 +555,7 @@ func TestOracle_Logging_SerializationNolog(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	ctx := context.Background()
 

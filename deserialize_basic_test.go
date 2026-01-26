@@ -41,14 +41,14 @@ func TestDeserialize_IntConversions(t *testing.T) {
 	user := &DeserializeUser{}
 
 	tests := []struct {
-		name  string
-		value any
-		want  int
+		value any    // 16 bytes (interface{})
+		name  string // 16 bytes
+		want  int    // 8 bytes
 	}{
-		{"int64", int64(123), 123},
-		{"int32", int32(456), 456},
-		{"float64", float64(789), 789},
-		{"string", "999", 999},
+		{int64(123), "int64", 123},
+		{int32(456), "int32", 456},
+		{float64(789), "float64", 789},
+		{"999", "string", 999},
 	}
 
 	for _, tt := range tests {
@@ -69,20 +69,20 @@ func TestDeserialize_BoolConversions(t *testing.T) {
 	post := &DeserializePost{}
 
 	tests := []struct {
-		name  string
-		value any
-		want  bool
+		value any    // 16 bytes (interface{})
+		name  string // 16 bytes
+		want  bool   // 1 byte
 	}{
-		{"bool true", true, true},
-		{"bool false", false, false},
-		{"string true", "true", true},
-		{"string false", "false", false},
-		{"string 1", "1", true},
-		{"string 0", "0", false},
-		{"string t", "t", true},
-		{"string f", "f", false},
-		{"int 1", 1, true},
-		{"int 0", 0, false},
+		{true, "bool true", true},
+		{false, "bool false", false},
+		{"true", "string true", true},
+		{"false", "string false", false},
+		{"1", "string 1", true},
+		{"0", "string 0", false},
+		{"t", "string t", true},
+		{"f", "string f", false},
+		{1, "int 1", true},
+		{0, "int 0", false},
 	}
 
 	for _, tt := range tests {

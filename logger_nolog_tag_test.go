@@ -31,7 +31,7 @@ func TestNologTagMasking(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	ctx := context.Background()
@@ -201,7 +201,7 @@ func TestNologTagMaskingInLoad(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	ctx := context.Background()

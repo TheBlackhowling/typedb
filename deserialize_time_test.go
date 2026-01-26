@@ -99,7 +99,7 @@ func TestDeserializeToField_ErrorFromConverter(t *testing.T) {
 	}
 
 	var b bool
-	err = deserializeToField(&b, "not a bool")
+	_ = deserializeToField(&b, "not a bool")
 	// This might succeed due to default case parsing, so we don't check error
 
 	var t1 time.Time
@@ -145,7 +145,7 @@ func TestDeserializeToField_PointerErrorPaths(t *testing.T) {
 	}
 
 	var boolPtr *bool
-	err = deserializeToField(&boolPtr, "not a bool")
+	_ = deserializeToField(&boolPtr, "not a bool")
 	// Might succeed due to default parsing
 
 	var timePtr *time.Time
@@ -178,6 +178,8 @@ func TestBuildFieldMap_NonStructEmbedded(t *testing.T) {
 		t.Error("Expected 'name' field in map")
 	}
 	// int embedded field should be skipped (not a struct)
+	// Reference the embedded int to avoid unused field warning
+	_ = modelValue.FieldByName("int")
 }
 
 func TestDeserialize_NonStructDest(t *testing.T) {

@@ -39,8 +39,8 @@ type Post struct {
 	UserID    int    `db:"user_id"`
 	Title     string `db:"title"`
 	Content   string `db:"content"`
-	Tags      string `db:"tags"`      // JSON stored as TEXT
-	Metadata  string `db:"metadata"`  // JSON stored as TEXT
+	Tags      string `db:"tags"`     // JSON stored as TEXT
+	Metadata  string `db:"metadata"` // JSON stored as TEXT
 	CreatedAt string `db:"created_at"`
 	UpdatedAt string `db:"updated_at" dbUpdate:"auto-timestamp"`
 }
@@ -85,22 +85,22 @@ func init() {
 // TypeExample demonstrates comprehensive SQLite data types
 type TypeExample struct {
 	typedb.Model
-	ID          int    `db:"id" load:"primary"`
-	IntegerCol  int    `db:"integer_col"`
-	RealCol     string `db:"real_col"`
-	NumericCol  string `db:"numeric_col"`
-	TextCol     string `db:"text_col"`
-	VarcharCol  string `db:"varchar_col"`
-	CharCol     string `db:"char_col"`
-	ClobCol     string `db:"clob_col"`
-	BlobCol     string `db:"blob_col"` // Binary as hex string
-	DateCol     string `db:"date_col"`
-	DatetimeCol string `db:"datetime_col"`
+	ID           int    `db:"id" load:"primary"`
+	IntegerCol   int    `db:"integer_col"`
+	RealCol      string `db:"real_col"`
+	NumericCol   string `db:"numeric_col"`
+	TextCol      string `db:"text_col"`
+	VarcharCol   string `db:"varchar_col"`
+	CharCol      string `db:"char_col"`
+	ClobCol      string `db:"clob_col"`
+	BlobCol      string `db:"blob_col"` // Binary as hex string
+	DateCol      string `db:"date_col"`
+	DatetimeCol  string `db:"datetime_col"`
 	TimestampCol string `db:"timestamp_col"`
-	TimeCol     string `db:"time_col"`
-	BooleanCol  bool   `db:"boolean_col"`
-	JsonCol     string `db:"json_col"`
-	CreatedAt   string `db:"created_at"`
+	TimeCol      string `db:"time_col"`
+	BooleanCol   bool   `db:"boolean_col"`
+	JsonCol      string `db:"json_col"`
+	CreatedAt    string `db:"created_at"`
 }
 
 func (t *TypeExample) QueryByID() string {

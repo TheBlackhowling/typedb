@@ -15,7 +15,7 @@ func TestMySQL_QueryAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	if err := db.Ping(ctx); err != nil {
 		t.Fatalf("Database ping failed: %v", err)
@@ -48,7 +48,7 @@ func TestMySQL_QueryFirst(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	if err := db.Ping(ctx); err != nil {
 		t.Fatalf("Database ping failed: %v", err)
@@ -74,7 +74,7 @@ func TestMySQL_QueryOne(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	if err := db.Ping(ctx); err != nil {
 		t.Fatalf("Database ping failed: %v", err)
@@ -96,7 +96,7 @@ func TestMySQL_QueryFirst_NoRows(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	if err := db.Ping(ctx); err != nil {
 		t.Fatalf("Database ping failed: %v", err)
@@ -119,7 +119,7 @@ func TestMySQL_QueryOne_NoRows(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	if err := db.Ping(ctx); err != nil {
 		t.Fatalf("Database ping failed: %v", err)
@@ -146,7 +146,7 @@ func TestMySQL_QueryOne_MultipleRows(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	if err := db.Ping(ctx); err != nil {
 		t.Fatalf("Database ping failed: %v", err)

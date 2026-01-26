@@ -15,7 +15,7 @@ func TestExecGlobalLoggingConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	ctx := context.Background()
@@ -130,7 +130,7 @@ func TestQueryAllGlobalLoggingConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	ctx := context.Background()
@@ -210,7 +210,7 @@ func TestQueryRowMapGlobalLoggingConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	ctx := context.Background()
@@ -290,7 +290,7 @@ func TestGetIntoGlobalLoggingConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	ctx := context.Background()
@@ -372,7 +372,7 @@ func TestQueryDoGlobalLoggingConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	ctx := context.Background()

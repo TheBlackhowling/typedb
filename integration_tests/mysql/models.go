@@ -39,7 +39,7 @@ type Post struct {
 	UserID    int    `db:"user_id"`
 	Title     string `db:"title"`
 	Content   string `db:"content"`
-	Tags      string `db:"tags"`      // MySQL JSON as string
+	Tags      string `db:"tags"`     // MySQL JSON as string
 	Metadata  string `db:"metadata"` // MySQL JSON as string
 	CreatedAt string `db:"created_at"`
 	UpdatedAt string `db:"updated_at" dbUpdate:"auto-timestamp"`

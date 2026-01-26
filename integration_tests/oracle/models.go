@@ -39,8 +39,8 @@ type Post struct {
 	UserID    int    `db:"user_id"`
 	Title     string `db:"title"`
 	Content   string `db:"content"`
-	Tags      string `db:"tags"`      // JSON stored as CLOB
-	Metadata  string `db:"metadata"`   // JSON stored as CLOB
+	Tags      string `db:"tags"`     // JSON stored as CLOB
+	Metadata  string `db:"metadata"` // JSON stored as CLOB
 	CreatedAt string `db:"created_at"`
 	UpdatedAt string `db:"updated_at" dbUpdate:"auto-timestamp"`
 }
@@ -85,37 +85,37 @@ func init() {
 // TypeExample demonstrates comprehensive Oracle data types
 type TypeExample struct {
 	typedb.Model
-	ID                int    `db:"id" load:"primary"`
-	NumberCol         string `db:"number_col"`
+	ID                 int    `db:"id" load:"primary"`
+	NumberCol          string `db:"number_col"`
 	NumberPrecisionCol string `db:"number_precision_col"`
-	FloatCol          string `db:"float_col"`
-	BinaryFloatCol    string `db:"binary_float_col"`
-	BinaryDoubleCol   string `db:"binary_double_col"`
-	CharCol           string `db:"char_col"`
-	Varchar2Col       string `db:"varchar2_col"`
-	VarcharCol        string `db:"varchar_col"`
-	NcharCol          string `db:"nchar_col"`
-	Nvarchar2Col      string `db:"nvarchar2_col"`
-	ClobCol           string `db:"clob_col"`
-	NclobCol          string `db:"nclob_col"`
-	LongCol           string `db:"long_col"`
-	RawCol            string `db:"raw_col"` // Binary as hex string
-	BlobCol           string `db:"blob_col"`
+	FloatCol           string `db:"float_col"`
+	BinaryFloatCol     string `db:"binary_float_col"`
+	BinaryDoubleCol    string `db:"binary_double_col"`
+	CharCol            string `db:"char_col"`
+	Varchar2Col        string `db:"varchar2_col"`
+	VarcharCol         string `db:"varchar_col"`
+	NcharCol           string `db:"nchar_col"`
+	Nvarchar2Col       string `db:"nvarchar2_col"`
+	ClobCol            string `db:"clob_col"`
+	NclobCol           string `db:"nclob_col"`
+	LongCol            string `db:"long_col"`
+	RawCol             string `db:"raw_col"` // Binary as hex string
+	BlobCol            string `db:"blob_col"`
 	// Note: LONG RAW is tested in a separate table (long_raw_examples) due to Oracle's limitation
 	// that only one LONG column is allowed per table
-	BfileCol          string `db:"bfile_col"`
-	NumberScaleCol    string `db:"number_scale_col"`
-	FloatPrecisionCol string `db:"float_precision_col"`
+	BfileCol              string `db:"bfile_col"`
+	NumberScaleCol        string `db:"number_scale_col"`
+	FloatPrecisionCol     string `db:"float_precision_col"`
 	TimestampPrecisionCol string `db:"timestamp_precision_col"`
-	RowidCol          string `db:"rowid_col"`
-	DateCol           string `db:"date_col"`
-	TimestampCol      string `db:"timestamp_col"`
-	TimestampTzCol    string `db:"timestamp_tz_col"`
-	TimestampLtzCol   string `db:"timestamp_ltz_col"`
-	IntervalYearCol   string `db:"interval_year_col"`
-	IntervalDayCol    string `db:"interval_day_col"`
-	XmltypeCol        string `db:"xmltype_col"`
-	CreatedAt         string `db:"created_at"`
+	RowidCol              string `db:"rowid_col"`
+	DateCol               string `db:"date_col"`
+	TimestampCol          string `db:"timestamp_col"`
+	TimestampTzCol        string `db:"timestamp_tz_col"`
+	TimestampLtzCol       string `db:"timestamp_ltz_col"`
+	IntervalYearCol       string `db:"interval_year_col"`
+	IntervalDayCol        string `db:"interval_day_col"`
+	XmltypeCol            string `db:"xmltype_col"`
+	CreatedAt             string `db:"created_at"`
 }
 
 func (t *TypeExample) QueryByID() string {
@@ -130,10 +130,10 @@ func init() {
 // (Oracle allows only one LONG column per table)
 type LongRawExample struct {
 	typedb.Model
-	ID        int    `db:"id" load:"primary"`
+	ID         int    `db:"id" load:"primary"`
 	LongRawCol string `db:"long_raw_col"`
-	CreatedAt string `db:"created_at"`
-	UpdatedAt string `db:"updated_at" dbUpdate:"auto-timestamp"`
+	CreatedAt  string `db:"created_at"`
+	UpdatedAt  string `db:"updated_at" dbUpdate:"auto-timestamp"`
 }
 
 func (l *LongRawExample) TableName() string {

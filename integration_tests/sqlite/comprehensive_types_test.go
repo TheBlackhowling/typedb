@@ -11,7 +11,7 @@ import (
 
 func TestSQLite_ComprehensiveTypes(t *testing.T) {
 	db := setupTestDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
@@ -52,7 +52,7 @@ func TestSQLite_ComprehensiveTypes(t *testing.T) {
 
 func TestSQLite_ComprehensiveTypesRoundTrip(t *testing.T) {
 	db := setupTestDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
@@ -71,20 +71,20 @@ func TestSQLite_ComprehensiveTypesRoundTrip(t *testing.T) {
 
 	// Insert test data
 	_, err := db.Exec(ctx, insertSQL,
-		testID,                      // id
-		987654321,                   // integer_col
-		3.14159,                     // real_col
-		"1234.56",                   // numeric_col
-		"test text content",         // text_col
-		"test_varchar",              // varchar_col
-		"test_char ",                // char_col (padded)
-		"test clob content",         // clob_col
-		[]byte{0xDE, 0xAD, 0xBE, 0xEF}, // blob_col
-		"2024-12-25",                // date_col
-		"2024-12-25 15:30:45",       // datetime_col
-		"2024-12-25 15:30:45",       // timestamp_col
-		"15:30:45",                  // time_col
-		true,                        // boolean_col
+		testID,                                 // id
+		987654321,                              // integer_col
+		3.14159,                                // real_col
+		"1234.56",                              // numeric_col
+		"test text content",                    // text_col
+		"test_varchar",                         // varchar_col
+		"test_char ",                           // char_col (padded)
+		"test clob content",                    // clob_col
+		[]byte{0xDE, 0xAD, 0xBE, 0xEF},         // blob_col
+		"2024-12-25",                           // date_col
+		"2024-12-25 15:30:45",                  // datetime_col
+		"2024-12-25 15:30:45",                  // timestamp_col
+		"15:30:45",                             // time_col
+		true,                                   // boolean_col
 		`{"test": "json_value", "number": 42}`, // json_col
 	)
 	if err != nil {

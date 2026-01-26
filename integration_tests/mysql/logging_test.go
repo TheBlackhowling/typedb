@@ -19,7 +19,7 @@ func TestMySQL_Logging_Exec(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	ctx := context.Background()
 
@@ -77,7 +77,7 @@ func TestMySQL_Logging_QueryAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	ctx := context.Background()
 
@@ -120,7 +120,7 @@ func TestMySQL_Logging_Begin_Commit_Rollback(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	ctx := context.Background()
 
@@ -268,7 +268,7 @@ func TestMySQL_Logging_ConfigOptions(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to connect to database: %v", err)
 		}
-		defer db.Close()
+		defer closeDB(t, db)
 
 		ctx := context.Background()
 		logger.Debugs = nil
@@ -295,7 +295,7 @@ func TestMySQL_Logging_ConfigOptions(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to connect to database: %v", err)
 		}
-		defer db.Close()
+		defer closeDB(t, db)
 
 		ctx := context.Background()
 		logger.Debugs = nil
@@ -322,7 +322,7 @@ func TestMySQL_Logging_ContextOverrides(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	ctx := context.Background()
 
@@ -448,7 +448,7 @@ func TestMySQL_Logging_NologTagMasking(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	ctx := context.Background()
 
@@ -547,7 +547,7 @@ func TestMySQL_Logging_SerializationNolog(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	ctx := context.Background()
 
@@ -730,4 +730,3 @@ func TestMySQL_Logging_SerializationNolog(t *testing.T) {
 		}
 	})
 }
-
