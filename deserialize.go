@@ -903,8 +903,7 @@ func deserializeBool(value any) (bool, error) {
 		return v != 0, nil
 	default:
 		// Convert to string and parse
-		str := fmt.Sprintf("%v", value)
-		return parseBoolString(str)
+		return parseBoolString(fmt.Sprintf("%v", value))
 	}
 }
 
