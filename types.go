@@ -31,11 +31,11 @@ type Executor interface {
 // Fields are ordered for optimal memory alignment (largest to smallest):
 // - 16-byte types (interfaces, string)
 // - 8-byte types (pointers, time.Duration)
-// - 1-byte types (bool)
+// - 1-byte types (bool) - grouped together to minimize padding
 type DB struct {
 	logger     Logger        // logger for this DB instance (interface = 16 bytes)
-	driverName string        // database driver name (e.g., "postgres", "mysql")
 	db         *sql.DB       // underlying database connection
+	driverName string        // database driver name (e.g., "postgres", "mysql")
 	timeout    time.Duration // default timeout for operations
 	logQueries bool          // whether to log SQL queries
 	logArgs    bool          // whether to log query arguments
@@ -47,14 +47,15 @@ type DB struct {
 // Fields are ordered for optimal memory alignment (largest to smallest):
 // - 16-byte types (interfaces, string)
 // - 8-byte types (pointers, time.Duration)
-// - 1-byte types (bool)
+// - 1-byte types (bool) - grouped together to minimize padding
 type Tx struct {
 	logger     Logger        // logger for this transaction (inherited from DB) (interface = 16 bytes)
-	driverName string        // database driver name (inherited from DB)
 	tx         *sql.Tx       // underlying transaction
+	driverName string        // database driver name (inherited from DB)
 	timeout    time.Duration // default timeout (inherited from DB)
 	logQueries bool          // whether to log SQL queries (inherited from DB)
 	logArgs    bool          // whether to log query arguments (inherited from DB)
+
 }
 
 // Config holds database connection and pool configuration.

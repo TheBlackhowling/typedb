@@ -11,6 +11,28 @@ import (
 	_ "github.com/mattn/go-sqlite3" // SQLite driver for Open* tests
 )
 
+// closeDB safely closes a *DB instance, logging any errors.
+// Use this in defer statements to handle Close() errors properly.
+func closeDB(t *testing.T, db *DB) {
+	if db == nil {
+		return
+	}
+	if err := db.Close(); err != nil {
+		t.Logf("Warning: failed to close *DB: %v", err)
+	}
+}
+
+// closeSQLDB safely closes a *sql.DB instance, logging any errors.
+// Use this in defer statements to handle Close() errors properly.
+func closeSQLDB(t *testing.T, db *sql.DB) {
+	if db == nil {
+		return
+	}
+	if err := db.Close(); err != nil {
+		t.Logf("Warning: failed to close *sql.DB: %v", err)
+	}
+}
+
 func TestNewDB(t *testing.T) {
 	sqlDB := &sql.DB{}
 	timeout := 10 * time.Second
@@ -92,7 +114,7 @@ func TestDB_Ping(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer sqlDB.Close()
+	defer closeSQLDB(t, sqlDB)
 
 	mock.ExpectPing()
 
@@ -125,7 +147,7 @@ func TestOpen(t *testing.T) {
 	if err != nil {
 		t.Fatalf("OpenWithoutValidation failed: %v", err)
 	}
-	defer typedbDB.Close()
+	defer closeDB(t, typedbDB)
 
 	if typedbDB.db == nil {
 		t.Error("Expected db to be set")
@@ -145,7 +167,7 @@ func TestOpen_WithOptions(t *testing.T) {
 	if err != nil {
 		t.Fatalf("OpenWithoutValidation failed: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	if db.timeout != 10*time.Second {
 		t.Errorf("Expected timeout 10s, got %v", db.timeout)
@@ -158,7 +180,7 @@ func TestOpenWithoutValidation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("OpenWithoutValidation failed: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	if db == nil {
 		t.Error("Expected db to be non-nil")
@@ -236,7 +258,7 @@ func TestTx_Commit(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer sqlDB.Close()
+	defer closeSQLDB(t, sqlDB)
 
 	mock.ExpectBegin()
 	mock.ExpectCommit()
@@ -268,7 +290,7 @@ func TestTx_Rollback(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer sqlDB.Close()
+	defer closeSQLDB(t, sqlDB)
 
 	mock.ExpectBegin()
 	mock.ExpectRollback()
@@ -301,7 +323,7 @@ func TestDB_Exec_Sqlmock(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "test", 5*time.Second)
 	ctx := context.Background()
@@ -351,7 +373,7 @@ func TestDB_QueryAll_Sqlmock(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "test", 5*time.Second)
 	ctx := context.Background()
@@ -427,7 +449,7 @@ func TestDB_QueryRowMap_Sqlmock(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "test", 5*time.Second)
 	ctx := context.Background()
@@ -514,7 +536,7 @@ func TestDB_GetInto_Sqlmock(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "test", 5*time.Second)
 	ctx := context.Background()
@@ -585,7 +607,7 @@ func TestDB_QueryDo_Sqlmock(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "test", 5*time.Second)
 	ctx := context.Background()
@@ -661,7 +683,7 @@ func TestTx_Exec_Sqlmock(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	mock.ExpectBegin()
 	mockTx, err := db.Begin()
@@ -721,7 +743,7 @@ func TestTx_QueryAll_Sqlmock(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	mock.ExpectBegin()
 	mockTx, err := db.Begin()
@@ -779,7 +801,7 @@ func TestTx_QueryRowMap_Sqlmock(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	mock.ExpectBegin()
 	mockTx, err := db.Begin()
@@ -861,7 +883,7 @@ func TestTx_GetInto_Sqlmock(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	mock.ExpectBegin()
 	mockTx, err := db.Begin()
@@ -925,7 +947,7 @@ func TestTx_QueryDo_Sqlmock(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	mock.ExpectBegin()
 	mockTx, err := db.Begin()

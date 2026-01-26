@@ -472,7 +472,13 @@ type StructWithDeepEmbeddedDot struct {
 // StructWithUnexportedField has unexported field with dot notation (should be skipped)
 type StructWithUnexportedField struct {
 	ID   int    `db:"id"`
-	name string `db:"users.name"` //nolint:unused // unexported, should be skipped - intentionally unused for testing
+	name string `db:"users.name"` // unexported, should be skipped - intentionally unused for testing
+}
+
+// Reference unexported name field to avoid unused warning
+var _ = func() {
+	s := StructWithUnexportedField{}
+	_ = s.name
 }
 
 // StructWithDashTag has db:"-" tag (should be skipped)
@@ -599,5 +605,11 @@ type SerializeModelWithUnexported struct {
 	Model
 	ID   int    `db:"id" load:"primary"`
 	Name string `db:"name"`
-	age  int    `db:"age"` //nolint:unused // unexported - intentionally unused for testing
+	age  int    `db:"age"` // unexported - intentionally unused for testing
+}
+
+// Reference unexported age field to avoid unused warning
+var _ = func() {
+	s := SerializeModelWithUnexported{}
+	_ = s.age
 }

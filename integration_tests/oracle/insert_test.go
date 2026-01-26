@@ -16,7 +16,7 @@ func TestOracle_Insert(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	if err := db.Ping(ctx); err != nil {
 		t.Fatalf("Database ping failed: %v", err)
@@ -64,7 +64,7 @@ func TestOracle_InsertAndLoad(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	if err := db.Ping(ctx); err != nil {
 		t.Fatalf("Database ping failed: %v", err)
@@ -117,7 +117,7 @@ func TestOracle_InsertAndGetId(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	if err := db.Ping(ctx); err != nil {
 		t.Fatalf("Database ping failed: %v", err)
@@ -167,7 +167,7 @@ func TestOracle_InsertAndGetId_WithInto(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer closeDB(t, db)
 
 	if err := db.Ping(ctx); err != nil {
 		t.Fatalf("Database ping failed: %v", err)

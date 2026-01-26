@@ -15,7 +15,7 @@ func TestExecContextLoggingOverrides(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	ctx := context.Background()
@@ -31,8 +31,8 @@ func TestExecContextLoggingOverrides(t *testing.T) {
 			WithArgs("John", "john@example.com").
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
-		ctx := WithNoLogging(ctx)
-		_, err := typedbDB.Exec(ctx, query, args...)
+		newCtx := WithNoLogging(ctx)
+		_, err := typedbDB.Exec(newCtx, query, args...)
 		if err != nil {
 			t.Fatalf("Exec failed: %v", err)
 		}
@@ -69,8 +69,8 @@ func TestExecContextLoggingOverrides(t *testing.T) {
 			WithArgs("John", "john@example.com").
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
-		ctx := WithNoQueryLogging(ctx)
-		_, err := typedbDB.Exec(ctx, query, args...)
+		newCtx := WithNoQueryLogging(ctx)
+		_, err := typedbDB.Exec(newCtx, query, args...)
 		if err != nil {
 			t.Fatalf("Exec failed: %v", err)
 		}
@@ -104,8 +104,8 @@ func TestExecContextLoggingOverrides(t *testing.T) {
 			WithArgs("John", "john@example.com").
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
-		ctx := WithNoArgLogging(ctx)
-		_, err := typedbDB.Exec(ctx, query, args...)
+		newCtx := WithNoArgLogging(ctx)
+		_, err := typedbDB.Exec(newCtx, query, args...)
 		if err != nil {
 			t.Fatalf("Exec failed: %v", err)
 		}
@@ -138,7 +138,7 @@ func TestQueryAllContextLoggingOverrides(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	ctx := context.Background()
@@ -155,8 +155,8 @@ func TestQueryAllContextLoggingOverrides(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
 				AddRow(1, "John", "john@example.com"))
 
-		ctx := WithNoLogging(ctx)
-		_, err := typedbDB.QueryAll(ctx, query, args...)
+		newCtx := WithNoLogging(ctx)
+		_, err := typedbDB.QueryAll(newCtx, query, args...)
 		if err != nil {
 			t.Fatalf("QueryAll failed: %v", err)
 		}
@@ -194,8 +194,8 @@ func TestQueryAllContextLoggingOverrides(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
 				AddRow(1, "John", "john@example.com"))
 
-		ctx := WithNoQueryLogging(ctx)
-		_, err := typedbDB.QueryAll(ctx, query, args...)
+		newCtx := WithNoQueryLogging(ctx)
+		_, err := typedbDB.QueryAll(newCtx, query, args...)
 		if err != nil {
 			t.Fatalf("QueryAll failed: %v", err)
 		}
@@ -230,8 +230,8 @@ func TestQueryAllContextLoggingOverrides(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
 				AddRow(1, "John", "john@example.com"))
 
-		ctx := WithNoArgLogging(ctx)
-		_, err := typedbDB.QueryAll(ctx, query, args...)
+		newCtx := WithNoArgLogging(ctx)
+		_, err := typedbDB.QueryAll(newCtx, query, args...)
 		if err != nil {
 			t.Fatalf("QueryAll failed: %v", err)
 		}
@@ -264,7 +264,7 @@ func TestQueryRowMapContextLoggingOverrides(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	ctx := context.Background()
@@ -281,8 +281,8 @@ func TestQueryRowMapContextLoggingOverrides(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
 				AddRow(123, "John", "john@example.com"))
 
-		ctx := WithNoLogging(ctx)
-		_, err := typedbDB.QueryRowMap(ctx, query, args...)
+		newCtx := WithNoLogging(ctx)
+		_, err := typedbDB.QueryRowMap(newCtx, query, args...)
 		if err != nil {
 			t.Fatalf("QueryRowMap failed: %v", err)
 		}
@@ -320,8 +320,8 @@ func TestQueryRowMapContextLoggingOverrides(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
 				AddRow(123, "John", "john@example.com"))
 
-		ctx := WithNoQueryLogging(ctx)
-		_, err := typedbDB.QueryRowMap(ctx, query, args...)
+		newCtx := WithNoQueryLogging(ctx)
+		_, err := typedbDB.QueryRowMap(newCtx, query, args...)
 		if err != nil {
 			t.Fatalf("QueryRowMap failed: %v", err)
 		}
@@ -356,8 +356,8 @@ func TestQueryRowMapContextLoggingOverrides(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
 				AddRow(123, "John", "john@example.com"))
 
-		ctx := WithNoArgLogging(ctx)
-		_, err := typedbDB.QueryRowMap(ctx, query, args...)
+		newCtx := WithNoArgLogging(ctx)
+		_, err := typedbDB.QueryRowMap(newCtx, query, args...)
 		if err != nil {
 			t.Fatalf("QueryRowMap failed: %v", err)
 		}
@@ -390,7 +390,7 @@ func TestGetIntoContextLoggingOverrides(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	ctx := context.Background()
@@ -409,8 +409,8 @@ func TestGetIntoContextLoggingOverrides(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
 				AddRow(123, "John", "john@example.com"))
 
-		ctx := WithNoLogging(ctx)
-		err := typedbDB.GetInto(ctx, query, args, &id, &name, &email)
+		newCtx := WithNoLogging(ctx)
+		err := typedbDB.GetInto(newCtx, query, args, &id, &name, &email)
 		if err != nil {
 			t.Fatalf("GetInto failed: %v", err)
 		}
@@ -448,8 +448,8 @@ func TestGetIntoContextLoggingOverrides(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
 				AddRow(123, "John", "john@example.com"))
 
-		ctx := WithNoQueryLogging(ctx)
-		err := typedbDB.GetInto(ctx, query, args, &id, &name, &email)
+		newCtx := WithNoQueryLogging(ctx)
+		err := typedbDB.GetInto(newCtx, query, args, &id, &name, &email)
 		if err != nil {
 			t.Fatalf("GetInto failed: %v", err)
 		}
@@ -484,8 +484,8 @@ func TestGetIntoContextLoggingOverrides(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
 				AddRow(123, "John", "john@example.com"))
 
-		ctx := WithNoArgLogging(ctx)
-		err := typedbDB.GetInto(ctx, query, args, &id, &name, &email)
+		newCtx := WithNoArgLogging(ctx)
+		err := typedbDB.GetInto(newCtx, query, args, &id, &name, &email)
 		if err != nil {
 			t.Fatalf("GetInto failed: %v", err)
 		}
@@ -518,7 +518,7 @@ func TestQueryDoContextLoggingOverrides(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	ctx := context.Background()
@@ -535,8 +535,8 @@ func TestQueryDoContextLoggingOverrides(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
 				AddRow(1, "John", "john@example.com"))
 
-		ctx := WithNoLogging(ctx)
-		err := typedbDB.QueryDo(ctx, query, args, func(rows *sql.Rows) error {
+		newCtx := WithNoLogging(ctx)
+		err := typedbDB.QueryDo(newCtx, query, args, func(rows *sql.Rows) error {
 			return nil
 		})
 		if err != nil {
@@ -576,8 +576,8 @@ func TestQueryDoContextLoggingOverrides(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
 				AddRow(1, "John", "john@example.com"))
 
-		ctx := WithNoQueryLogging(ctx)
-		err := typedbDB.QueryDo(ctx, query, args, func(rows *sql.Rows) error {
+		newCtx := WithNoQueryLogging(ctx)
+		err := typedbDB.QueryDo(newCtx, query, args, func(rows *sql.Rows) error {
 			return nil
 		})
 		if err != nil {
@@ -614,8 +614,8 @@ func TestQueryDoContextLoggingOverrides(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
 				AddRow(1, "John", "john@example.com"))
 
-		ctx := WithNoArgLogging(ctx)
-		err := typedbDB.QueryDo(ctx, query, args, func(rows *sql.Rows) error {
+		newCtx := WithNoArgLogging(ctx)
+		err := typedbDB.QueryDo(newCtx, query, args, func(rows *sql.Rows) error {
 			return nil
 		})
 		if err != nil {
@@ -650,7 +650,7 @@ func TestContextLoggingOverrides(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	ctx := context.Background()
@@ -664,8 +664,8 @@ func TestContextLoggingOverrides(t *testing.T) {
 			WithArgs("test", "password123").
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
-		ctx := WithNoLogging(ctx)
-		_, err := typedbDB.Exec(ctx, "INSERT INTO users (name, password) VALUES ($1, $2)", "test", "password123")
+		newCtx := WithNoLogging(ctx)
+		_, err := typedbDB.Exec(newCtx, "INSERT INTO users (name, password) VALUES ($1, $2)", "test", "password123")
 		if err != nil {
 			t.Fatalf("Exec failed: %v", err)
 		}
@@ -703,8 +703,8 @@ func TestContextLoggingOverrides(t *testing.T) {
 			WithArgs("test", "password123").
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
-		ctx := WithNoQueryLogging(ctx)
-		_, err := typedbDB.Exec(ctx, "INSERT INTO users (name, password) VALUES ($1, $2)", "test", "password123")
+		newCtx := WithNoQueryLogging(ctx)
+		_, err := typedbDB.Exec(newCtx, "INSERT INTO users (name, password) VALUES ($1, $2)", "test", "password123")
 		if err != nil {
 			t.Fatalf("Exec failed: %v", err)
 		}
@@ -738,8 +738,8 @@ func TestContextLoggingOverrides(t *testing.T) {
 			WithArgs("test", "password123").
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
-		ctx := WithNoArgLogging(ctx)
-		_, err := typedbDB.Exec(ctx, "INSERT INTO users (name, password) VALUES ($1, $2)", "test", "password123")
+		newCtx := WithNoArgLogging(ctx)
+		_, err := typedbDB.Exec(newCtx, "INSERT INTO users (name, password) VALUES ($1, $2)", "test", "password123")
 		if err != nil {
 			t.Fatalf("Exec failed: %v", err)
 		}

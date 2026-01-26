@@ -75,7 +75,7 @@ func TestFindFieldByTag(t *testing.T) {
 	}
 
 	// Test finding non-existent tag
-	field, found = findFieldByTag(user, "load", "nonexistent")
+	_, found = findFieldByTag(user, "load", "nonexistent")
 	if found {
 		t.Error("Expected not to find field with load:\"nonexistent\" tag")
 	}
@@ -218,9 +218,7 @@ func TestFindMethod(t *testing.T) {
 	if !found {
 		t.Fatal("Expected to find Deserialize method")
 	}
-	if method == nil {
-		t.Error("Method should not be nil")
-	}
+	// method cannot be nil if found is true (findMethod guarantees this)
 	if method.Name != "Deserialize" {
 		t.Errorf("Expected method name 'Deserialize', got %q", method.Name)
 	}

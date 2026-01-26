@@ -39,7 +39,7 @@ type Post struct {
 	UserID    int    `db:"user_id"`
 	Title     string `db:"title"`
 	Content   string `db:"content"`
-	Tags      string `db:"tags"`      // PostgreSQL array as string
+	Tags      string `db:"tags"`     // PostgreSQL array as string
 	Metadata  string `db:"metadata"` // JSONB as string
 	CreatedAt string `db:"created_at"`
 	UpdatedAt string `db:"updated_at" dbUpdate:"auto-timestamp"`
@@ -85,67 +85,67 @@ func init() {
 // TypeExample demonstrates comprehensive PostgreSQL data types
 type TypeExample struct {
 	typedb.Model
-	ID                    int    `db:"id" load:"primary"`
-	SmallInt              int    `db:"small_int"`
-	IntegerCol            int    `db:"integer_col"`
-	BigInt                int64  `db:"big_int"`
-	DecimalCol            string `db:"decimal_col"`
-	NumericCol            string `db:"numeric_col"`
-	RealCol               string `db:"real_col"`
-	DoublePrecisionCol    string `db:"double_precision_col"`
-	MoneyCol              string `db:"money_col"`
-	VarcharCol            string `db:"varchar_col"`
-	CharCol               string `db:"char_col"`
-	TextCol               string `db:"text_col"`
-	ByteaCol              string `db:"bytea_col"` // Binary as hex string
-	DateCol               string `db:"date_col"`
-	TimeCol               string `db:"time_col"`
-	TimeTzCol             string `db:"time_tz_col"`
-	TimestampCol          string `db:"timestamp_col"`
-	TimestamptzCol        string `db:"timestamptz_col"`
-	IntervalCol           string `db:"interval_col"`
-	BooleanCol            bool   `db:"boolean_col"`
-	JsonCol               string `db:"json_col"`
-	JsonbCol              string `db:"jsonb_col"`
-	SmallintArray         string `db:"smallint_array"`
-	IntArray              string `db:"int_array"`
-	BigintArray           string `db:"bigint_array"`
-	RealArray             string `db:"real_array"`
-	DoublePrecisionArray  string `db:"double_precision_array"`
-	NumericArray          string `db:"numeric_array"`
-	VarcharArray          string `db:"varchar_array"`
-	TextArray             string `db:"text_array"`
-	BooleanArray          string `db:"boolean_array"`
-	DateArray             string `db:"date_array"`
-	TimestampArray        string `db:"timestamp_array"`
-	JsonArray             string `db:"json_array"`
-	JsonbArray            string `db:"jsonb_array"`
-	UuidArray             string `db:"uuid_array"`
-	ByteaArray            string `db:"bytea_array"`
-	UuidCol               string `db:"uuid_col"`
-	InetCol               string `db:"inet_col"`
-	CidrCol               string `db:"cidr_col"`
-	MacaddrCol            string `db:"macaddr_col"`
-	Macaddr8Col           string `db:"macaddr8_col"`
-	PointCol              string `db:"point_col"`
-	LineCol               string `db:"line_col"`
-	LsegCol               string `db:"lseg_col"`
-	BoxCol                string `db:"box_col"`
-	PathCol               string `db:"path_col"`
-	PolygonCol            string `db:"polygon_col"`
-	CircleCol             string `db:"circle_col"`
-	Int4rangeCol          string `db:"int4range_col"`
-	Int8rangeCol          string `db:"int8range_col"`
-	NumrangeCol           string `db:"numrange_col"`
-	TsrangeCol            string `db:"tsrange_col"`
-	TstzrangeCol          string `db:"tstzrange_col"`
-	DaterangeCol          string `db:"daterange_col"`
-	BitCol                string `db:"bit_col"`
-	VarbitCol             string `db:"varbit_col"`
-	TsvectorCol           string `db:"tsvector_col"`
-	TsqueryCol            string `db:"tsquery_col"`
-	XmlCol                string `db:"xml_col"`
-	CreatedAt             string `db:"created_at"`
+	ID                   int    `db:"id" load:"primary"`
+	SmallInt             int    `db:"small_int"`
+	IntegerCol           int    `db:"integer_col"`
+	BigInt               int64  `db:"big_int"`
+	DecimalCol           string `db:"decimal_col"`
+	NumericCol           string `db:"numeric_col"`
+	RealCol              string `db:"real_col"`
+	DoublePrecisionCol   string `db:"double_precision_col"`
+	MoneyCol             string `db:"money_col"`
+	VarcharCol           string `db:"varchar_col"`
+	CharCol              string `db:"char_col"`
+	TextCol              string `db:"text_col"`
+	ByteaCol             string `db:"bytea_col"` // Binary as hex string
+	DateCol              string `db:"date_col"`
+	TimeCol              string `db:"time_col"`
+	TimeTzCol            string `db:"time_tz_col"`
+	TimestampCol         string `db:"timestamp_col"`
+	TimestamptzCol       string `db:"timestamptz_col"`
+	IntervalCol          string `db:"interval_col"`
+	BooleanCol           bool   `db:"boolean_col"`
+	JsonCol              string `db:"json_col"`
+	JsonbCol             string `db:"jsonb_col"`
+	SmallintArray        string `db:"smallint_array"`
+	IntArray             string `db:"int_array"`
+	BigintArray          string `db:"bigint_array"`
+	RealArray            string `db:"real_array"`
+	DoublePrecisionArray string `db:"double_precision_array"`
+	NumericArray         string `db:"numeric_array"`
+	VarcharArray         string `db:"varchar_array"`
+	TextArray            string `db:"text_array"`
+	BooleanArray         string `db:"boolean_array"`
+	DateArray            string `db:"date_array"`
+	TimestampArray       string `db:"timestamp_array"`
+	JsonArray            string `db:"json_array"`
+	JsonbArray           string `db:"jsonb_array"`
+	UuidArray            string `db:"uuid_array"`
+	ByteaArray           string `db:"bytea_array"`
+	UuidCol              string `db:"uuid_col"`
+	InetCol              string `db:"inet_col"`
+	CidrCol              string `db:"cidr_col"`
+	MacaddrCol           string `db:"macaddr_col"`
+	Macaddr8Col          string `db:"macaddr8_col"`
+	PointCol             string `db:"point_col"`
+	LineCol              string `db:"line_col"`
+	LsegCol              string `db:"lseg_col"`
+	BoxCol               string `db:"box_col"`
+	PathCol              string `db:"path_col"`
+	PolygonCol           string `db:"polygon_col"`
+	CircleCol            string `db:"circle_col"`
+	Int4rangeCol         string `db:"int4range_col"`
+	Int8rangeCol         string `db:"int8range_col"`
+	NumrangeCol          string `db:"numrange_col"`
+	TsrangeCol           string `db:"tsrange_col"`
+	TstzrangeCol         string `db:"tstzrange_col"`
+	DaterangeCol         string `db:"daterange_col"`
+	BitCol               string `db:"bit_col"`
+	VarbitCol            string `db:"varbit_col"`
+	TsvectorCol          string `db:"tsvector_col"`
+	TsqueryCol           string `db:"tsquery_col"`
+	XmlCol               string `db:"xml_col"`
+	CreatedAt            string `db:"created_at"`
 }
 
 func (t *TypeExample) QueryByID() string {

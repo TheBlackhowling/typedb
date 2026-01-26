@@ -15,7 +15,7 @@ func TestExecHelperMasking(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	ctx := context.Background()
@@ -42,8 +42,8 @@ func TestExecHelperMasking(t *testing.T) {
 			for i := 0; i < len(entry.keyvals)-1; i += 2 {
 				if entry.keyvals[i] == "args" {
 					foundArgs = true
-					if args, ok := entry.keyvals[i+1].([]any); ok {
-						loggedArgs = args
+					if logArgs, ok := entry.keyvals[i+1].([]any); ok {
+						loggedArgs = logArgs
 					}
 					break
 				}
@@ -68,13 +68,13 @@ func TestExecHelperMasking(t *testing.T) {
 		logger.debugs = nil
 		logger.errors = nil
 
-		ctx := WithMaskIndices(ctx, []int{2}) // Mask password at index 2
+		maskedCtx := WithMaskIndices(ctx, []int{2}) // Mask password at index 2
 
 		mock.ExpectExec("INSERT INTO users").
 			WithArgs("John", "john@example.com", "secret123").
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
-		_, err := execHelper(ctx, db, logger, 5*time.Second, true, true, query, args...)
+		_, err := execHelper(maskedCtx, db, logger, 5*time.Second, true, true, query, args...)
 		if err != nil {
 			t.Fatalf("execHelper failed: %v", err)
 		}
@@ -86,8 +86,8 @@ func TestExecHelperMasking(t *testing.T) {
 			for i := 0; i < len(entry.keyvals)-1; i += 2 {
 				if entry.keyvals[i] == "args" {
 					foundArgs = true
-					if args, ok := entry.keyvals[i+1].([]any); ok {
-						loggedArgs = args
+					if logArgs, ok := entry.keyvals[i+1].([]any); ok {
+						loggedArgs = logArgs
 					}
 					break
 				}
@@ -121,7 +121,7 @@ func TestQueryAllHelperMasking(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	ctx := context.Background()
@@ -149,8 +149,8 @@ func TestQueryAllHelperMasking(t *testing.T) {
 			for i := 0; i < len(entry.keyvals)-1; i += 2 {
 				if entry.keyvals[i] == "args" {
 					foundArgs = true
-					if args, ok := entry.keyvals[i+1].([]any); ok {
-						loggedArgs = args
+					if logArgs, ok := entry.keyvals[i+1].([]any); ok {
+						loggedArgs = logArgs
 					}
 					break
 				}
@@ -175,14 +175,14 @@ func TestQueryAllHelperMasking(t *testing.T) {
 		logger.debugs = nil
 		logger.errors = nil
 
-		ctx := WithMaskIndices(ctx, []int{1}) // Mask password at index 1
+		maskedCtx := WithMaskIndices(ctx, []int{1}) // Mask password at index 1
 
 		mock.ExpectQuery("SELECT id, name, email FROM users").
 			WithArgs("john@example.com", "secret123").
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
 				AddRow(1, "John", "john@example.com"))
 
-		_, err := queryAllHelper(ctx, db, logger, 5*time.Second, true, true, query, args...)
+		_, err := queryAllHelper(maskedCtx, db, logger, 5*time.Second, true, true, query, args...)
 		if err != nil {
 			t.Fatalf("queryAllHelper failed: %v", err)
 		}
@@ -194,8 +194,8 @@ func TestQueryAllHelperMasking(t *testing.T) {
 			for i := 0; i < len(entry.keyvals)-1; i += 2 {
 				if entry.keyvals[i] == "args" {
 					foundArgs = true
-					if args, ok := entry.keyvals[i+1].([]any); ok {
-						loggedArgs = args
+					if logArgs, ok := entry.keyvals[i+1].([]any); ok {
+						loggedArgs = logArgs
 					}
 					break
 				}
@@ -226,7 +226,7 @@ func TestQueryRowMapHelperMasking(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	ctx := context.Background()
@@ -254,8 +254,8 @@ func TestQueryRowMapHelperMasking(t *testing.T) {
 			for i := 0; i < len(entry.keyvals)-1; i += 2 {
 				if entry.keyvals[i] == "args" {
 					foundArgs = true
-					if args, ok := entry.keyvals[i+1].([]any); ok {
-						loggedArgs = args
+					if logArgs, ok := entry.keyvals[i+1].([]any); ok {
+						loggedArgs = logArgs
 					}
 					break
 				}
@@ -280,14 +280,14 @@ func TestQueryRowMapHelperMasking(t *testing.T) {
 		logger.debugs = nil
 		logger.errors = nil
 
-		ctx := WithMaskIndices(ctx, []int{1}) // Mask password at index 1
+		maskedCtx := WithMaskIndices(ctx, []int{1}) // Mask password at index 1
 
 		mock.ExpectQuery("SELECT id, name, email FROM users").
 			WithArgs(123, "secret123").
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
 				AddRow(123, "John", "john@example.com"))
 
-		_, err := queryRowMapHelper(ctx, db, logger, 5*time.Second, true, true, query, args...)
+		_, err := queryRowMapHelper(maskedCtx, db, logger, 5*time.Second, true, true, query, args...)
 		if err != nil {
 			t.Fatalf("queryRowMapHelper failed: %v", err)
 		}
@@ -299,8 +299,8 @@ func TestQueryRowMapHelperMasking(t *testing.T) {
 			for i := 0; i < len(entry.keyvals)-1; i += 2 {
 				if entry.keyvals[i] == "args" {
 					foundArgs = true
-					if args, ok := entry.keyvals[i+1].([]any); ok {
-						loggedArgs = args
+					if logArgs, ok := entry.keyvals[i+1].([]any); ok {
+						loggedArgs = logArgs
 					}
 					break
 				}
@@ -331,7 +331,7 @@ func TestGetIntoHelperMasking(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	ctx := context.Background()
@@ -361,8 +361,8 @@ func TestGetIntoHelperMasking(t *testing.T) {
 			for i := 0; i < len(entry.keyvals)-1; i += 2 {
 				if entry.keyvals[i] == "args" {
 					foundArgs = true
-					if args, ok := entry.keyvals[i+1].([]any); ok {
-						loggedArgs = args
+					if logArgs, ok := entry.keyvals[i+1].([]any); ok {
+						loggedArgs = logArgs
 					}
 					break
 				}
@@ -387,14 +387,14 @@ func TestGetIntoHelperMasking(t *testing.T) {
 		logger.debugs = nil
 		logger.errors = nil
 
-		ctx := WithMaskIndices(ctx, []int{1}) // Mask password at index 1
+		maskedCtx := WithMaskIndices(ctx, []int{1}) // Mask password at index 1
 
 		mock.ExpectQuery("SELECT id, name, email FROM users").
 			WithArgs("john@example.com", "secret123").
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
 				AddRow(1, "John", "john@example.com"))
 
-		err := getIntoHelper(ctx, db, logger, 5*time.Second, true, true, query, args, &id, &name, &email)
+		err := getIntoHelper(maskedCtx, db, logger, 5*time.Second, true, true, query, args, &id, &name, &email)
 		if err != nil {
 			t.Fatalf("getIntoHelper failed: %v", err)
 		}
@@ -406,8 +406,8 @@ func TestGetIntoHelperMasking(t *testing.T) {
 			for i := 0; i < len(entry.keyvals)-1; i += 2 {
 				if entry.keyvals[i] == "args" {
 					foundArgs = true
-					if args, ok := entry.keyvals[i+1].([]any); ok {
-						loggedArgs = args
+					if logArgs, ok := entry.keyvals[i+1].([]any); ok {
+						loggedArgs = logArgs
 					}
 					break
 				}
@@ -438,7 +438,7 @@ func TestQueryDoHelperMasking(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	ctx := context.Background()
@@ -473,8 +473,8 @@ func TestQueryDoHelperMasking(t *testing.T) {
 			for i := 0; i < len(entry.keyvals)-1; i += 2 {
 				if entry.keyvals[i] == "args" {
 					foundArgs = true
-					if args, ok := entry.keyvals[i+1].([]any); ok {
-						loggedArgs = args
+					if logArgs, ok := entry.keyvals[i+1].([]any); ok {
+						loggedArgs = logArgs
 					}
 					break
 				}
@@ -499,7 +499,7 @@ func TestQueryDoHelperMasking(t *testing.T) {
 		logger.debugs = nil
 		logger.errors = nil
 
-		ctx := WithMaskIndices(ctx, []int{1}) // Mask password at index 1
+		maskedCtx := WithMaskIndices(ctx, []int{1}) // Mask password at index 1
 
 		mock.ExpectQuery("SELECT id, name, email FROM users").
 			WithArgs("john@example.com", "secret123").
@@ -507,7 +507,7 @@ func TestQueryDoHelperMasking(t *testing.T) {
 				AddRow(1, "John", "john@example.com"))
 
 		scanCalled := false
-		err := queryDoHelper(ctx, db, logger, 5*time.Second, true, true, query, args, func(rows *sql.Rows) error {
+		err := queryDoHelper(maskedCtx, db, logger, 5*time.Second, true, true, query, args, func(rows *sql.Rows) error {
 			scanCalled = true
 			return nil
 		})
@@ -525,8 +525,8 @@ func TestQueryDoHelperMasking(t *testing.T) {
 			for i := 0; i < len(entry.keyvals)-1; i += 2 {
 				if entry.keyvals[i] == "args" {
 					foundArgs = true
-					if args, ok := entry.keyvals[i+1].([]any); ok {
-						loggedArgs = args
+					if logArgs, ok := entry.keyvals[i+1].([]any); ok {
+						loggedArgs = logArgs
 					}
 					break
 				}

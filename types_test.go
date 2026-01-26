@@ -56,9 +56,9 @@ func TestModelStruct(t *testing.T) {
 	// Test that Model struct can be created
 	model := &Model{}
 
-	if model == nil {
-		t.Fatal("Model should not be nil")
-	}
+	// model cannot be nil since it's created with &Model{}
+	// This test verifies the struct can be instantiated
+	_ = model // Ensure model is used
 }
 
 // Note: Interface implementation tests will be added in later layers:

@@ -112,8 +112,8 @@ func TestWithMaskIndices(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("store single index", func(t *testing.T) {
-		ctx := WithMaskIndices(ctx, []int{1})
-		maskIndices := ctx.Value(maskIndicesKey{})
+		newCtx := WithMaskIndices(ctx, []int{1})
+		maskIndices := newCtx.Value(maskIndicesKey{})
 		if maskIndices == nil {
 			t.Fatal("Expected maskIndices to be stored in context")
 		}
@@ -127,8 +127,8 @@ func TestWithMaskIndices(t *testing.T) {
 	})
 
 	t.Run("store multiple indices", func(t *testing.T) {
-		ctx := WithMaskIndices(ctx, []int{0, 2, 5})
-		maskIndices := ctx.Value(maskIndicesKey{})
+		newCtx := WithMaskIndices(ctx, []int{0, 2, 5})
+		maskIndices := newCtx.Value(maskIndicesKey{})
 		if maskIndices == nil {
 			t.Fatal("Expected maskIndices to be stored in context")
 		}
@@ -148,8 +148,8 @@ func TestWithMaskIndices(t *testing.T) {
 	})
 
 	t.Run("store empty indices", func(t *testing.T) {
-		ctx := WithMaskIndices(ctx, []int{})
-		maskIndices := ctx.Value(maskIndicesKey{})
+		newCtx := WithMaskIndices(ctx, []int{})
+		maskIndices := newCtx.Value(maskIndicesKey{})
 		if maskIndices == nil {
 			t.Fatal("Expected maskIndices to be stored in context (even if empty)")
 		}
@@ -163,9 +163,9 @@ func TestWithMaskIndices(t *testing.T) {
 	})
 
 	t.Run("chaining WithMaskIndices overwrites previous", func(t *testing.T) {
-		ctx := WithMaskIndices(ctx, []int{1, 2})
-		ctx = WithMaskIndices(ctx, []int{3, 4})
-		maskIndices := ctx.Value(maskIndicesKey{})
+		ctx1 := WithMaskIndices(ctx, []int{1, 2})
+		ctx2 := WithMaskIndices(ctx1, []int{3, 4})
+		maskIndices := ctx2.Value(maskIndicesKey{})
 		if maskIndices == nil {
 			t.Fatal("Expected maskIndices to be stored in context")
 		}
@@ -210,9 +210,9 @@ func TestGetLoggingFlagsAndArgs(t *testing.T) {
 	})
 
 	t.Run("masking applied when mask indices in context", func(t *testing.T) {
-		ctx := WithMaskIndices(ctx, []int{2})
+		maskedCtx := WithMaskIndices(ctx, []int{2})
 		args := []any{"John", "john@example.com", "password123"}
-		logQueries, logArgs, logArgsCopy := getLoggingFlagsAndArgs(ctx, true, true, args)
+		logQueries, logArgs, logArgsCopy := getLoggingFlagsAndArgs(maskedCtx, true, true, args)
 
 		if !logQueries {
 			t.Error("Expected logQueries to be true")
@@ -241,9 +241,9 @@ func TestGetLoggingFlagsAndArgs(t *testing.T) {
 	})
 
 	t.Run("masking multiple indices", func(t *testing.T) {
-		ctx := WithMaskIndices(ctx, []int{0, 2})
+		maskedCtx := WithMaskIndices(ctx, []int{0, 2})
 		args := []any{"secret1", "john@example.com", "secret2"}
-		logQueries, logArgs, logArgsCopy := getLoggingFlagsAndArgs(ctx, true, true, args)
+		logQueries, logArgs, logArgsCopy := getLoggingFlagsAndArgs(maskedCtx, true, true, args)
 
 		if !logQueries {
 			t.Error("Expected logQueries to be true")
@@ -263,9 +263,9 @@ func TestGetLoggingFlagsAndArgs(t *testing.T) {
 	})
 
 	t.Run("masking with LogArgs=false (should not mask)", func(t *testing.T) {
-		ctx := WithMaskIndices(ctx, []int{2})
+		maskedCtx := WithMaskIndices(ctx, []int{2})
 		args := []any{"John", "john@example.com", "password123"}
-		logQueries, logArgs, logArgsCopy := getLoggingFlagsAndArgs(ctx, true, false, args)
+		logQueries, logArgs, logArgsCopy := getLoggingFlagsAndArgs(maskedCtx, true, false, args)
 
 		if !logQueries {
 			t.Error("Expected logQueries to be true")
@@ -288,9 +288,9 @@ func TestGetLoggingFlagsAndArgs(t *testing.T) {
 	})
 
 	t.Run("masking with LogQueries=false and LogArgs=true", func(t *testing.T) {
-		ctx := WithMaskIndices(ctx, []int{2})
+		maskedCtx := WithMaskIndices(ctx, []int{2})
 		args := []any{"John", "john@example.com", "password123"}
-		logQueries, logArgs, logArgsCopy := getLoggingFlagsAndArgs(ctx, false, true, args)
+		logQueries, logArgs, logArgsCopy := getLoggingFlagsAndArgs(maskedCtx, false, true, args)
 
 		if logQueries {
 			t.Error("Expected logQueries to be false")
