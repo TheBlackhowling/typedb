@@ -358,6 +358,43 @@ Test plan documents should include:
 
 **NO EXCEPTIONS**: All static analysis checks must pass before creating a PR. The GitHub Actions workflow will also run these checks automatically on all PRs.
 
+### ⚠️ CRITICAL: Static Analysis Disabling Policy
+
+**DO NOT disable static analysis checks without explicit user permission - EVER.**
+
+- **Absolute Rule**: No disabling of static analysis tools, linters, or checks without explicit user approval
+- Static analysis checks are mandatory for code quality and security
+- All warnings and errors must be addressed, not suppressed
+
+- **If you encounter a static analysis warning/error:**
+  1. **DO NOT** add `//nolint`, `//nolint:linter-name`, or similar directives automatically
+  2. **DO NOT** disable checks in `.golangci.yml` or other config files
+  3. **DO NOT** add files to ignore lists without permission
+  4. **DO** fix the underlying issue instead of suppressing it
+  5. **DO** discuss with the user if the warning is a false positive
+  6. **DO** explain why suppression might be necessary if fixing is impossible
+  7. **DO** wait for explicit user approval before adding any suppression directives
+
+- **Acceptable suppression scenarios (with user approval):**
+   - False positives that cannot be fixed (e.g., linter bug)
+   - Intentional code patterns that trigger warnings but are correct
+   - Performance optimizations that require unsafe code
+   - Legacy code that cannot be refactored immediately (with plan to fix)
+
+- **Unacceptable suppression scenarios (fix instead of suppress):**
+   - Real bugs or code quality issues
+   - Warnings that can be fixed with code changes
+   - Style issues that can be addressed
+   - Security warnings (MUST be fixed, never suppressed)
+
+- **If suppression is approved:**
+  1. Add a clear comment explaining WHY suppression is necessary
+  2. Include the specific linter name: `//nolint:linter-name // reason`
+  3. Document the suppression in PR description
+  4. Create a backlog task to fix the underlying issue if temporary
+
+- **NO EXCEPTIONS**: Even suppressing false positives requires user discussion and explicit approval. The goal is to fix issues, not hide them.
+
 ### Pre-PR Checklist
 
 **Before creating ANY PR, you MUST verify:**

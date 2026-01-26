@@ -334,10 +334,10 @@ func TestMSSQL_Logging_ContextOverrides(t *testing.T) {
 
 	t.Run("WithNoLogging disables all logging", func(t *testing.T) {
 		logger.Debugs = nil
-		ctx := typedb.WithNoLogging(ctx)
+		ctx = typedb.WithNoLogging(ctx)
 		// Use a unique email to avoid conflicts
 		email := fmt.Sprintf("test-nolog-%d@example.com", time.Now().UnixNano())
-		_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (@p1, @p2)", "Test User", email)
+		_, err = db.Exec(ctx, "INSERT INTO users (name, email) VALUES (@p1, @p2)", "Test User", email)
 		if err != nil {
 			t.Fatalf("Exec failed: %v", err)
 		}
@@ -368,10 +368,10 @@ func TestMSSQL_Logging_ContextOverrides(t *testing.T) {
 
 	t.Run("WithNoQueryLogging disables query logging only", func(t *testing.T) {
 		logger.Debugs = nil
-		ctx := typedb.WithNoQueryLogging(ctx)
+		ctx = typedb.WithNoQueryLogging(ctx)
 		// Use a unique email to avoid conflicts
 		email := fmt.Sprintf("test-noquery-%d@example.com", time.Now().UnixNano())
-		_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (@p1, @p2)", "Test User", email)
+		_, err = db.Exec(ctx, "INSERT INTO users (name, email) VALUES (@p1, @p2)", "Test User", email)
 		if err != nil {
 			t.Fatalf("Exec failed: %v", err)
 		}
@@ -399,10 +399,10 @@ func TestMSSQL_Logging_ContextOverrides(t *testing.T) {
 
 	t.Run("WithNoArgLogging disables argument logging only", func(t *testing.T) {
 		logger.Debugs = nil
-		ctx := typedb.WithNoArgLogging(ctx)
+		ctx = typedb.WithNoArgLogging(ctx)
 		// Use a unique email to avoid conflicts
 		email := fmt.Sprintf("test-noargs-%d@example.com", time.Now().UnixNano())
-		_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (@p1, @p2)", "Test User", email)
+		_, err = db.Exec(ctx, "INSERT INTO users (name, email) VALUES (@p1, @p2)", "Test User", email)
 		if err != nil {
 			t.Fatalf("Exec failed: %v", err)
 		}
@@ -468,7 +468,7 @@ func TestMSSQL_Logging_NologTagMasking(t *testing.T) {
 			Name:  "Test User",
 			Email: email,
 		}
-		err := typedb.Insert(ctx, db, user)
+		err = typedb.Insert(ctx, db, user)
 		if err != nil {
 			t.Fatalf("Insert failed: %v", err)
 		}
@@ -480,8 +480,8 @@ func TestMSSQL_Logging_NologTagMasking(t *testing.T) {
 			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
 				if entry.Keyvals[i] == "args" {
 					foundArgs = true
-					args := entry.Keyvals[i+1].([]any)
-					for _, arg := range args {
+					logArgs := entry.Keyvals[i+1].([]any)
+					for _, arg := range logArgs {
 						if arg == "[REDACTED]" {
 							foundMasked = true
 						}
@@ -509,7 +509,7 @@ func TestMSSQL_Logging_NologTagMasking(t *testing.T) {
 			Name:  "Updated User",
 			Email: email,
 		}
-		err := typedb.Update(ctx, db, user)
+		err = typedb.Update(ctx, db, user)
 		if err != nil {
 			t.Fatalf("Update failed: %v", err)
 		}
@@ -539,7 +539,7 @@ func TestMSSQL_Logging_NologTagMasking(t *testing.T) {
 	t.Run("Load masks nolog fields", func(t *testing.T) {
 		logger.Debugs = nil
 		user := &UserWithNolog{ID: 1}
-		err := typedb.Load(ctx, db, user)
+		err = typedb.Load(ctx, db, user)
 		if err != nil {
 			t.Fatalf("Load failed: %v", err)
 		}
@@ -570,7 +570,7 @@ func TestMSSQL_Logging_SerializationNolog(t *testing.T) {
 
 		// Pass model as argument to QueryAll (database driver will fail, but masking should occur in logs first)
 		// We verify masking detection works even though SQL execution fails
-		_, err := db.QueryAll(ctx, "SELECT id, name, email FROM users WHERE email = @p1", user)
+		_, err = db.QueryAll(ctx, "SELECT id, name, email FROM users WHERE email = @p1", user)
 		// SQL execution will fail because structs can't be serialized, but masking should have occurred in logs
 		if err == nil {
 			t.Fatal("Expected QueryAll to fail with struct argument, but it succeeded")
@@ -584,8 +584,8 @@ func TestMSSQL_Logging_SerializationNolog(t *testing.T) {
 			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
 				if entry.Keyvals[i] == "args" {
 					foundArgs = true
-					args := entry.Keyvals[i+1].([]any)
-					for _, arg := range args {
+					logArgs := entry.Keyvals[i+1].([]any)
+					for _, arg := range logArgs {
 						if arg == "[REDACTED]" {
 							foundMasked = true
 						}
@@ -614,7 +614,7 @@ func TestMSSQL_Logging_SerializationNolog(t *testing.T) {
 		}
 
 		// Pass model as argument to QueryRowMap (database driver will fail, but masking should occur in logs first)
-		_, err := db.QueryRowMap(ctx, "SELECT id, name, email FROM users WHERE email = @p1", user)
+		_, err = db.QueryRowMap(ctx, "SELECT id, name, email FROM users WHERE email = @p1", user)
 		// SQL execution will fail because structs can't be serialized, but masking should have occurred in logs
 		if err == nil {
 			t.Fatal("Expected QueryRowMap to fail with struct argument, but it succeeded")
@@ -628,8 +628,8 @@ func TestMSSQL_Logging_SerializationNolog(t *testing.T) {
 			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
 				if entry.Keyvals[i] == "args" {
 					foundArgs = true
-					args := entry.Keyvals[i+1].([]any)
-					for _, arg := range args {
+					logArgs := entry.Keyvals[i+1].([]any)
+					for _, arg := range logArgs {
 						if arg == "[REDACTED]" {
 							foundMasked = true
 						}
@@ -659,7 +659,7 @@ func TestMSSQL_Logging_SerializationNolog(t *testing.T) {
 		var dest map[string]any
 
 		// Pass model as argument to GetInto (database driver will fail, but masking should occur in logs first)
-		err := db.GetInto(ctx, "SELECT id, name, email FROM users WHERE email = @p1", []any{user}, &dest)
+		err = db.GetInto(ctx, "SELECT id, name, email FROM users WHERE email = @p1", []any{user}, &dest)
 		// SQL execution will fail because structs can't be serialized, but masking should have occurred in logs
 		if err == nil {
 			t.Fatal("Expected GetInto to fail with struct argument, but it succeeded")
@@ -673,8 +673,8 @@ func TestMSSQL_Logging_SerializationNolog(t *testing.T) {
 			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
 				if entry.Keyvals[i] == "args" {
 					foundArgs = true
-					args := entry.Keyvals[i+1].([]any)
-					for _, arg := range args {
+					logArgs := entry.Keyvals[i+1].([]any)
+					for _, arg := range logArgs {
 						if arg == "[REDACTED]" {
 							foundMasked = true
 						}
@@ -703,7 +703,7 @@ func TestMSSQL_Logging_SerializationNolog(t *testing.T) {
 		}
 
 		// Pass model as argument to QueryDo (database driver will fail, but masking should occur in logs first)
-		err := db.QueryDo(ctx, "SELECT id, name, email FROM users WHERE email = @p1", []any{user}, func(rows *sql.Rows) error {
+		err = db.QueryDo(ctx, "SELECT id, name, email FROM users WHERE email = @p1", []any{user}, func(rows *sql.Rows) error {
 			return nil
 		})
 		// SQL execution will fail because structs can't be serialized, but masking should have occurred in logs
@@ -719,8 +719,8 @@ func TestMSSQL_Logging_SerializationNolog(t *testing.T) {
 			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
 				if entry.Keyvals[i] == "args" {
 					foundArgs = true
-					args := entry.Keyvals[i+1].([]any)
-					for _, arg := range args {
+					logArgs := entry.Keyvals[i+1].([]any)
+					for _, arg := range logArgs {
 						if arg == "[REDACTED]" {
 							foundMasked = true
 						}

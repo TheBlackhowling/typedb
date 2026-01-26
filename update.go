@@ -179,10 +179,7 @@ func Update[T ModelInterface](ctx context.Context, exec Executor, model T) error
 
 	// If partial update is enabled, refresh the original copy after successful update
 	if opts.PartialUpdate {
-		if err := saveOriginalCopyIfEnabled(model); err != nil {
-			// Log error but don't fail the update - the update succeeded
-			// The original copy will be refreshed on the next deserialization
-		}
+		_ = saveOriginalCopyIfEnabled(model) // Ignore error - update succeeded, original copy will refresh on next deserialization
 	}
 
 	return nil
@@ -213,7 +210,9 @@ func getTimestampFunction(driverName string) string {
 // Fields with dbUpdate:"auto-timestamp" are automatically populated with database timestamp functions.
 // If changedFields is provided (partial update enabled), only includes fields that have changed.
 // Returns: column names, field values for serialization, auto-update column names, and mask indices (for fields with nolog:"true" tag).
+// driverName parameter is kept for API consistency with serializeModelFields, but is not currently used.
 func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName, driverName string, changedFields map[string]bool) (columns []string, values []any, autoUpdateColumns []string, maskIndices []int, err error) {
+	_ = driverName // Reserved for future use (e.g., database-specific field handling)
 	modelValue := reflect.ValueOf(model)
 	if modelValue.Kind() != reflect.Ptr || modelValue.IsNil() {
 		return nil, nil, nil, nil, fmt.Errorf("typedb: model must be a non-nil pointer")
@@ -274,7 +273,7 @@ func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName, dr
 }
 
 // extractOriginalCopy extracts the original copy from Model.originalCopy field using unsafe
-func extractOriginalCopy(structValue reflect.Value) (originalCopy interface{}, err error) {
+func extractOriginalCopy(structValue reflect.Value) interface{} {
 	for i := 0; i < structValue.NumField(); i++ {
 		field := structValue.Type().Field(i)
 		if field.Anonymous && field.Type == reflect.TypeOf(Model{}) {
@@ -283,13 +282,13 @@ func extractOriginalCopy(structValue reflect.Value) (originalCopy interface{}, e
 			modelFieldPtr := unsafe.Pointer(modelFieldValue.UnsafeAddr())
 			originalCopyFieldType := field.Type.Field(0) // Model.originalCopy field
 			originalCopyFieldPtr := unsafe.Add(modelFieldPtr, originalCopyFieldType.Offset)
-			originalCopy = *(*interface{})(originalCopyFieldPtr)
+			originalCopy := *(*interface{})(originalCopyFieldPtr)
 			if originalCopy != nil {
-				return originalCopy, nil
+				return originalCopy
 			}
 		}
 	}
-	return nil, nil // No original copy found
+	return nil // No original copy found
 }
 
 // compareFieldMaps compares two field maps and returns a map of changed column names
@@ -340,10 +339,7 @@ func getChangedFields(model ModelInterface, primaryKeyFieldName string) (changed
 	}
 
 	// Extract original copy
-	originalCopy, err := extractOriginalCopy(structValue)
-	if err != nil {
-		return nil, err
-	}
+	originalCopy := extractOriginalCopy(structValue)
 
 	if originalCopy == nil {
 		// No original copy exists - treat all fields as changed (fallback to normal update)
