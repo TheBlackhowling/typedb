@@ -333,7 +333,7 @@ func TestSQLite_Logging_ContextOverrides(t *testing.T) {
 
 	t.Run("WithNoLogging disables all logging", func(t *testing.T) {
 		logger.Debugs = nil
-		ctx := typedb.WithNoLogging(ctx)
+		ctx = typedb.WithNoLogging(ctx)
 		// Use a unique email to avoid conflicts
 		email := fmt.Sprintf("test-nolog-%d@example.com", time.Now().UnixNano())
 		_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", email)
@@ -367,7 +367,7 @@ func TestSQLite_Logging_ContextOverrides(t *testing.T) {
 
 	t.Run("WithNoQueryLogging disables query logging only", func(t *testing.T) {
 		logger.Debugs = nil
-		ctx := typedb.WithNoQueryLogging(ctx)
+		ctx = typedb.WithNoQueryLogging(ctx)
 		// Use a unique email to avoid conflicts
 		email := fmt.Sprintf("test-noquery-%d@example.com", time.Now().UnixNano())
 		_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", email)
@@ -398,7 +398,7 @@ func TestSQLite_Logging_ContextOverrides(t *testing.T) {
 
 	t.Run("WithNoArgLogging disables argument logging only", func(t *testing.T) {
 		logger.Debugs = nil
-		ctx := typedb.WithNoArgLogging(ctx)
+		ctx = typedb.WithNoArgLogging(ctx)
 		// Use a unique email to avoid conflicts
 		email := fmt.Sprintf("test-noargs-%d@example.com", time.Now().UnixNano())
 		_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", email)
@@ -477,8 +477,8 @@ func TestSQLite_Logging_NologTagMasking(t *testing.T) {
 			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
 				if entry.Keyvals[i] == "args" {
 					foundArgs = true
-					args := entry.Keyvals[i+1].([]any)
-					for _, arg := range args {
+					logArgs := entry.Keyvals[i+1].([]any)
+					for _, arg := range logArgs {
 						if arg == "[REDACTED]" {
 							foundMasked = true
 						}
@@ -579,8 +579,8 @@ func TestSQLite_Logging_SerializationNolog(t *testing.T) {
 			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
 				if entry.Keyvals[i] == "args" {
 					foundArgs = true
-					args := entry.Keyvals[i+1].([]any)
-					for _, arg := range args {
+					logArgs := entry.Keyvals[i+1].([]any)
+					for _, arg := range logArgs {
 						if arg == "[REDACTED]" {
 							foundMasked = true
 						}
@@ -623,8 +623,8 @@ func TestSQLite_Logging_SerializationNolog(t *testing.T) {
 			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
 				if entry.Keyvals[i] == "args" {
 					foundArgs = true
-					args := entry.Keyvals[i+1].([]any)
-					for _, arg := range args {
+					logArgs := entry.Keyvals[i+1].([]any)
+					for _, arg := range logArgs {
 						if arg == "[REDACTED]" {
 							foundMasked = true
 						}
@@ -668,8 +668,8 @@ func TestSQLite_Logging_SerializationNolog(t *testing.T) {
 			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
 				if entry.Keyvals[i] == "args" {
 					foundArgs = true
-					args := entry.Keyvals[i+1].([]any)
-					for _, arg := range args {
+					logArgs := entry.Keyvals[i+1].([]any)
+					for _, arg := range logArgs {
 						if arg == "[REDACTED]" {
 							foundMasked = true
 						}
@@ -714,8 +714,8 @@ func TestSQLite_Logging_SerializationNolog(t *testing.T) {
 			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
 				if entry.Keyvals[i] == "args" {
 					foundArgs = true
-					args := entry.Keyvals[i+1].([]any)
-					for _, arg := range args {
+					logArgs := entry.Keyvals[i+1].([]any)
+					for _, arg := range logArgs {
 						if arg == "[REDACTED]" {
 							foundMasked = true
 						}

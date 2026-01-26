@@ -24,7 +24,7 @@ func getModelType(model any) reflect.Type {
 func findFieldByTag(model any, tagKey, tagValue string) (*reflect.StructField, bool) {
 	t := getModelType(model)
 	return findFieldByTagRecursive(t, tagKey, tagValue)
-	//nolint:unparam // tagKey is kept for API flexibility even though currently always "load"
+	// tagKey parameter is kept for API flexibility even though currently always "load"
 }
 
 // findFieldByTagRecursive recursively searches for a field with the given tag.
