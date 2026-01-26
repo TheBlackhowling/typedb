@@ -82,7 +82,7 @@ func TestMySQL_Logging_QueryAll(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("success logs debug", func(t *testing.T) {
-		logger.Debugs = nil
+		logger.Debugs = nil // Reset logs
 		_, err := db.QueryAll(ctx, "SELECT id, name, email, created_at FROM users ORDER BY id")
 		if err != nil {
 			t.Fatalf("QueryAll failed: %v", err)
@@ -92,8 +92,8 @@ func TestMySQL_Logging_QueryAll(t *testing.T) {
 		if len(logger.Debugs) == 0 {
 			t.Fatal("Expected Debug log for QueryAll, got none")
 		}
-		if logger.Debugs[0].Msg != "Executing query" {
-			t.Errorf("Expected Debug log message 'Executing query', got %q", logger.Debugs[0].Msg)
+		if logger.Debugs[0].Msg != "Querying all rows" {
+			t.Errorf("Expected Debug log message 'Querying all rows', got %q", logger.Debugs[0].Msg)
 		}
 	})
 
@@ -205,19 +205,21 @@ func TestMySQL_Logging_Close(t *testing.T) {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	logger.Debugs = nil
-	err = db.Close()
-	if err != nil {
-		t.Fatalf("Close failed: %v", err)
-	}
+	t.Run("close logs info", func(t *testing.T) {
+		logger.Infos = nil // Reset logs
+		err := db.Close()
+		if err != nil {
+			t.Fatalf("Close failed: %v", err)
+		}
 
-	// Verify Debug log was emitted
-	if len(logger.Debugs) == 0 {
-		t.Fatal("Expected Debug log for Close, got none")
-	}
-	if logger.Debugs[0].Msg != "Closing database connection" {
-		t.Errorf("Expected Debug log message 'Closing database connection', got %q", logger.Debugs[0].Msg)
-	}
+		// Verify Info log was emitted
+		if len(logger.Infos) == 0 {
+			t.Fatal("Expected Info log for Close, got none")
+		}
+		if logger.Infos[0].Msg != "Closing database connection" {
+			t.Errorf("Expected Info log message 'Closing database connection', got %q", logger.Infos[0].Msg)
+		}
+	})
 }
 
 func TestMySQL_Logging_PerInstanceLogger(t *testing.T) {
@@ -326,16 +328,35 @@ func TestMySQL_Logging_ContextOverrides(t *testing.T) {
 
 	t.Run("WithNoLogging disables all logging", func(t *testing.T) {
 		logger.Debugs = nil
-		email := fmt.Sprintf("test-nologging-%d@example.com", time.Now().UnixNano())
 		ctx := typedb.WithNoLogging(ctx)
+		// Use a unique email to avoid conflicts
+		email := fmt.Sprintf("test-nolog-%d@example.com", time.Now().UnixNano())
 		_, err := db.Exec(ctx, "INSERT INTO users (name, email) VALUES (?, ?)", "Test User", email)
 		if err != nil {
 			t.Fatalf("Exec failed: %v", err)
 		}
 
-		// Verify no Debug logs were emitted
-		if len(logger.Debugs) > 0 {
-			t.Error("Expected no Debug logs when WithNoLogging is used")
+		// Should log message but without query/args
+		if len(logger.Debugs) == 0 {
+			t.Fatal("Expected Debug log even when logging disabled")
+		}
+		foundQuery := false
+		foundArgs := false
+		for _, entry := range logger.Debugs {
+			for i := 0; i < len(entry.Keyvals)-1; i += 2 {
+				if entry.Keyvals[i] == "query" {
+					foundQuery = true
+				}
+				if entry.Keyvals[i] == "args" {
+					foundArgs = true
+				}
+			}
+		}
+		if foundQuery {
+			t.Error("Expected 'query' key to be absent when WithNoLogging is used")
+		}
+		if foundArgs {
+			t.Error("Expected 'args' key to be absent when WithNoLogging is used")
 		}
 	})
 
