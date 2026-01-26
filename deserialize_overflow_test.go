@@ -248,19 +248,39 @@ func TestConvertUint64Slice_OverflowHandling(t *testing.T) {
 
 // Test that valid conversions still work (no false positives)
 func TestDeserializeInt_ValidConversions(t *testing.T) {
+	maxInt := int(^uint(0) >> 1)
+	minInt := ^maxInt
+	maxInt32 := int32(math.MaxInt32)
+	minInt32 := int32(math.MinInt32)
+	
 	tests := []struct {
 		name  string
 		value any
 		want  int
 	}{
-		{"int", 123, 123},
-		{"int32", int32(456), 456},
-		{"int16", int16(789), 789},
-		{"int8", int8(42), 42},
-		{"uint32", uint32(999), 999},
-		{"uint16", uint16(888), 888},
-		{"uint8", uint8(77), 77},
+		{"int (zero)", 0, 0},
+		{"int (small positive)", 123, 123},
+		{"int (small negative)", -123, -123},
+		{"int (max)", maxInt, maxInt},
+		{"int (min)", minInt, minInt},
+		{"int32 (max)", maxInt32, int(maxInt32)},
+		{"int32 (min)", minInt32, int(minInt32)},
+		{"int32 (small)", int32(456), 456},
+		{"int16 (max)", int16(math.MaxInt16), int(math.MaxInt16)},
+		{"int16 (min)", int16(math.MinInt16), int(math.MinInt16)},
+		{"int16 (small)", int16(789), 789},
+		{"int8 (max)", int8(math.MaxInt8), int(math.MaxInt8)},
+		{"int8 (min)", int8(math.MinInt8), int(math.MinInt8)},
+		{"int8 (small)", int8(42), 42},
+		{"uint32 (max)", uint32(math.MaxUint32), int(math.MaxUint32)},
+		{"uint32 (small)", uint32(999), 999},
+		{"uint16 (max)", uint16(math.MaxUint16), int(math.MaxUint16)},
+		{"uint16 (small)", uint16(888), 888},
+		{"uint8 (max)", uint8(math.MaxUint8), int(math.MaxUint8)},
+		{"uint8 (small)", uint8(77), 77},
+		{"uint (max valid)", uint(maxInt), maxInt},
 		{"uint (small)", uint(555), 555},
+		{"uint64 (max valid)", uint64(maxInt), maxInt},
 		{"uint64 (small)", uint64(333), 333},
 	}
 
@@ -278,16 +298,39 @@ func TestDeserializeInt_ValidConversions(t *testing.T) {
 }
 
 func TestDeserializeInt64_ValidConversions(t *testing.T) {
+	maxInt64 := int64(math.MaxInt64)
+	minInt64 := int64(math.MinInt64)
+	maxInt32 := int32(math.MaxInt32)
+	minInt32 := int32(math.MinInt32)
+	maxUint32 := uint32(math.MaxUint32)
+	maxUint64Valid := uint64(maxInt64) // Largest uint64 that fits in int64
+	
 	tests := []struct {
 		name  string
 		value any
 		want  int64
 	}{
-		{"int64", int64(123), 123},
-		{"int", 456, 456},
-		{"int32", int32(789), 789},
-		{"uint32", uint32(999), 999},
+		{"int64 (zero)", int64(0), 0},
+		{"int64 (max)", maxInt64, maxInt64},
+		{"int64 (min)", minInt64, minInt64},
+		{"int64 (small)", int64(123), 123},
+		{"int (max)", int(math.MaxInt), int64(math.MaxInt)},
+		{"int (min)", int(math.MinInt), int64(math.MinInt)},
+		{"int (small)", 456, 456},
+		{"int32 (max)", maxInt32, int64(maxInt32)},
+		{"int32 (min)", minInt32, int64(minInt32)},
+		{"int32 (small)", int32(789), 789},
+		{"int16 (max)", int16(math.MaxInt16), int64(math.MaxInt16)},
+		{"int16 (min)", int16(math.MinInt16), int64(math.MinInt16)},
+		{"int8 (max)", int8(math.MaxInt8), int64(math.MaxInt8)},
+		{"int8 (min)", int8(math.MinInt8), int64(math.MinInt8)},
+		{"uint32 (max)", maxUint32, int64(maxUint32)},
+		{"uint32 (small)", uint32(999), 999},
+		{"uint16 (max)", uint16(math.MaxUint16), int64(math.MaxUint16)},
+		{"uint8 (max)", uint8(math.MaxUint8), int64(math.MaxUint8)},
+		{"uint (max valid)", uint(maxUint64Valid), int64(maxUint64Valid)},
 		{"uint (small)", uint(555), 555},
+		{"uint64 (max valid)", maxUint64Valid, int64(maxUint64Valid)},
 		{"uint64 (small)", uint64(333), 333},
 	}
 
@@ -305,16 +348,30 @@ func TestDeserializeInt64_ValidConversions(t *testing.T) {
 }
 
 func TestDeserializeUint32_ValidConversions(t *testing.T) {
+	maxUint32 := uint32(math.MaxUint32)
+	maxUint16 := uint16(math.MaxUint16)
+	maxUint8 := uint8(math.MaxUint8)
+	maxInt32 := int32(math.MaxInt32)
+	maxIntValid := int(maxUint32) // Largest int that fits in uint32
+	
 	tests := []struct {
 		name  string
 		value any
 		want  uint32
 	}{
-		{"uint32", uint32(123), 123},
-		{"uint16", uint16(456), 456},
-		{"uint8", uint8(77), 77},
-		{"int (small positive)", 999, 999},
+		{"uint32 (zero)", uint32(0), 0},
+		{"uint32 (max)", maxUint32, maxUint32},
+		{"uint32 (small)", uint32(123), 123},
+		{"uint16 (max)", maxUint16, uint32(maxUint16)},
+		{"uint16 (small)", uint16(456), 456},
+		{"uint8 (max)", maxUint8, uint32(maxUint8)},
+		{"uint8 (small)", uint8(77), 77},
+		{"int32 (max valid)", maxInt32, uint32(maxInt32)},
 		{"int32 (small positive)", int32(555), 555},
+		{"int32 (zero)", int32(0), 0},
+		{"int (max valid)", maxIntValid, uint32(maxIntValid)},
+		{"int (small positive)", 999, 999},
+		{"int (zero)", 0, 0},
 	}
 
 	for _, tt := range tests {
@@ -331,17 +388,46 @@ func TestDeserializeUint32_ValidConversions(t *testing.T) {
 }
 
 func TestDeserializeInt32_ValidConversions(t *testing.T) {
+	maxInt32 := int32(math.MaxInt32)
+	minInt32 := int32(math.MinInt32)
+	maxInt16 := int16(math.MaxInt16)
+	minInt16 := int16(math.MinInt16)
+	maxInt8 := int8(math.MaxInt8)
+	minInt8 := int8(math.MinInt8)
+	maxUint16 := uint16(math.MaxUint16)
+	maxUint8 := uint8(math.MaxUint8)
+	maxUint32Valid := uint32(maxInt32) // Largest uint32 that fits in int32
+	maxUintValid := uint(maxInt32) // Largest uint that fits in int32
+	
 	tests := []struct {
 		name  string
 		value any
 		want  int32
 	}{
-		{"int32", int32(123), 123},
-		{"int16", int16(456), 456},
-		{"int8", int8(77), 77},
+		{"int32 (zero)", int32(0), 0},
+		{"int32 (max)", maxInt32, maxInt32},
+		{"int32 (min)", minInt32, minInt32},
+		{"int32 (small)", int32(123), 123},
+		{"int16 (max)", maxInt16, int32(maxInt16)},
+		{"int16 (min)", minInt16, int32(minInt16)},
+		{"int16 (small)", int16(456), 456},
+		{"int8 (max)", maxInt8, int32(maxInt8)},
+		{"int8 (min)", minInt8, int32(minInt8)},
+		{"int8 (small)", int8(77), 77},
+		{"int (max valid)", int(maxInt32), maxInt32},
+		{"int (min valid)", int(minInt32), minInt32},
 		{"int (small)", 999, 999},
-		{"uint16", uint16(555), 555},
-		{"uint8", uint8(33), 33},
+		{"int (small negative)", -999, -999},
+		{"int64 (max valid)", int64(maxInt32), maxInt32},
+		{"int64 (min valid)", int64(minInt32), minInt32},
+		{"uint32 (max valid)", maxUint32Valid, maxInt32},
+		{"uint32 (small)", uint32(123), 123},
+		{"uint16 (max)", maxUint16, int32(maxUint16)},
+		{"uint16 (small)", uint16(555), 555},
+		{"uint8 (max)", maxUint8, int32(maxUint8)},
+		{"uint8 (small)", uint8(33), 33},
+		{"uint (max valid)", maxUintValid, maxInt32},
+		{"uint (small)", uint(123), 123},
 	}
 
 	for _, tt := range tests {
