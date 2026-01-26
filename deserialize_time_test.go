@@ -40,9 +40,9 @@ func TestDeserializeBool_DefaultCase(t *testing.T) {
 		name  string
 		want  bool
 	}{
-		{"slice", []int{1}, true},
-		{"map", map[string]int{"a": 1}, true},
-		{"nil map", map[string]int(nil), false},
+		{value: []int{1}, name: "slice", want: true},
+		{value: map[string]int{"a": 1}, name: "map", want: true},
+		{value: map[string]int(nil), name: "nil map", want: false},
 	}
 
 	for _, tt := range tests {
