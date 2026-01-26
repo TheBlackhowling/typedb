@@ -455,7 +455,7 @@ func deserializeToField(target, value any) error {
 	}
 
 	// Fallback to reflection for other types
-	return deserializeWithReflection(targetValue, targetElem, value)
+	return deserializeWithReflection(targetElem, value)
 }
 
 // deserializeToFieldValue deserializes a value directly using reflect.Value.
@@ -498,7 +498,7 @@ func deserializeToFieldValue(fieldValuePtr reflect.Value, value any) error {
 }
 
 // deserializeWithReflection handles complex types using reflection.
-func deserializeWithReflection(targetValue, targetElem reflect.Value, value any) error {
+func deserializeWithReflection(targetElem reflect.Value, value any) error {
 	valueValue := reflect.ValueOf(value)
 	valueType := valueValue.Type()
 	targetType := targetElem.Type()
