@@ -528,7 +528,7 @@ func isZeroOrNil(v reflect.Value) bool {
 //	err := typedb.Insert(ctx, db, user)
 //	// user.ID is now set with the inserted ID
 // buildInsertQueryParts builds the common INSERT query parts (quoted table name, quoted columns, placeholders)
-func buildInsertQueryParts(driverName string, tableName string, columns []string, values []any) (string, []string, []string) {
+func buildInsertQueryParts(driverName, tableName string, columns []string, values []any) (string, []string, []string) {
 	quotedTableName := quoteIdentifier(driverName, tableName)
 	quotedColumns := make([]string, len(columns))
 	for i, col := range columns {
