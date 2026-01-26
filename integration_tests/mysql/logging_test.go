@@ -108,8 +108,8 @@ func TestMySQL_Logging_QueryAll(t *testing.T) {
 		if len(logger.Errors) == 0 {
 			t.Fatal("Expected Error log for QueryAll failure, got none")
 		}
-		if logger.Errors[0].Msg != "Query execution failed" {
-			t.Errorf("Expected Error log message 'Query execution failed', got %q", logger.Errors[0].Msg)
+		if logger.Errors[0].Msg != "Query failed" {
+			t.Errorf("Expected Error log message 'Query failed', got %q", logger.Errors[0].Msg)
 		}
 	})
 }
