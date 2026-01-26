@@ -26,6 +26,35 @@ This file contains rules and guidelines for AI assistants working on the typedb 
 
 - **NO EXCEPTIONS**: Even fixing obvious typos or formatting issues requires user consent
 
+### ⚠️ CRITICAL: Test Skipping Policy
+
+**DO NOT skip tests without explicit user permission - EVER.**
+
+- **Absolute Rule**: No test skipping (`t.Skip`, `t.Skipf`, `t.SkipNow`) without explicit user approval
+- All tests should run unless there's a documented, user-approved reason to skip them
+
+- **If you think a test should be skipped:**
+  1. **DO NOT** add `t.Skip()` automatically
+  2. **DO** discuss with the user first
+  3. **DO** explain why the test should be skipped
+  4. **DO** propose alternatives (e.g., conditional test, mock setup, etc.)
+  5. **DO** wait for explicit user approval before adding skip logic
+  6. **DO** document the reason for skipping in a comment if approved
+
+- **Acceptable skip scenarios (with user approval):**
+  - Missing test dependencies that cannot be mocked (e.g., database driver not available)
+  - Platform-specific tests that don't apply to current environment
+  - Tests that require external services that are unavailable
+  - Tests that are intentionally disabled pending a fix
+
+- **Unacceptable skip scenarios (fix instead of skip):**
+  - Tests that fail due to bugs in the code
+  - Tests that fail due to incorrect test setup
+  - Tests that are flaky (fix the flakiness instead)
+  - Tests that are slow (optimize instead of skip)
+
+- **NO EXCEPTIONS**: Even skipping tests for missing dependencies requires user discussion and approval
+
 ## Test Addition Workflow
 
 ### ⚠️ MANDATORY: Test Requirements for All Changes

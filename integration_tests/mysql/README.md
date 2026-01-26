@@ -52,7 +52,7 @@ go test -v
 go test -v -run TestMySQL_Load
 ```
 
-**Note:** Tests will skip if database connection fails, making them safe to run in CI/CD environments without a database.
+**Note:** Tests will fail if database connection fails, ensuring databases are properly configured in CI/CD environments.
 
 ## Test Coverage
 
