@@ -277,7 +277,7 @@ func validateIdentifier(identifier string) error {
 	// Allow alphanumeric, underscore, dot, and quote characters
 	// Reject dangerous characters: semicolon, dash, parentheses, etc.
 	// This regex matches: letters, digits, underscore, dot, and quote characters
-	validPattern := regexp.MustCompile(`^[a-zA-Z0-9_\.\"` + "`" + `]+$`)
+	validPattern := regexp.MustCompile(`^[a-zA-Z0-9_."` + "`" + `]+$`)
 	if !validPattern.MatchString(identifier) {
 		return fmt.Errorf("typedb: invalid identifier '%s': identifiers can only contain alphanumeric characters, underscores, dots, and quote characters", identifier)
 	}
