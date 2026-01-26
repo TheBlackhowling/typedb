@@ -8,8 +8,8 @@ import (
 
 func TestIsZeroOrNil(t *testing.T) {
 	tests := []struct {
-		name     string
 		value    any
+		name     string
 		expected bool
 	}{
 		// Nil pointer types
@@ -341,8 +341,8 @@ func TestGeneratePlaceholder(t *testing.T) {
 	tests := []struct {
 		name       string
 		driverName string
-		position   int
 		expected   string
+		position   int
 	}{
 		// PostgreSQL
 		{"postgres_lowercase_1", "postgres", 1, "$1"},
@@ -409,8 +409,8 @@ func TestGeneratePlaceholder(t *testing.T) {
 
 // SimpleStructNoDot has no dot notation
 type SimpleStructNoDot struct {
-	ID   int    `db:"id"`
 	Name string `db:"name"`
+	ID   int    `db:"id"`
 }
 
 // SimpleStructWithDot has dot notation in direct field
@@ -435,8 +435,8 @@ type PointerEmbeddedStructWithDot struct {
 
 // Level1Struct has embedded struct (level 1)
 type Level1Struct struct {
-	EmbeddedStructNoDot
 	Field string `db:"field"`
+	EmbeddedStructNoDot
 }
 
 // Level2Struct has embedded struct that embeds another struct (level 2)
@@ -453,8 +453,8 @@ type Level3Struct struct {
 
 // StructWithEmbeddedDot has embedded struct with dot notation
 type StructWithEmbeddedDot struct {
-	EmbeddedStructWithDot
 	Field string `db:"field"`
+	EmbeddedStructWithDot
 }
 
 // StructWithPointerEmbeddedDot has pointer embedded struct with dot notation
@@ -471,8 +471,8 @@ type StructWithDeepEmbeddedDot struct {
 
 // StructWithUnexportedField has unexported field with dot notation (should be skipped)
 type StructWithUnexportedField struct {
+	name string `db:"users.name"`
 	ID   int    `db:"id"`
-	name string `db:"users.name"` // unexported, should be skipped - intentionally unused for testing
 }
 
 // Reference unexported name field to avoid unused warning
@@ -483,15 +483,15 @@ var _ = func() {
 
 // StructWithDashTag has db:"-" tag (should be skipped)
 type StructWithDashTag struct {
-	ID   int    `db:"id"`
 	Name string `db:"-"`
+	ID   int    `db:"id"`
 	User int    `db:"users.id"`
 }
 
 func TestCheckDotNotationRecursive(t *testing.T) {
 	tests := []struct {
-		name     string
 		typ      reflect.Type
+		name     string
 		expected bool
 	}{
 		// Non-struct types
@@ -547,36 +547,36 @@ func TestCheckDotNotationRecursive(t *testing.T) {
 // SerializeTestModel is a simple model for testing serializeModelFields
 type SerializeTestModel struct {
 	Model
-	ID    int64  `db:"id" load:"primary"`
 	Name  string `db:"name"`
 	Email string `db:"email"`
+	ID    int64  `db:"id" load:"primary"`
 	Age   int    `db:"age"`
 }
 
 // SerializeModelWithDashTag has db:"-" tag
 type SerializeModelWithDashTag struct {
 	Model
-	ID   int    `db:"id" load:"primary"`
 	Name string `db:"name"`
 	Skip string `db:"-"`
+	ID   int    `db:"id" load:"primary"`
 	Age  int    `db:"age"`
 }
 
 // SerializeModelWithEmptyTag has empty db tag
 type SerializeModelWithEmptyTag struct {
 	Model
-	ID   int    `db:"id" load:"primary"`
 	Name string `db:"name"`
-	Skip string // No db tag
-	Age  int    `db:"age"`
+	Skip string
+	ID   int `db:"id" load:"primary"`
+	Age  int `db:"age"`
 }
 
 // SerializeModelWithDotNotation has dot notation in db tag
 type SerializeModelWithDotNotation struct {
 	Model
+	Bio    string `db:"profiles.bio"`
 	ID     int    `db:"id" load:"primary"`
 	UserID int    `db:"users.id"`
-	Bio    string `db:"profiles.bio"`
 }
 
 // SerializeEmbeddedStruct is embedded in other models
@@ -588,24 +588,24 @@ type SerializeEmbeddedStruct struct {
 type SerializeModelWithEmbedded struct {
 	Model
 	SerializeEmbeddedStruct
-	ID   int    `db:"id" load:"primary"`
 	Name string `db:"name"`
+	ID   int    `db:"id" load:"primary"`
 }
 
 // SerializeModelWithPointerEmbedded has pointer embedded struct
 type SerializeModelWithPointerEmbedded struct {
 	Model
 	*SerializeEmbeddedStruct
-	ID   int    `db:"id" load:"primary"`
 	Name string `db:"name"`
+	ID   int    `db:"id" load:"primary"`
 }
 
 // SerializeModelWithUnexported has unexported field
 type SerializeModelWithUnexported struct {
 	Model
-	ID   int    `db:"id" load:"primary"`
 	Name string `db:"name"`
-	age  int    `db:"age"` // unexported - intentionally unused for testing
+	ID   int    `db:"id" load:"primary"`
+	age  int    `db:"age"`
 }
 
 // Reference unexported age field to avoid unused warning

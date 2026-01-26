@@ -36,8 +36,8 @@ func TestDeserializeInt32_DefaultCase(t *testing.T) {
 func TestDeserializeBool_DefaultCase(t *testing.T) {
 	// Test default case with various string formats
 	tests := []struct {
-		name  string
 		value any
+		name  string
 		want  bool
 	}{
 		{"slice", []int{1}, true},
@@ -166,8 +166,8 @@ func TestBuildFieldMap_NonStructEmbedded(t *testing.T) {
 	// Test embedded non-struct type (should skip)
 	type ModelWithIntEmbedded struct {
 		Model
-		int         //nolint:unused // unexported embedded int - intentionally unused for testing
 		Name string `db:"name"`
+		int
 	}
 
 	model := &ModelWithIntEmbedded{}
@@ -261,8 +261,8 @@ func TestParseTime_MoreFormats(t *testing.T) {
 
 func TestDeserializeUint64(t *testing.T) {
 	tests := []struct {
-		name    string
 		value   any
+		name    string
 		want    uint64
 		wantErr bool
 	}{
@@ -319,8 +319,8 @@ func TestDeserializeUint64(t *testing.T) {
 
 func TestDeserializeUint32(t *testing.T) {
 	tests := []struct {
-		name    string
 		value   any
+		name    string
 		want    uint32
 		wantErr bool
 	}{
@@ -375,8 +375,8 @@ func TestDeserializeUint32(t *testing.T) {
 
 func TestDeserializeUint(t *testing.T) {
 	tests := []struct {
-		name    string
 		value   any
+		name    string
 		want    uint
 		wantErr bool
 	}{

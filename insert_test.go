@@ -13,9 +13,9 @@ import (
 // InsertTestModel is a simple model for testing Insert functions
 type InsertTestModel struct {
 	Model
-	ID        int64  `db:"id" load:"primary"`
 	Name      string `db:"name"`
 	CreatedAt string `db:"created_at"`
+	ID        int64  `db:"id" load:"primary"`
 }
 
 func (m *InsertTestModel) TableName() string {
@@ -740,8 +740,8 @@ func TestGetDriverName(t *testing.T) {
 func TestDeserialize_AddressableValue(t *testing.T) {
 	type TestModel struct {
 		Model
-		ID   int64  `db:"id"`
 		Name string `db:"name"`
+		ID   int64  `db:"id"`
 	}
 
 	model := &TestModel{}
@@ -771,8 +771,8 @@ func TestDeserialize_AddressableValue(t *testing.T) {
 func TestDeserialize_NonAddressableValue(t *testing.T) {
 	type TestModelNonAddr struct {
 		Model
-		ID   int64  `db:"id"`
 		Name string `db:"name"`
+		ID   int64  `db:"id"`
 	}
 
 	// Register the model for Model.Deserialize to work
@@ -807,8 +807,8 @@ func TestValidateIdentifier(t *testing.T) {
 	tests := []struct {
 		name       string
 		identifier string
-		wantErr    bool
 		errMsg     string
+		wantErr    bool
 	}{
 		{
 			name:       "valid simple identifier",

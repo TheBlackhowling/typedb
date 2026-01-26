@@ -7,18 +7,18 @@ import (
 
 func TestDeserializeInt_AllTypes(t *testing.T) {
 	tests := []struct {
-		name  string
 		value any
+		name  string
 		want  int
 	}{
-		{"int16", int16(123), 123},
-		{"int8", int8(45), 45},
-		{"uint", uint(789), 789},
-		{"uint64", uint64(999), 999},
-		{"uint32", uint32(111), 111},
-		{"uint16", uint16(222), 222},
-		{"uint8", uint8(33), 33},
-		{"float32", float32(444.5), 444},
+		{value: int16(123), name: "int16", want: 123},
+		{value: int8(45), name: "int8", want: 45},
+		{value: uint(789), name: "uint", want: 789},
+		{value: uint64(999), name: "uint64", want: 999},
+		{value: uint32(111), name: "uint32", want: 111},
+		{value: uint16(222), name: "uint16", want: 222},
+		{value: uint8(33), name: "uint8", want: 33},
+		{value: float32(444.5), name: "float32", want: 444},
 	}
 
 	for _, tt := range tests {
@@ -36,16 +36,16 @@ func TestDeserializeInt_AllTypes(t *testing.T) {
 
 func TestDeserializeInt64_AllTypes(t *testing.T) {
 	tests := []struct {
-		name  string
 		value any
+		name  string
 		want  int64
 	}{
-		{"int16", int16(123), 123},
-		{"int8", int8(45), 45},
-		{"uint32", uint32(999), 999},
-		{"uint16", uint16(222), 222},
-		{"uint8", uint8(33), 33},
-		{"float32", float32(444.5), 444},
+		{value: int16(123), name: "int16", want: 123},
+		{value: int8(45), name: "int8", want: 45},
+		{value: uint32(999), name: "uint32", want: 999},
+		{value: uint16(222), name: "uint16", want: 222},
+		{value: uint8(33), name: "uint8", want: 33},
+		{value: float32(444.5), name: "float32", want: 444},
 	}
 
 	for _, tt := range tests {
@@ -63,15 +63,15 @@ func TestDeserializeInt64_AllTypes(t *testing.T) {
 
 func TestDeserializeInt32_AllTypes(t *testing.T) {
 	tests := []struct {
-		name  string
 		value any
+		name  string
 		want  int32
 	}{
-		{"int16", int16(123), 123},
-		{"int8", int8(45), 45},
-		{"uint16", uint16(222), 222},
-		{"uint8", uint8(33), 33},
-		{"float32", float32(444.5), 444},
+		{value: int16(123), name: "int16", want: 123},
+		{value: int8(45), name: "int8", want: 45},
+		{value: uint16(222), name: "uint16", want: 222},
+		{value: uint8(33), name: "uint8", want: 33},
+		{value: float32(444.5), name: "float32", want: 444},
 	}
 
 	for _, tt := range tests {
@@ -89,28 +89,28 @@ func TestDeserializeInt32_AllTypes(t *testing.T) {
 
 func TestDeserializeBool_AllTypes(t *testing.T) {
 	tests := []struct {
-		name  string
 		value any
+		name  string
 		want  bool
 	}{
-		{"int16 1", int16(1), true},
-		{"int16 0", int16(0), false},
-		{"int8 1", int8(1), true},
-		{"int8 0", int8(0), false},
-		{"uint 1", uint(1), true},
-		{"uint 0", uint(0), false},
-		{"uint64 1", uint64(1), true},
-		{"uint64 0", uint64(0), false},
-		{"uint32 1", uint32(1), true},
-		{"uint32 0", uint32(0), false},
-		{"uint16 1", uint16(1), true},
-		{"uint16 0", uint16(0), false},
-		{"uint8 1", uint8(1), true},
-		{"uint8 0", uint8(0), false},
-		{"float64 1.0", float64(1.0), true},
-		{"float64 0.0", float64(0.0), false},
-		{"float32 1.0", float32(1.0), true},
-		{"float32 0.0", float32(0.0), false},
+		{value: int16(1), name: "int16 1", want: true},
+		{value: int16(0), name: "int16 0", want: false},
+		{value: int8(1), name: "int8 1", want: true},
+		{value: int8(0), name: "int8 0", want: false},
+		{value: uint(1), name: "uint 1", want: true},
+		{value: uint(0), name: "uint 0", want: false},
+		{value: uint64(1), name: "uint64 1", want: true},
+		{value: uint64(0), name: "uint64 0", want: false},
+		{value: uint32(1), name: "uint32 1", want: true},
+		{value: uint32(0), name: "uint32 0", want: false},
+		{value: uint16(1), name: "uint16 1", want: true},
+		{value: uint16(0), name: "uint16 0", want: false},
+		{value: uint8(1), name: "uint8 1", want: true},
+		{value: uint8(0), name: "uint8 0", want: false},
+		{value: float64(1.0), name: "float64 1.0", want: true},
+		{value: float64(0.0), name: "float64 0.0", want: false},
+		{value: float32(1.0), name: "float32 1.0", want: true},
+		{value: float32(0.0), name: "float32 0.0", want: false},
 	}
 
 	for _, tt := range tests {
@@ -151,9 +151,9 @@ func TestBuildFieldMap_PointerEmbeddedStruct(t *testing.T) {
 func TestBuildFieldMap_SkipDashTag(t *testing.T) {
 	type ModelWithDashTag struct {
 		Model
-		ID   int    `db:"id"`
 		Name string `db:"name"`
 		Skip string `db:"-"`
+		ID   int    `db:"id"`
 	}
 
 	model := &ModelWithDashTag{}
@@ -248,12 +248,12 @@ func TestParseTime_AllFormats(t *testing.T) {
 		value string
 		want  bool // true if should succeed
 	}{
-		{"RFC3339Nano", "2023-01-01T12:00:00.123456789Z", true},
-		{"SQL format", "2023-01-02 15:04:05", true},
-		{"Date only", "2023-01-02", true},
-		{"SQL with microseconds", "2023-01-02 15:04:05.999999", true},
-		{"SQL with nanoseconds", "2023-01-02 15:04:05.999999999", true},
-		{"Invalid format", "not a date", false},
+		{value: "2023-01-01T12:00:00.123456789Z", name: "RFC3339Nano", want: true},
+		{value: "2023-01-02 15:04:05", name: "SQL format", want: true},
+		{value: "2023-01-02", name: "Date only", want: true},
+		{value: "2023-01-02 15:04:05.999999", name: "SQL with microseconds", want: true},
+		{value: "2023-01-02 15:04:05.999999999", name: "SQL with nanoseconds", want: true},
+		{value: "not a date", name: "Invalid format", want: false},
 	}
 
 	for _, tt := range tests {
@@ -325,14 +325,14 @@ func TestDeserializeIntArray_ErrorInPostgresFormat(t *testing.T) {
 func TestDeserializeBool_DefaultCaseMore(t *testing.T) {
 	// Test default case paths that hit different string parsing branches
 	tests := []struct {
-		name  string
 		value any
+		name  string
 		want  bool
 	}{
-		{"T uppercase", []string{"T"}, true},
-		{"F uppercase", []string{"F"}, false},
-		{"TRUE uppercase", []string{"TRUE"}, true},
-		{"FALSE uppercase", []string{"FALSE"}, false},
+		{value: []string{"T"}, name: "T uppercase", want: true},
+		{value: []string{"F"}, name: "F uppercase", want: false},
+		{value: []string{"TRUE"}, name: "TRUE uppercase", want: true},
+		{value: []string{"FALSE"}, name: "FALSE uppercase", want: false},
 	}
 
 	for _, tt := range tests {
@@ -363,12 +363,12 @@ func TestParseTime_EmptyString(t *testing.T) {
 func TestDeserializeInt64_MoreTypes(t *testing.T) {
 	// Test remaining type cases
 	tests := []struct {
-		name  string
 		value any
+		name  string
 		want  int64
 	}{
-		{"uint16", uint16(123), 123},
-		{"uint8", uint8(45), 45},
+		{value: uint16(123), name: "uint16", want: 123},
+		{value: uint8(45), name: "uint8", want: 45},
 	}
 
 	for _, tt := range tests {
@@ -387,12 +387,12 @@ func TestDeserializeInt64_MoreTypes(t *testing.T) {
 func TestDeserializeInt32_MoreTypes(t *testing.T) {
 	// Test remaining type cases
 	tests := []struct {
-		name  string
 		value any
+		name  string
 		want  int32
 	}{
-		{"uint16", uint16(123), 123},
-		{"uint8", uint8(45), 45},
+		{value: uint16(123), name: "uint16", want: 123},
+		{value: uint8(45), name: "uint8", want: 45},
 	}
 
 	for _, tt := range tests {

@@ -205,9 +205,9 @@ func TestSerializeStringArray_Error(t *testing.T) {
 
 func TestSerialize(t *testing.T) {
 	tests := []struct {
-		name  string
 		value any
 		want  any
+		name  string
 	}{
 		{"int", 123, 123},
 		{"int64", int64(456), int64(456)},
@@ -271,8 +271,8 @@ func TestSerialize(t *testing.T) {
 func TestSerializeJSONB_MoreTypes(t *testing.T) {
 	// Test types that go through JSON marshaling
 	tests := []struct {
-		name  string
 		value any
+		name  string
 	}{
 		{"struct", struct{ Name string }{"test"}},
 		{"slice of maps", []map[string]any{{"a": 1}, {"b": 2}}},

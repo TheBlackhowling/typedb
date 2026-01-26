@@ -8,9 +8,9 @@ import (
 // InsertModel is a model for testing Insert function
 type InsertModel struct {
 	Model
-	ID    int64  `db:"id" load:"primary"`
 	Name  string `db:"name"`
 	Email string `db:"email"`
+	ID    int64  `db:"id" load:"primary"`
 }
 
 // oracleTestWrapper wraps a DB to intercept Exec calls and populate sql.Out for testing
@@ -50,8 +50,8 @@ func init() {
 // JoinedModel is a model with dot notation (should fail Insert)
 type JoinedModel struct {
 	Model
-	UserID int    `db:"users.id" load:"primary"`
 	Bio    string `db:"profiles.bio"`
+	UserID int    `db:"users.id" load:"primary"`
 }
 
 func (m *JoinedModel) TableName() string {
