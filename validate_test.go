@@ -10,9 +10,9 @@ import (
 
 type ValidUser struct {
 	Model
-	ID    int    `db:"id" load:"primary"`
 	Email string `db:"email" load:"unique"`
 	Name  string `db:"name"`
+	ID    int    `db:"id" load:"primary"`
 }
 
 func (u *ValidUser) QueryByID() string {
@@ -102,8 +102,8 @@ func (m *MissingCompositeMethod) Deserialize(row map[string]any) error {
 
 type MissingUniqueMethod struct {
 	Model
-	ID    int    `db:"id" load:"primary"`
 	Email string `db:"email" load:"unique"`
+	ID    int    `db:"id" load:"primary"`
 }
 
 func (m *MissingUniqueMethod) QueryByID() string {

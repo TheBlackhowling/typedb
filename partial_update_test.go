@@ -8,16 +8,16 @@ import (
 // PartialUpdateModelWithComplexTypes is a model with various complex field types for testing
 type PartialUpdateModelWithComplexTypes struct {
 	Model
-	ID          int64                  `db:"id" load:"primary"`
+	Metadata    map[string]any         `db:"metadata"`
+	Settings    map[string]string      `db:"settings"`
+	Preferences map[string]interface{} `db:"preferences"`
 	Name        string                 `db:"name"`
 	Email       string                 `db:"email"`
+	Tags        []string               `db:"tags"`
+	ID          int64                  `db:"id" load:"primary"`
 	Age         int                    `db:"age"`
-	Metadata    map[string]any         `db:"metadata"` // JSONB-like field
-	Tags        []string               `db:"tags"`     // Array field
-	Settings    map[string]string      `db:"settings"`
-	IsActive    bool                   `db:"is_active"`
 	Score       float64                `db:"score"`
-	Preferences map[string]interface{} `db:"preferences"` // Another JSONB-like field
+	IsActive    bool                   `db:"is_active"`
 }
 
 func (m *PartialUpdateModelWithComplexTypes) TableName() string {

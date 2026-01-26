@@ -10,9 +10,9 @@ import (
 // QueryTestUser is a test model for query tests
 type QueryTestUser struct {
 	Model
-	ID    int    `db:"id"`
 	Name  string `db:"name"`
 	Email string `db:"email"`
+	ID    int    `db:"id"`
 }
 
 func (u *QueryTestUser) Deserialize(row map[string]any) error {

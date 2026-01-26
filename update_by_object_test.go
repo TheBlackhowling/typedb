@@ -13,19 +13,19 @@ import (
 // UpdateModelWithSkipTag is a model with a field that should be skipped during Update
 type UpdateModelWithSkipTag struct {
 	Model
-	ID        int64  `db:"id" load:"primary"`
 	Name      string `db:"name"`
 	Email     string `db:"email"`
-	CreatedAt string `db:"created_at" dbUpdate:"false"` // Should be skipped in Update but can be read/inserted
+	CreatedAt string `db:"created_at" dbUpdate:"false"`
+	ID        int64  `db:"id" load:"primary"`
 }
 
 // UpdateModelWithDbInsertFalse is a model with a field that should be skipped during Insert
 type UpdateModelWithDbInsertFalse struct {
 	Model
-	ID        int64  `db:"id" load:"primary"`
 	Name      string `db:"name"`
 	Email     string `db:"email"`
-	UpdatedAt string `db:"updated_at" dbInsert:"false"` // Should be skipped in Insert but can be read/updated
+	UpdatedAt string `db:"updated_at" dbInsert:"false"`
+	ID        int64  `db:"id" load:"primary"`
 }
 
 func (m *UpdateModelWithDbInsertFalse) TableName() string {
@@ -43,10 +43,10 @@ func init() {
 // UpdateModelWithBothTags is a model with a field that should be skipped in both Insert and Update
 type UpdateModelWithBothTags struct {
 	Model
-	ID        int64  `db:"id" load:"primary"`
 	Name      string `db:"name"`
 	Email     string `db:"email"`
-	CreatedAt string `db:"created_at" dbInsert:"false" dbUpdate:"false"` // Should be skipped in Insert and Update but can be read
+	CreatedAt string `db:"created_at" dbInsert:"false" dbUpdate:"false"`
+	ID        int64  `db:"id" load:"primary"`
 }
 
 func (m *UpdateModelWithBothTags) TableName() string {
@@ -76,10 +76,10 @@ func init() {
 // UpdateModelWithSkipTagValue is a model with dbUpdate:"false" tag
 type UpdateModelWithSkipTagValue struct {
 	Model
-	ID        int64  `db:"id" load:"primary"`
 	Name      string `db:"name"`
 	Email     string `db:"email"`
-	UpdatedAt string `db:"updated_at" dbUpdate:"false"` // Should be skipped in Update but can be read/inserted
+	UpdatedAt string `db:"updated_at" dbUpdate:"false"`
+	ID        int64  `db:"id" load:"primary"`
 }
 
 func (m *UpdateModelWithSkipTagValue) TableName() string {
@@ -97,10 +97,10 @@ func init() {
 // UpdateModelWithAutoTimestamp is a model with a field that should be auto-populated with database timestamp
 type UpdateModelWithAutoTimestamp struct {
 	Model
-	ID        int64  `db:"id" load:"primary"`
 	Name      string `db:"name"`
 	Email     string `db:"email"`
-	UpdatedAt string `db:"updated_at" dbUpdate:"auto-timestamp"` // Should be auto-populated with database timestamp function
+	UpdatedAt string `db:"updated_at" dbUpdate:"auto-timestamp"`
+	ID        int64  `db:"id" load:"primary"`
 }
 
 func (m *UpdateModelWithAutoTimestamp) TableName() string {
@@ -118,9 +118,9 @@ func init() {
 // UpdateModelWithPartialUpdate is a model with partial update enabled
 type UpdateModelWithPartialUpdate struct {
 	Model
-	ID    int64  `db:"id" load:"primary"`
 	Name  string `db:"name"`
 	Email string `db:"email"`
+	ID    int64  `db:"id" load:"primary"`
 }
 
 func (m *UpdateModelWithPartialUpdate) TableName() string {

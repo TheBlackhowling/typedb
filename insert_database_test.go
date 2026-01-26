@@ -336,10 +336,10 @@ func TestInsert_Oracle_InsertAndReturnError(t *testing.T) {
 // InsertModelWithDbInsertFalse is a model with a field that should be skipped during Insert
 type InsertModelWithDbInsertFalse struct {
 	Model
-	ID        int64  `db:"id" load:"primary"`
 	Name      string `db:"name"`
 	Email     string `db:"email"`
-	CreatedAt string `db:"created_at" dbInsert:"false"` // Should be skipped in Insert but can be read/updated
+	CreatedAt string `db:"created_at" dbInsert:"false"`
+	ID        int64  `db:"id" load:"primary"`
 }
 
 func (m *InsertModelWithDbInsertFalse) TableName() string {
@@ -357,10 +357,10 @@ func init() {
 // InsertModelWithDbUpdateFalse is a model with a field that should be skipped during Update
 type InsertModelWithDbUpdateFalse struct {
 	Model
-	ID        int64  `db:"id" load:"primary"`
 	Name      string `db:"name"`
 	Email     string `db:"email"`
-	UpdatedAt string `db:"updated_at" dbUpdate:"false"` // Should be skipped in Update but can be read/inserted
+	UpdatedAt string `db:"updated_at" dbUpdate:"false"`
+	ID        int64  `db:"id" load:"primary"`
 }
 
 func (m *InsertModelWithDbUpdateFalse) TableName() string {
@@ -378,10 +378,10 @@ func init() {
 // InsertModelWithBothTags is a model with a field that should be skipped in both Insert and Update
 type InsertModelWithBothTags struct {
 	Model
-	ID        int64  `db:"id" load:"primary"`
 	Name      string `db:"name"`
 	Email     string `db:"email"`
-	CreatedAt string `db:"created_at" dbInsert:"false" dbUpdate:"false"` // Should be skipped in Insert and Update but can be read
+	CreatedAt string `db:"created_at" dbInsert:"false" dbUpdate:"false"`
+	ID        int64  `db:"id" load:"primary"`
 }
 
 func (m *InsertModelWithBothTags) TableName() string {

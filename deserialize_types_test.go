@@ -36,8 +36,8 @@ func TestDeserialize_TimeFormats(t *testing.T) {
 
 func TestDeserializeInt(t *testing.T) {
 	tests := []struct {
-		name  string
 		value any
+		name  string
 		want  int
 	}{
 		{"int", 123, 123},
@@ -62,8 +62,8 @@ func TestDeserializeInt(t *testing.T) {
 
 func TestDeserializeBool(t *testing.T) {
 	tests := []struct {
-		name  string
 		value any
+		name  string
 		want  bool
 	}{
 		{"bool true", true, true},
@@ -113,9 +113,9 @@ func TestDeserializeString(t *testing.T) {
 
 func TestDeserializeJSONB(t *testing.T) {
 	tests := []struct {
-		name  string
 		value any
 		want  map[string]any
+		name  string
 	}{
 		{"map", map[string]any{"key": "value"}, map[string]any{"key": "value"}},
 		{"json string", `{"key": "value"}`, map[string]any{"key": "value"}},
@@ -167,9 +167,9 @@ func TestDeserializeStringArray_InvalidFormat(t *testing.T) {
 
 func TestDeserializeMap(t *testing.T) {
 	tests := []struct {
-		name  string
 		value any
 		want  map[string]string
+		name  string
 	}{
 		{"map[string]string", map[string]string{"key": "value"}, map[string]string{"key": "value"}},
 		{"map[string]any", map[string]any{"key": 123}, map[string]string{"key": "123"}},
@@ -199,8 +199,8 @@ func TestDeserializeMap_UnsupportedType(t *testing.T) {
 
 func TestDeserializeInt64(t *testing.T) {
 	tests := []struct {
-		name  string
 		value any
+		name  string
 		want  int64
 	}{
 		{"int64", int64(123), 123},
@@ -226,8 +226,8 @@ func TestDeserializeInt64(t *testing.T) {
 
 func TestDeserializeInt32(t *testing.T) {
 	tests := []struct {
-		name  string
 		value any
+		name  string
 		want  int32
 	}{
 		{"int32", int32(123), 123},
@@ -253,9 +253,9 @@ func TestDeserializeInt32(t *testing.T) {
 
 func TestDeserializeTime(t *testing.T) {
 	tests := []struct {
-		name  string
 		value any
-		want  bool // true if should succeed
+		name  string
+		want  bool
 	}{
 		{"time.Time", time.Date(2023, 1, 1, 12, 0, 0, 0, time.UTC), true},
 		{"RFC3339 string", "2023-01-01T12:00:00Z", true},
