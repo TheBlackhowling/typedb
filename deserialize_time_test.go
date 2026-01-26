@@ -381,33 +381,33 @@ func TestDeserializeUint(t *testing.T) {
 		wantErr bool
 	}{
 		// Direct types
-		{"uint", uint(123), 123, false},
-		{"uint64", uint64(456), 456, false},
-		{"uint32", uint32(789), 789, false},
-		{"uint16", uint16(100), 100, false},
-		{"uint8", uint8(200), 200, false},
+		{value: uint(123), name: "uint", want: 123, wantErr: false},
+		{value: uint64(456), name: "uint64", want: 456, wantErr: false},
+		{value: uint32(789), name: "uint32", want: 789, wantErr: false},
+		{value: uint16(100), name: "uint16", want: 100, wantErr: false},
+		{value: uint8(200), name: "uint8", want: 200, wantErr: false},
 
 		// Positive signed integers
-		{"int64 positive", int64(999), 999, false},
-		{"int positive", int(888), 888, false},
+		{value: int64(999), name: "int64 positive", want: 999, wantErr: false},
+		{value: int(888), name: "int positive", want: 888, wantErr: false},
 
 		// Negative signed integers (should error)
-		{"int64 negative", int64(-1), 0, true},
-		{"int negative", int(-2), 0, true},
+		{value: int64(-1), name: "int64 negative", want: 0, wantErr: true},
+		{value: int(-2), name: "int negative", want: 0, wantErr: true},
 
 		// String
-		{"string valid", "18446744073709551615", uint(18446744073709551615), false},
-		{"string small", "42", 42, false},
-		{"string zero", "0", 0, false},
-		{"string negative", "-1", 0, true},
-		{"string invalid", "not a number", 0, true},
+		{value: "18446744073709551615", name: "string valid", want: uint(18446744073709551615), wantErr: false},
+		{value: "42", name: "string small", want: 42, wantErr: false},
+		{value: "0", name: "string zero", want: 0, wantErr: false},
+		{value: "-1", name: "string negative", want: 0, wantErr: true},
+		{value: "not a number", name: "string invalid", want: 0, wantErr: true},
 
 		// Float types
-		{"float64 positive", float64(123.7), 123, false},
-		{"float64 zero", float64(0.0), 0, false},
-		{"float64 negative", float64(-1.5), 0, true},
-		{"float32 positive", float32(456.8), 456, false},
-		{"float32 negative", float32(-2.3), 0, true},
+		{value: float64(123.7), name: "float64 positive", want: 123, wantErr: false},
+		{value: float64(0.0), name: "float64 zero", want: 0, wantErr: false},
+		{value: float64(-1.5), name: "float64 negative", want: 0, wantErr: true},
+		{value: float32(456.8), name: "float32 positive", want: 456, wantErr: false},
+		{value: float32(-2.3), name: "float32 negative", want: 0, wantErr: true},
 
 		// Default case (fmt.Sprintf) - these will fail to parse
 		{value: true, name: "bool true", want: 0, wantErr: true},
