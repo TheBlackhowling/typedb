@@ -403,7 +403,7 @@ func deserializeMapType(target, value any) error {
 
 // deserializeToField deserializes a value to the appropriate type.
 // Handles type conversion for common Go types and uses reflection for complex types.
-func deserializeToField(target any, value any) error {
+func deserializeToField(target, value any) error {
 	targetValue := reflect.ValueOf(target)
 	if targetValue.Kind() != reflect.Ptr {
 		return fmt.Errorf("typedb: target must be a pointer")
