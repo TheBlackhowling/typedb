@@ -48,7 +48,7 @@ linters:
 linters-settings:
   errcheck:
     check-type-assertions: true
-    check-blank: false  # Allow _ = to explicitly ignore errors
+    check-blank: true
   
   gocritic:
     enabled-tags:
