@@ -269,7 +269,8 @@ func TestPostgreSQL_Update_NonPartialUpdate(t *testing.T) {
 	}
 
 	// Get or create a post for testing
-	firstPost, err := typedb.QueryFirst[*Post](ctx, db, "SELECT id, user_id, title, content, tags, metadata, created_at, updated_at FROM posts ORDER BY id LIMIT 1")
+	var firstPost *Post
+	firstPost, err = typedb.QueryFirst[*Post](ctx, db, "SELECT id, user_id, title, content, tags, metadata, created_at, updated_at FROM posts ORDER BY id LIMIT 1")
 	if err != nil || firstPost == nil {
 		// Create a post if none exists
 		newPost := &Post{
@@ -277,7 +278,7 @@ func TestPostgreSQL_Update_NonPartialUpdate(t *testing.T) {
 			Title:   "Test Post for Non-Partial Update",
 			Content: "Original content",
 		}
-		if err := typedb.Insert(ctx, db, newPost); err != nil {
+		if err = typedb.Insert(ctx, db, newPost); err != nil {
 			t.Fatalf("Failed to create test post: %v", err)
 		}
 		firstPost = newPost
