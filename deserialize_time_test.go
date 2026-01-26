@@ -267,40 +267,40 @@ func TestDeserializeUint64(t *testing.T) {
 		wantErr bool
 	}{
 		// Direct types
-		{"uint64", uint64(123), 123, false},
-		{"uint", uint(456), 456, false},
-		{"uint32", uint32(789), 789, false},
-		{"uint16", uint16(100), 100, false},
-		{"uint8", uint8(200), 200, false},
+		{value: uint64(123), name: "uint64", want: 123, wantErr: false},
+		{value: uint(456), name: "uint", want: 456, wantErr: false},
+		{value: uint32(789), name: "uint32", want: 789, wantErr: false},
+		{value: uint16(100), name: "uint16", want: 100, wantErr: false},
+		{value: uint8(200), name: "uint8", want: 200, wantErr: false},
 
 		// Positive signed integers
-		{"int64 positive", int64(999), 999, false},
-		{"int positive", int(888), 888, false},
-		{"int32 positive", int32(777), 777, false},
+		{value: int64(999), name: "int64 positive", want: 999, wantErr: false},
+		{value: int(888), name: "int positive", want: 888, wantErr: false},
+		{value: int32(777), name: "int32 positive", want: 777, wantErr: false},
 
 		// Negative signed integers (should error)
-		{"int64 negative", int64(-1), 0, true},
-		{"int negative", int(-2), 0, true},
-		{"int32 negative", int32(-3), 0, true},
+		{value: int64(-1), name: "int64 negative", want: 0, wantErr: true},
+		{value: int(-2), name: "int negative", want: 0, wantErr: true},
+		{value: int32(-3), name: "int32 negative", want: 0, wantErr: true},
 
 		// String (MySQL unsigned BIGINT case)
-		{"string valid", "18446744073709551615", uint64(18446744073709551615), false},
-		{"string small", "42", 42, false},
-		{"string zero", "0", 0, false},
-		{"string negative", "-1", 0, true},
-		{"string invalid", "not a number", 0, true},
+		{value: "18446744073709551615", name: "string valid", want: uint64(18446744073709551615), wantErr: false},
+		{value: "42", name: "string small", want: 42, wantErr: false},
+		{value: "0", name: "string zero", want: 0, wantErr: false},
+		{value: "-1", name: "string negative", want: 0, wantErr: true},
+		{value: "not a number", name: "string invalid", want: 0, wantErr: true},
 
 		// Float types
-		{"float64 positive", float64(123.7), 123, false},
-		{"float64 zero", float64(0.0), 0, false},
-		{"float64 negative", float64(-1.5), 0, true},
-		{"float32 positive", float32(456.8), 456, false},
-		{"float32 negative", float32(-2.3), 0, true},
+		{value: float64(123.7), name: "float64 positive", want: 123, wantErr: false},
+		{value: float64(0.0), name: "float64 zero", want: 0, wantErr: false},
+		{value: float64(-1.5), name: "float64 negative", want: 0, wantErr: true},
+		{value: float32(456.8), name: "float32 positive", want: 456, wantErr: false},
+		{value: float32(-2.3), name: "float32 negative", want: 0, wantErr: true},
 
 		// Default case (fmt.Sprintf) - these will fail to parse
-		{"bool true", true, 0, true},
-		{"bool false", false, 0, true},
-		{"nil", nil, 0, true},
+		{value: true, name: "bool true", want: 0, wantErr: true},
+		{value: false, name: "bool false", want: 0, wantErr: true},
+		{value: nil, name: "nil", want: 0, wantErr: true},
 	}
 
 	for _, tt := range tests {
@@ -325,38 +325,38 @@ func TestDeserializeUint32(t *testing.T) {
 		wantErr bool
 	}{
 		// Direct types
-		{"uint32", uint32(123), 123, false},
-		{"uint", uint(456), 456, false},
-		{"uint16", uint16(789), 789, false},
-		{"uint8", uint8(200), 200, false},
+		{value: uint32(123), name: "uint32", want: 123, wantErr: false},
+		{value: uint(456), name: "uint", want: 456, wantErr: false},
+		{value: uint16(789), name: "uint16", want: 789, wantErr: false},
+		{value: uint8(200), name: "uint8", want: 200, wantErr: false},
 
 		// Positive signed integers
-		{"int32 positive", int32(999), 999, false},
-		{"int positive", int(888), 888, false},
+		{value: int32(999), name: "int32 positive", want: 999, wantErr: false},
+		{value: int(888), name: "int positive", want: 888, wantErr: false},
 
 		// Negative signed integers (should error)
-		{"int32 negative", int32(-1), 0, true},
-		{"int negative", int(-2), 0, true},
+		{value: int32(-1), name: "int32 negative", want: 0, wantErr: true},
+		{value: int(-2), name: "int negative", want: 0, wantErr: true},
 
 		// String
-		{"string valid", "4294967295", uint32(4294967295), false},
-		{"string small", "42", 42, false},
-		{"string zero", "0", 0, false},
-		{"string negative", "-1", 0, true},
-		{"string invalid", "not a number", 0, true},
-		{"string overflow", "4294967296", 0, true}, // Exceeds uint32 max
+		{value: "4294967295", name: "string valid", want: uint32(4294967295), wantErr: false},
+		{value: "42", name: "string small", want: 42, wantErr: false},
+		{value: "0", name: "string zero", want: 0, wantErr: false},
+		{value: "-1", name: "string negative", want: 0, wantErr: true},
+		{value: "not a number", name: "string invalid", want: 0, wantErr: true},
+		{value: "4294967296", name: "string overflow", want: 0, wantErr: true}, // Exceeds uint32 max
 
 		// Float types
-		{"float64 positive", float64(123.7), 123, false},
-		{"float64 zero", float64(0.0), 0, false},
-		{"float64 negative", float64(-1.5), 0, true},
-		{"float32 positive", float32(456.8), 456, false},
-		{"float32 negative", float32(-2.3), 0, true},
+		{value: float64(123.7), name: "float64 positive", want: 123, wantErr: false},
+		{value: float64(0.0), name: "float64 zero", want: 0, wantErr: false},
+		{value: float64(-1.5), name: "float64 negative", want: 0, wantErr: true},
+		{value: float32(456.8), name: "float32 positive", want: 456, wantErr: false},
+		{value: float32(-2.3), name: "float32 negative", want: 0, wantErr: true},
 
 		// Default case (fmt.Sprintf) - these will fail to parse
-		{"bool true", true, 0, true},
-		{"bool false", false, 0, true},
-		{"nil", nil, 0, true},
+		{value: true, name: "bool true", want: 0, wantErr: true},
+		{value: false, name: "bool false", want: 0, wantErr: true},
+		{value: nil, name: "nil", want: 0, wantErr: true},
 	}
 
 	for _, tt := range tests {
@@ -410,9 +410,9 @@ func TestDeserializeUint(t *testing.T) {
 		{"float32 negative", float32(-2.3), 0, true},
 
 		// Default case (fmt.Sprintf) - these will fail to parse
-		{"bool true", true, 0, true},
-		{"bool false", false, 0, true},
-		{"nil", nil, 0, true},
+		{value: true, name: "bool true", want: 0, wantErr: true},
+		{value: false, name: "bool false", want: 0, wantErr: true},
+		{value: nil, name: "nil", want: 0, wantErr: true},
 	}
 
 	for _, tt := range tests {
