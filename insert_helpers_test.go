@@ -495,32 +495,32 @@ func TestCheckDotNotationRecursive(t *testing.T) {
 		expected bool
 	}{
 		// Non-struct types
-		{"int_type", reflect.TypeOf(0), false},
-		{"string_type", reflect.TypeOf(""), false},
-		{"slice_type", reflect.TypeOf([]int{}), false},
-		{"map_type", reflect.TypeOf(map[string]int{}), false},
+		{typ: reflect.TypeOf(0), name: "int_type", expected: false},
+		{typ: reflect.TypeOf(""), name: "string_type", expected: false},
+		{typ: reflect.TypeOf([]int{}), name: "slice_type", expected: false},
+		{typ: reflect.TypeOf(map[string]int{}), name: "map_type", expected: false},
 
 		// Structs with no dot notation
-		{"simple_no_dot", reflect.TypeOf(SimpleStructNoDot{}), false},
-		{"insert_model", reflect.TypeOf(InsertModel{}), false},
+		{typ: reflect.TypeOf(SimpleStructNoDot{}), name: "simple_no_dot", expected: false},
+		{typ: reflect.TypeOf(InsertModel{}), name: "insert_model", expected: false},
 
 		// Structs with dot notation in direct fields
-		{"simple_with_dot", reflect.TypeOf(SimpleStructWithDot{}), true},
-		{"joined_model", reflect.TypeOf(JoinedModel{}), true},
+		{typ: reflect.TypeOf(SimpleStructWithDot{}), name: "simple_with_dot", expected: true},
+		{typ: reflect.TypeOf(JoinedModel{}), name: "joined_model", expected: true},
 
 		// Embedded structs without dot notation
-		{"embedded_no_dot", reflect.TypeOf(EmbeddedStructNoDot{}), false},
-		{"level1_no_dot", reflect.TypeOf(Level1Struct{}), false},
-		{"level2_no_dot", reflect.TypeOf(Level2Struct{}), false},
-		{"level3_no_dot", reflect.TypeOf(Level3Struct{}), false},
+		{typ: reflect.TypeOf(EmbeddedStructNoDot{}), name: "embedded_no_dot", expected: false},
+		{typ: reflect.TypeOf(Level1Struct{}), name: "level1_no_dot", expected: false},
+		{typ: reflect.TypeOf(Level2Struct{}), name: "level2_no_dot", expected: false},
+		{typ: reflect.TypeOf(Level3Struct{}), name: "level3_no_dot", expected: false},
 
 		// Embedded structs with dot notation (non-pointer)
-		{"embedded_with_dot", reflect.TypeOf(EmbeddedStructWithDot{}), true},
-		{"struct_with_embedded_dot", reflect.TypeOf(StructWithEmbeddedDot{}), true},
+		{typ: reflect.TypeOf(EmbeddedStructWithDot{}), name: "embedded_with_dot", expected: true},
+		{typ: reflect.TypeOf(StructWithEmbeddedDot{}), name: "struct_with_embedded_dot", expected: true},
 
 		// Pointer embedded structs with dot notation
-		{"pointer_embedded_with_dot", reflect.TypeOf(PointerEmbeddedStructWithDot{}), true},
-		{"struct_with_pointer_embedded_dot", reflect.TypeOf(StructWithPointerEmbeddedDot{}), true},
+		{typ: reflect.TypeOf(PointerEmbeddedStructWithDot{}), name: "pointer_embedded_with_dot", expected: true},
+		{typ: reflect.TypeOf(StructWithPointerEmbeddedDot{}), name: "struct_with_pointer_embedded_dot", expected: true},
 
 		// Deep embedding with dot notation (2-3 levels)
 		{"deep_embedded_dot", reflect.TypeOf(StructWithDeepEmbeddedDot{}), true},
