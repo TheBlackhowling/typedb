@@ -13,66 +13,66 @@ func TestIsZeroOrNil(t *testing.T) {
 		expected bool
 	}{
 		// Nil pointer types
-		{"nil_ptr", (*int)(nil), true},
-		{"nil_slice", ([]int)(nil), true},
-		{"nil_map", (map[string]int)(nil), true},
-		{"nil_chan", (chan int)(nil), true},
-		{"nil_func", (func())(nil), true},
+		{name: "nil_ptr", value: (*int)(nil), expected: true},
+		{name: "nil_slice", value: ([]int)(nil), expected: true},
+		{name: "nil_map", value: (map[string]int)(nil), expected: true},
+		{name: "nil_chan", value: (chan int)(nil), expected: true},
+		{name: "nil_func", value: (func())(nil), expected: true},
 
 		// Non-nil pointer types
-		{"non_nil_ptr", intPtr(42), false},
-		{"non_nil_slice", []int{1, 2, 3}, false},
-		{"non_nil_map", map[string]int{"a": 1}, false},
-		{"non_nil_chan", make(chan int), false},
-		{"non_nil_func", func() {}, false},
+		{name: "non_nil_ptr", value: intPtr(42), expected: false},
+		{name: "non_nil_slice", value: []int{1, 2, 3}, expected: false},
+		{name: "non_nil_map", value: map[string]int{"a": 1}, expected: false},
+		{name: "non_nil_chan", value: make(chan int), expected: false},
+		{name: "non_nil_func", value: func() {}, expected: false},
 
 		// Empty but non-nil
-		{"empty_slice", []int{}, false},        // Empty slice is not nil
-		{"empty_map", map[string]int{}, false}, // Empty map is not nil
+		{name: "empty_slice", value: []int{}, expected: false},        // Empty slice is not nil
+		{name: "empty_map", value: map[string]int{}, expected: false}, // Empty map is not nil
 
 		// String types
-		{"empty_string", "", true},
-		{"non_empty_string", "hello", false},
+		{name: "empty_string", value: "", expected: true},
+		{name: "non_empty_string", value: "hello", expected: false},
 
 		// Integer types
-		{"int_zero", 0, true},
-		{"int_non_zero", 42, false},
-		{"int8_zero", int8(0), true},
-		{"int8_non_zero", int8(42), false},
-		{"int16_zero", int16(0), true},
-		{"int16_non_zero", int16(42), false},
-		{"int32_zero", int32(0), true},
-		{"int32_non_zero", int32(42), false},
-		{"int64_zero", int64(0), true},
-		{"int64_non_zero", int64(42), false},
+		{name: "int_zero", value: 0, expected: true},
+		{name: "int_non_zero", value: 42, expected: false},
+		{name: "int8_zero", value: int8(0), expected: true},
+		{name: "int8_non_zero", value: int8(42), expected: false},
+		{name: "int16_zero", value: int16(0), expected: true},
+		{name: "int16_non_zero", value: int16(42), expected: false},
+		{name: "int32_zero", value: int32(0), expected: true},
+		{name: "int32_non_zero", value: int32(42), expected: false},
+		{name: "int64_zero", value: int64(0), expected: true},
+		{name: "int64_non_zero", value: int64(42), expected: false},
 
 		// Unsigned integer types
-		{"uint_zero", uint(0), true},
-		{"uint_non_zero", uint(42), false},
-		{"uint8_zero", uint8(0), true},
-		{"uint8_non_zero", uint8(42), false},
-		{"uint16_zero", uint16(0), true},
-		{"uint16_non_zero", uint16(42), false},
-		{"uint32_zero", uint32(0), true},
-		{"uint32_non_zero", uint32(42), false},
-		{"uint64_zero", uint64(0), true},
-		{"uint64_non_zero", uint64(42), false},
-		{"uintptr_zero", uintptr(0), true},
-		{"uintptr_non_zero", uintptr(42), false},
+		{name: "uint_zero", value: uint(0), expected: true},
+		{name: "uint_non_zero", value: uint(42), expected: false},
+		{name: "uint8_zero", value: uint8(0), expected: true},
+		{name: "uint8_non_zero", value: uint8(42), expected: false},
+		{name: "uint16_zero", value: uint16(0), expected: true},
+		{name: "uint16_non_zero", value: uint16(42), expected: false},
+		{name: "uint32_zero", value: uint32(0), expected: true},
+		{name: "uint32_non_zero", value: uint32(42), expected: false},
+		{name: "uint64_zero", value: uint64(0), expected: true},
+		{name: "uint64_non_zero", value: uint64(42), expected: false},
+		{name: "uintptr_zero", value: uintptr(0), expected: true},
+		{name: "uintptr_non_zero", value: uintptr(42), expected: false},
 
 		// Float types
-		{"float32_zero", float32(0), true},
-		{"float32_non_zero", float32(3.14), false},
-		{"float64_zero", float64(0), true},
-		{"float64_non_zero", float64(3.14), false},
+		{name: "float32_zero", value: float32(0), expected: true},
+		{name: "float32_non_zero", value: float32(3.14), expected: false},
+		{name: "float64_zero", value: float64(0), expected: true},
+		{name: "float64_non_zero", value: float64(3.14), expected: false},
 
 		// Bool types
-		{"bool_false", false, true},
-		{"bool_true", true, false},
+		{name: "bool_false", value: false, expected: true},
+		{name: "bool_true", value: true, expected: false},
 
 		// Struct types (default case - should return false)
-		{"struct_zero", struct{}{}, false},
-		{"struct_with_fields", struct{ X int }{X: 0}, false},
+		{name: "struct_zero", value: struct{}{}, expected: false},
+		{name: "struct_with_fields", value: struct{ X int }{X: 0}, expected: false},
 	}
 
 	for _, tt := range tests {
