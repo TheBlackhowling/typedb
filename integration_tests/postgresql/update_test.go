@@ -262,13 +262,7 @@ func TestPostgreSQL_Update_NonPartialUpdate(t *testing.T) {
 	// Actually, the test should verify that when partial update is NOT enabled (default),
 	// all fields are updated. But User has partial update enabled.
 	// Let's test with Post model which doesn't have partial update enabled
-	// Get first user to create post if needed
-	firstUser, err := typedb.QueryFirst[*User](ctx, db, "SELECT id, name, email, created_at FROM users ORDER BY id LIMIT 1")
-	if err != nil || firstUser == nil {
-		t.Fatal("Need at least one user in database for non-partial update test")
-	}
-
-	// Get or create a post for testing
+	// Get or create a post for testing (firstUser already fetched above)
 	var firstPost *Post
 	firstPost, err = typedb.QueryFirst[*Post](ctx, db, "SELECT id, user_id, title, content, tags, metadata, created_at, updated_at FROM posts ORDER BY id LIMIT 1")
 	if err != nil || firstPost == nil {
