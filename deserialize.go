@@ -200,7 +200,9 @@ func buildFieldMapFromPtr(ptrValue, structValue reflect.Value) map[string]reflec
 			fieldType := field.Type
 			fieldValuePtr := reflect.NewAt(fieldType, fieldPtr)
 
-			currentIndex := append(append([]int(nil), indexPath...), i)
+			currentIndex := make([]int, len(indexPath), len(indexPath)+1)
+			copy(currentIndex, indexPath)
+			currentIndex = append(currentIndex, i)
 
 			// Handle embedded structs
 			if field.Anonymous {

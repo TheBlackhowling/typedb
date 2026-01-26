@@ -190,7 +190,9 @@ func findFieldByNameRecursive(t reflect.Type, fieldName string) (*reflect.Struct
 			if foundField, found := findFieldByNameRecursive(embeddedType, fieldName); found {
 				// Create a new field with adjusted index
 				adjustedField := *foundField
-				adjustedField.Index = append(append([]int(nil), field.Index...), foundField.Index...)
+				adjustedIndex := make([]int, len(field.Index), len(field.Index)+len(foundField.Index))
+				copy(adjustedIndex, field.Index)
+				adjustedField.Index = append(adjustedIndex, foundField.Index...)
 				return &adjustedField, true
 			}
 		}

@@ -8,7 +8,7 @@ import (
 func TestDeserializeInt_OverflowErrors(t *testing.T) {
 	maxInt := int(^uint(0) >> 1)
 	maxInt64 := int64(math.MaxInt64)
-	
+
 	tests := []struct {
 		name    string
 		value   any
@@ -25,7 +25,7 @@ func TestDeserializeInt_OverflowErrors(t *testing.T) {
 			wantErr: "overflows int",
 		},
 	}
-	
+
 	// Only test int64 overflow if int is smaller than int64 (32-bit systems)
 	if int64(maxInt) < maxInt64 {
 		tests = append(tests, struct {
@@ -197,23 +197,23 @@ func TestConvertUintSlice_OverflowHandling(t *testing.T) {
 	// It should set overflow values to 0
 	largeUint := uint(math.MaxUint64)
 	smallUint := uint(123)
-	
+
 	v := []uint{smallUint, largeUint, smallUint}
 	result := convertUintSlice(v)
-	
+
 	if len(result) != len(v) {
 		t.Fatalf("Expected result length %d, got %d", len(v), len(result))
 	}
-	
+
 	if result[0] != int(smallUint) {
 		t.Errorf("Expected result[0] = %d, got %d", int(smallUint), result[0])
 	}
-	
+
 	// Overflow value should be set to 0
 	if result[1] != 0 {
 		t.Errorf("Expected overflow value to be 0, got %d", result[1])
 	}
-	
+
 	if result[2] != int(smallUint) {
 		t.Errorf("Expected result[2] = %d, got %d", int(smallUint), result[2])
 	}
@@ -224,23 +224,23 @@ func TestConvertUint64Slice_OverflowHandling(t *testing.T) {
 	// It should set overflow values to 0
 	largeUint64 := uint64(math.MaxUint64)
 	smallUint64 := uint64(123)
-	
+
 	v := []uint64{smallUint64, largeUint64, smallUint64}
 	result := convertUint64Slice(v)
-	
+
 	if len(result) != len(v) {
 		t.Fatalf("Expected result length %d, got %d", len(v), len(result))
 	}
-	
+
 	if result[0] != int(smallUint64) {
 		t.Errorf("Expected result[0] = %d, got %d", int(smallUint64), result[0])
 	}
-	
+
 	// Overflow value should be set to 0
 	if result[1] != 0 {
 		t.Errorf("Expected overflow value to be 0, got %d", result[1])
 	}
-	
+
 	if result[2] != int(smallUint64) {
 		t.Errorf("Expected result[2] = %d, got %d", int(smallUint64), result[2])
 	}
@@ -252,7 +252,7 @@ func TestDeserializeInt_ValidConversions(t *testing.T) {
 	minInt := ^maxInt
 	maxInt32 := int32(math.MaxInt32)
 	minInt32 := int32(math.MinInt32)
-	
+
 	tests := []struct {
 		name  string
 		value any
@@ -304,7 +304,7 @@ func TestDeserializeInt64_ValidConversions(t *testing.T) {
 	minInt32 := int32(math.MinInt32)
 	maxUint32 := uint32(math.MaxUint32)
 	maxUint64Valid := uint64(maxInt64) // Largest uint64 that fits in int64
-	
+
 	tests := []struct {
 		name  string
 		value any
@@ -353,7 +353,7 @@ func TestDeserializeUint32_ValidConversions(t *testing.T) {
 	maxUint8 := uint8(math.MaxUint8)
 	maxInt32 := int32(math.MaxInt32)
 	maxIntValid := int(maxUint32) // Largest int that fits in uint32
-	
+
 	tests := []struct {
 		name  string
 		value any
@@ -397,8 +397,8 @@ func TestDeserializeInt32_ValidConversions(t *testing.T) {
 	maxUint16 := uint16(math.MaxUint16)
 	maxUint8 := uint8(math.MaxUint8)
 	maxUint32Valid := uint32(maxInt32) // Largest uint32 that fits in int32
-	maxUintValid := uint(maxInt32) // Largest uint that fits in int32
-	
+	maxUintValid := uint(maxInt32)     // Largest uint that fits in int32
+
 	tests := []struct {
 		name  string
 		value any

@@ -799,7 +799,7 @@ func extractNologMaskIndicesFromArgs(args []any) []int {
 	}
 
 	var maskIndices []int
-	
+
 	for argIdx, arg := range args {
 		if arg == nil {
 			continue
@@ -928,7 +928,7 @@ func getLoggingFlagsAndArgs(ctx context.Context, logQueries, logArgs bool, args 
 		if maskIndices, hasMask := getMaskIndices(ctx); hasMask {
 			allMaskIndices = append(allMaskIndices, maskIndices...)
 		}
-		
+
 		// Also check for model structs in arguments with nolog tags
 		autoMaskIndices := extractNologMaskIndicesFromArgs(args)
 		if len(autoMaskIndices) > 0 {
@@ -944,7 +944,7 @@ func getLoggingFlagsAndArgs(ctx context.Context, logQueries, logArgs bool, args 
 				}
 			}
 		}
-		
+
 		if len(allMaskIndices) > 0 {
 			loggingArgs = maskArgs(args, allMaskIndices)
 		}
