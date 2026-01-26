@@ -141,8 +141,8 @@ func TestMySQL_Logging_Begin_Commit_Rollback(t *testing.T) {
 		}
 	})
 
-	t.Run("Commit logs debug", func(t *testing.T) {
-		logger.Debugs = nil
+	t.Run("Commit logs info", func(t *testing.T) {
+		logger.Infos = nil // Reset logs
 		tx, err := db.Begin(ctx, nil)
 		if err != nil {
 			t.Fatalf("Begin failed: %v", err)
@@ -153,24 +153,24 @@ func TestMySQL_Logging_Begin_Commit_Rollback(t *testing.T) {
 			t.Fatalf("Commit failed: %v", err)
 		}
 
-		// Verify Debug log was emitted
-		if len(logger.Debugs) < 2 {
-			t.Fatal("Expected Debug log for Commit, got none")
+		// Verify Info log was emitted
+		if len(logger.Infos) == 0 {
+			t.Fatal("Expected Info log for Commit, got none")
 		}
 		foundCommit := false
-		for _, entry := range logger.Debugs {
+		for _, entry := range logger.Infos {
 			if entry.Msg == "Committing transaction" {
 				foundCommit = true
 				break
 			}
 		}
 		if !foundCommit {
-			t.Error("Expected Debug log message 'Committing transaction'")
+			t.Error("Expected Info log message 'Committing transaction'")
 		}
 	})
 
-	t.Run("Rollback logs debug", func(t *testing.T) {
-		logger.Debugs = nil
+	t.Run("Rollback logs info", func(t *testing.T) {
+		logger.Infos = nil // Reset logs
 		tx, err := db.Begin(ctx, nil)
 		if err != nil {
 			t.Fatalf("Begin failed: %v", err)
@@ -181,19 +181,19 @@ func TestMySQL_Logging_Begin_Commit_Rollback(t *testing.T) {
 			t.Fatalf("Rollback failed: %v", err)
 		}
 
-		// Verify Debug log was emitted
-		if len(logger.Debugs) < 2 {
-			t.Fatal("Expected Debug log for Rollback, got none")
+		// Verify Info log was emitted
+		if len(logger.Infos) == 0 {
+			t.Fatal("Expected Info log for Rollback, got none")
 		}
 		foundRollback := false
-		for _, entry := range logger.Debugs {
+		for _, entry := range logger.Infos {
 			if entry.Msg == "Rolling back transaction" {
 				foundRollback = true
 				break
 			}
 		}
 		if !foundRollback {
-			t.Error("Expected Debug log message 'Rolling back transaction'")
+			t.Error("Expected Info log message 'Rolling back transaction'")
 		}
 	})
 }
