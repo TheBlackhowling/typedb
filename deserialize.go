@@ -3,6 +3,7 @@ package typedb
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"reflect"
 	"strconv"
 	"strings"
@@ -539,7 +540,9 @@ func deserializeInt(value any) (int, error) {
 	case int:
 		return v, nil
 	case int64:
-		if v < ^int(^uint(0)>>1) || v > int64(^uint(0)>>1) {
+		maxInt := int64(^uint(0) >> 1)
+		minInt := ^maxInt
+		if v < minInt || v > maxInt {
 			return 0, fmt.Errorf("typedb: int64 value %d overflows int", v)
 		}
 		return int(v), nil
@@ -757,12 +760,16 @@ func deserializeInt32(value any) (int32, error) {
 	case int32:
 		return v, nil
 	case int:
-		if v < ^int32(^uint32(0)>>1) || v > int(^uint32(0)>>1) {
+		maxInt32 := int64(math.MaxInt32)
+		minInt32 := int64(math.MinInt32)
+		if int64(v) < minInt32 || int64(v) > maxInt32 {
 			return 0, fmt.Errorf("typedb: int value %d overflows int32", v)
 		}
 		return int32(v), nil
 	case int64:
-		if v < ^int32(^uint32(0)>>1) || v > int64(^uint32(0)>>1) {
+		maxInt32 := int64(math.MaxInt32)
+		minInt32 := int64(math.MinInt32)
+		if v < minInt32 || v > maxInt32 {
 			return 0, fmt.Errorf("typedb: int64 value %d overflows int32", v)
 		}
 		return int32(v), nil
