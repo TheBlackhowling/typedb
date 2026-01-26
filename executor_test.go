@@ -38,8 +38,8 @@ func TestDB_WithTimeout(t *testing.T) {
 	if !ok {
 		t.Error("Expected context to have deadline")
 	}
-	if deadline.Sub(time.Now()) > 6*time.Second || deadline.Sub(time.Now()) < 4*time.Second {
-		t.Errorf("Expected deadline around 5s, got %v", deadline.Sub(time.Now()))
+	if time.Until(deadline) > 6*time.Second || time.Until(deadline) < 4*time.Second {
+		t.Errorf("Expected deadline around 5s, got %v", time.Until(deadline))
 	}
 	cancel()
 
@@ -60,8 +60,8 @@ func TestDB_WithTimeout(t *testing.T) {
 	if !ok {
 		t.Error("Expected context to have deadline")
 	}
-	if deadline3.Sub(time.Now()) > 6*time.Second || deadline3.Sub(time.Now()) < 4*time.Second {
-		t.Errorf("Expected default deadline around 5s, got %v", deadline3.Sub(time.Now()))
+	if time.Until(deadline3) > 6*time.Second || time.Until(deadline3) < 4*time.Second {
+		t.Errorf("Expected default deadline around 5s, got %v", time.Until(deadline3))
 	}
 	cancel3()
 }
@@ -215,8 +215,8 @@ func TestTx_WithTimeout(t *testing.T) {
 	if !ok {
 		t.Error("Expected context to have deadline")
 	}
-	if deadline.Sub(time.Now()) > 6*time.Second || deadline.Sub(time.Now()) < 4*time.Second {
-		t.Errorf("Expected deadline around 5s, got %v", deadline.Sub(time.Now()))
+	if time.Until(deadline) > 6*time.Second || time.Until(deadline) < 4*time.Second {
+		t.Errorf("Expected deadline around 5s, got %v", time.Until(deadline))
 	}
 	cancel()
 

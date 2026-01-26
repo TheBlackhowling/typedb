@@ -31,7 +31,7 @@ func Example10_Update_AutoTimestamp(ctx context.Context, db *typedb.DB, firstUse
 	fmt.Println("\n--- Example 10: Update - Auto-Timestamp ---")
 	// Note: This example requires the User model to have an UpdatedAt field with dbUpdate:"auto-timestamp" tag
 	// and the database table to have an updated_at column
-	
+
 	// Load user first to get the initial UpdatedAt value
 	userBeforeUpdate := &User{ID: firstUser.ID}
 	if err := typedb.Load(ctx, db, userBeforeUpdate); err != nil {
@@ -39,7 +39,7 @@ func Example10_Update_AutoTimestamp(ctx context.Context, db *typedb.DB, firstUse
 	}
 	originalUpdatedAt := userBeforeUpdate.UpdatedAt
 	fmt.Printf("  Original UpdatedAt: %s\n", originalUpdatedAt)
-	
+
 	// Update user - UpdatedAt will be automatically populated with CURRENT_TIMESTAMP
 	userToUpdate := &User{
 		ID:   firstUser.ID,
@@ -49,7 +49,7 @@ func Example10_Update_AutoTimestamp(ctx context.Context, db *typedb.DB, firstUse
 	if err := typedb.Update(ctx, db, userToUpdate); err != nil {
 		log.Fatalf("Failed to update user: %v", err)
 	}
-	
+
 	// Reload user to verify UpdatedAt was changed
 	updatedUser := &User{ID: firstUser.ID}
 	if err := typedb.Load(ctx, db, updatedUser); err != nil {
@@ -57,7 +57,7 @@ func Example10_Update_AutoTimestamp(ctx context.Context, db *typedb.DB, firstUse
 	}
 	fmt.Printf("  ✓ Updated user name to: %s\n", updatedUser.Name)
 	fmt.Printf("  New UpdatedAt: %s\n", updatedUser.UpdatedAt)
-	
+
 	// Verify UpdatedAt changed (should be different from original)
 	if updatedUser.UpdatedAt == originalUpdatedAt {
 		log.Fatalf("UpdatedAt should have changed, but it's still: %s", updatedUser.UpdatedAt)
@@ -70,35 +70,35 @@ func Example11_Update_PartialUpdate(ctx context.Context, db *typedb.DB, firstUse
 	fmt.Println("\n--- Example 11: Update - Partial Update ---")
 	// Note: This example requires the User model to be registered with RegisterModelWithOptions
 	// and ModelOptions{PartialUpdate: true}
-	
+
 	// Load user first to save original copy (required for partial update)
 	userToUpdate := &User{ID: firstUser.ID}
 	if err := typedb.Load(ctx, db, userToUpdate); err != nil {
 		log.Fatalf("Failed to load user: %v", err)
 	}
-	
+
 	originalName := userToUpdate.Name
 	originalEmail := userToUpdate.Email
 	fmt.Printf("  Original Name: %s\n", originalName)
 	fmt.Printf("  Original Email: %s\n", originalEmail)
-	
+
 	// Modify only name, keep email unchanged
 	userToUpdate.Name = "Partially Updated Name"
 	// Email remains unchanged - will NOT be included in UPDATE
-	
+
 	if err := typedb.Update(ctx, db, userToUpdate); err != nil {
 		log.Fatalf("Failed to update user: %v", err)
 	}
-	
+
 	// Reload to verify only name was updated
 	updatedUser := &User{ID: firstUser.ID}
 	if err := typedb.Load(ctx, db, updatedUser); err != nil {
 		log.Fatalf("Failed to load updated user: %v", err)
 	}
-	
+
 	fmt.Printf("  ✓ Updated name to: %s\n", updatedUser.Name)
 	fmt.Printf("  ✓ Email remained unchanged: %s\n", updatedUser.Email)
-	
+
 	// Verify email was not changed
 	if updatedUser.Email != originalEmail {
 		log.Fatalf("Email should not have changed, but it did. Original: %s, New: %s", originalEmail, updatedUser.Email)

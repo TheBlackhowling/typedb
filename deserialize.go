@@ -807,6 +807,9 @@ func deserializeString(value any) string {
 	if value == nil {
 		return ""
 	}
+	if s, ok := value.(string); ok {
+		return s
+	}
 	return fmt.Sprintf("%v", value)
 }
 

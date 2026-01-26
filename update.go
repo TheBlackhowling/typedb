@@ -59,8 +59,8 @@ import (
 //	user.Name = "New Name"
 //	typedb.Update(ctx, db, user) // Only updates name field, not email
 // validateUpdateModel validates model for update operation
-func validateUpdateModel[T ModelInterface](model T) (string, *reflect.StructField, string, error) {
-	tableName, err := getTableName(model)
+func validateUpdateModel[T ModelInterface](model T) (tableName string, primaryKeyField *reflect.StructField, primaryKeyColumn string, err error) {
+	tableName, err = getTableName(model)
 	if err != nil {
 		return "", nil, "", fmt.Errorf("typedb: Update validation failed: %w", err)
 	}
@@ -74,7 +74,7 @@ func validateUpdateModel[T ModelInterface](model T) (string, *reflect.StructFiel
 		return "", nil, "", fmt.Errorf("typedb: Update requires a field with load:\"primary\" tag")
 	}
 
-	primaryKeyColumn := primaryField.Tag.Get("db")
+	primaryKeyColumn = primaryField.Tag.Get("db")
 	if primaryKeyColumn == "" || primaryKeyColumn == "-" {
 		return "", nil, "", fmt.Errorf("typedb: primary key field %s must have a db tag", primaryField.Name)
 	}
@@ -94,7 +94,7 @@ func buildUpdateQuery(driverName string, tableName string, primaryKeyColumn stri
 	quotedTableName := quoteIdentifier(driverName, tableName)
 	quotedPrimaryKeyColumn := quoteIdentifier(driverName, primaryKeyColumn)
 
-	var setClauses []string
+	setClauses := make([]string, 0, len(columns)+len(autoUpdateColumns))
 	placeholderIndex := 1
 
 	// Add regular fields with placeholders
@@ -213,7 +213,7 @@ func getTimestampFunction(driverName string) string {
 // Fields with dbUpdate:"auto-timestamp" are automatically populated with database timestamp functions.
 // If changedFields is provided (partial update enabled), only includes fields that have changed.
 // Returns: column names, field values for serialization, auto-update column names, and mask indices (for fields with nolog:"true" tag).
-func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName string, driverName string, changedFields map[string]bool) ([]string, []any, []string, []int, error) {
+func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName, driverName string, changedFields map[string]bool) (columns []string, values []any, autoUpdateColumns []string, maskIndices []int, err error) {
 	modelValue := reflect.ValueOf(model)
 	if modelValue.Kind() != reflect.Ptr || modelValue.IsNil() {
 		return nil, nil, nil, nil, fmt.Errorf("typedb: model must be a non-nil pointer")
@@ -224,10 +224,10 @@ func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName str
 		return nil, nil, nil, nil, fmt.Errorf("typedb: model must be a pointer to struct")
 	}
 
-	var columns []string
-	var values []any
-	var autoUpdateColumns []string
-	var maskIndices []int
+	columns = []string{}
+	values = []any{}
+	autoUpdateColumns = []string{}
+	maskIndices = []int{}
 
 	iterateStructFields(modelValue.Type(), modelValue, primaryKeyFieldName, func(field reflect.StructField, fieldValue reflect.Value, columnName string) bool {
 		// Check for dbUpdate tag
@@ -274,7 +274,7 @@ func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName str
 }
 
 // extractOriginalCopy extracts the original copy from Model.originalCopy field using unsafe
-func extractOriginalCopy(structValue reflect.Value) (interface{}, error) {
+func extractOriginalCopy(structValue reflect.Value) (originalCopy interface{}, err error) {
 	for i := 0; i < structValue.NumField(); i++ {
 		field := structValue.Type().Field(i)
 		if field.Anonymous && field.Type == reflect.TypeOf(Model{}) {
@@ -283,7 +283,7 @@ func extractOriginalCopy(structValue reflect.Value) (interface{}, error) {
 			modelFieldPtr := unsafe.Pointer(modelFieldValue.UnsafeAddr())
 			originalCopyFieldType := field.Type.Field(0) // Model.originalCopy field
 			originalCopyFieldPtr := unsafe.Add(modelFieldPtr, originalCopyFieldType.Offset)
-			originalCopy := *(*interface{})(originalCopyFieldPtr)
+			originalCopy = *(*interface{})(originalCopyFieldPtr)
 			if originalCopy != nil {
 				return originalCopy, nil
 			}
@@ -328,7 +328,7 @@ func compareFieldMaps(currentFields, originalFields map[string]reflect.Value) ma
 // getChangedFields compares the current model state with its original copy and returns
 // a map of column names that have changed. Returns nil if partial update is not enabled
 // or if no original copy exists.
-func getChangedFields(model ModelInterface, primaryKeyFieldName string) (map[string]bool, error) {
+func getChangedFields(model ModelInterface, primaryKeyFieldName string) (changedFields map[string]bool, err error) {
 	modelValue := reflect.ValueOf(model)
 	if modelValue.Kind() != reflect.Ptr || modelValue.IsNil() {
 		return nil, fmt.Errorf("model must be a non-nil pointer")
