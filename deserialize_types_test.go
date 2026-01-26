@@ -40,11 +40,11 @@ func TestDeserializeInt(t *testing.T) {
 		name  string
 		want  int
 	}{
-		{"int", 123, 123},
-		{"int64", int64(456), 456},
-		{"int32", int32(789), 789},
-		{"float64", float64(999), 999},
-		{"string", "111", 111},
+		{value: 123, name: "int", want: 123},
+		{value: int64(456), name: "int64", want: 456},
+		{value: int32(789), name: "int32", want: 789},
+		{value: float64(999), name: "float64", want: 999},
+		{value: "111", name: "string", want: 111},
 	}
 
 	for _, tt := range tests {
@@ -66,14 +66,14 @@ func TestDeserializeBool(t *testing.T) {
 		name  string
 		want  bool
 	}{
-		{"bool true", true, true},
-		{"bool false", false, false},
-		{"string true", "true", true},
-		{"string false", "false", false},
-		{"string 1", "1", true},
-		{"string 0", "0", false},
-		{"int 1", 1, true},
-		{"int 0", 0, false},
+		{value: true, name: "bool true", want: true},
+		{value: false, name: "bool false", want: false},
+		{value: "true", name: "string true", want: true},
+		{value: "false", name: "string false", want: false},
+		{value: "1", name: "string 1", want: true},
+		{value: "0", name: "string 0", want: false},
+		{value: 1, name: "int 1", want: true},
+		{value: 0, name: "int 0", want: false},
 	}
 
 	for _, tt := range tests {
@@ -117,9 +117,9 @@ func TestDeserializeJSONB(t *testing.T) {
 		want  map[string]any
 		name  string
 	}{
-		{"map", map[string]any{"key": "value"}, map[string]any{"key": "value"}},
-		{"json string", `{"key": "value"}`, map[string]any{"key": "value"}},
-		{"json bytes", []byte(`{"key": "value"}`), map[string]any{"key": "value"}},
+		{value: map[string]any{"key": "value"}, want: map[string]any{"key": "value"}, name: "map"},
+		{value: `{"key": "value"}`, want: map[string]any{"key": "value"}, name: "json string"},
+		{value: []byte(`{"key": "value"}`), want: map[string]any{"key": "value"}, name: "json bytes"},
 	}
 
 	for _, tt := range tests {
@@ -171,10 +171,10 @@ func TestDeserializeMap(t *testing.T) {
 		want  map[string]string
 		name  string
 	}{
-		{"map[string]string", map[string]string{"key": "value"}, map[string]string{"key": "value"}},
-		{"map[string]any", map[string]any{"key": 123}, map[string]string{"key": "123"}},
-		{"json string", `{"key": "value"}`, map[string]string{"key": "value"}},
-		{"json bytes", []byte(`{"key": "value"}`), map[string]string{"key": "value"}},
+		{value: map[string]string{"key": "value"}, want: map[string]string{"key": "value"}, name: "map[string]string"},
+		{value: map[string]any{"key": 123}, want: map[string]string{"key": "123"}, name: "map[string]any"},
+		{value: `{"key": "value"}`, want: map[string]string{"key": "value"}, name: "json string"},
+		{value: []byte(`{"key": "value"}`), want: map[string]string{"key": "value"}, name: "json bytes"},
 	}
 
 	for _, tt := range tests {
@@ -203,11 +203,11 @@ func TestDeserializeInt64(t *testing.T) {
 		name  string
 		want  int64
 	}{
-		{"int64", int64(123), 123},
-		{"int", int(456), 456},
-		{"int32", int32(789), 789},
-		{"uint64", uint64(999), 999},
-		{"float64", float64(111), 111},
+		{value: int64(123), name: "int64", want: 123},
+		{value: int(456), name: "int", want: 456},
+		{value: int32(789), name: "int32", want: 789},
+		{value: uint64(999), name: "uint64", want: 999},
+		{value: float64(111), name: "float64", want: 111},
 		{"string", "222", 222},
 	}
 
@@ -230,11 +230,11 @@ func TestDeserializeInt32(t *testing.T) {
 		name  string
 		want  int32
 	}{
-		{"int32", int32(123), 123},
-		{"int", int(456), 456},
-		{"int64", int64(789), 789},
-		{"uint32", uint32(999), 999},
-		{"float64", float64(111), 111},
+		{value: int32(123), name: "int32", want: 123},
+		{value: int(456), name: "int", want: 456},
+		{value: int64(789), name: "int64", want: 789},
+		{value: uint32(999), name: "uint32", want: 999},
+		{value: float64(111), name: "float64", want: 111},
 		{"string", "222", 222},
 	}
 
@@ -257,10 +257,10 @@ func TestDeserializeTime(t *testing.T) {
 		name  string
 		want  bool
 	}{
-		{"time.Time", time.Date(2023, 1, 1, 12, 0, 0, 0, time.UTC), true},
-		{"RFC3339 string", "2023-01-01T12:00:00Z", true},
-		{"bytes", []byte("2023-01-01T12:00:00Z"), true},
-		{"invalid", 123, false},
+		{value: time.Date(2023, 1, 1, 12, 0, 0, 0, time.UTC), name: "time.Time", want: true},
+		{value: "2023-01-01T12:00:00Z", name: "RFC3339 string", want: true},
+		{value: []byte("2023-01-01T12:00:00Z"), name: "bytes", want: true},
+		{value: 123, name: "invalid", want: false},
 	}
 
 	for _, tt := range tests {
