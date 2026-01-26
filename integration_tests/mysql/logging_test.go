@@ -126,7 +126,7 @@ func TestMySQL_Logging_Begin_Commit_Rollback(t *testing.T) {
 
 	t.Run("Begin logs debug", func(t *testing.T) {
 		logger.Debugs = nil
-		tx, err := db.Begin(ctx)
+		tx, err := db.Begin(ctx, nil)
 		if err != nil {
 			t.Fatalf("Begin failed: %v", err)
 		}
@@ -143,7 +143,7 @@ func TestMySQL_Logging_Begin_Commit_Rollback(t *testing.T) {
 
 	t.Run("Commit logs debug", func(t *testing.T) {
 		logger.Debugs = nil
-		tx, err := db.Begin(ctx)
+		tx, err := db.Begin(ctx, nil)
 		if err != nil {
 			t.Fatalf("Begin failed: %v", err)
 		}
@@ -171,7 +171,7 @@ func TestMySQL_Logging_Begin_Commit_Rollback(t *testing.T) {
 
 	t.Run("Rollback logs debug", func(t *testing.T) {
 		logger.Debugs = nil
-		tx, err := db.Begin(ctx)
+		tx, err := db.Begin(ctx, nil)
 		if err != nil {
 			t.Fatalf("Begin failed: %v", err)
 		}
