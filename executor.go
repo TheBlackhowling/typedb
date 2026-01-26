@@ -906,21 +906,23 @@ func iterateStructFieldsForNolog(structType reflect.Type, structValue reflect.Va
 
 // getLoggingFlagsAndArgs extracts logging flags from context and applies masking if needed.
 // Returns the effective logQueries, logArgs flags and the args to use for logging (may be masked).
-func getLoggingFlagsAndArgs(ctx context.Context, logQueries, logArgs bool, args []any) (bool, bool, []any) {
+func getLoggingFlagsAndArgs(ctx context.Context, logQueries, logArgs bool, args []any) (effectiveLogQueries, effectiveLogArgs bool, loggingArgs []any) {
 	// Check for context-based logging overrides
+	effectiveLogQueries = logQueries
+	effectiveLogArgs = logArgs
 	override, hasOverride := getLogOverride(ctx)
 	if hasOverride {
 		if override.noQueries {
-			logQueries = false
+			effectiveLogQueries = false
 		}
 		if override.noArgs {
-			logArgs = false
+			effectiveLogArgs = false
 		}
 	}
 
 	// Check for mask indices and apply masking if needed
-	logArgsCopy := args
-	if logArgs {
+	loggingArgs = args
+	if effectiveLogArgs {
 		// First check for explicit mask indices from context (set by Insert/Update/Load)
 		var allMaskIndices []int
 		if maskIndices, hasMask := getMaskIndices(ctx); hasMask {
@@ -944,9 +946,9 @@ func getLoggingFlagsAndArgs(ctx context.Context, logQueries, logArgs bool, args 
 		}
 		
 		if len(allMaskIndices) > 0 {
-			logArgsCopy = maskArgs(args, allMaskIndices)
+			loggingArgs = maskArgs(args, allMaskIndices)
 		}
 	}
 
-	return logQueries, logArgs, logArgsCopy
+	return effectiveLogQueries, effectiveLogArgs, loggingArgs
 }
