@@ -345,46 +345,46 @@ func TestGeneratePlaceholder(t *testing.T) {
 		position   int
 	}{
 		// PostgreSQL
-		{"postgres_lowercase_1", "postgres", 1, "$1"},
-		{"postgres_lowercase_2", "postgres", 2, "$2"},
-		{"postgres_lowercase_10", "postgres", 10, "$10"},
-		{"postgres_uppercase", "POSTGRES", 1, "$1"},
-		{"postgres_mixed_case", "Postgres", 3, "$3"},
+		{name: "postgres_lowercase_1", driverName: "postgres", position: 1, expected: "$1"},
+		{name: "postgres_lowercase_2", driverName: "postgres", position: 2, expected: "$2"},
+		{name: "postgres_lowercase_10", driverName: "postgres", position: 10, expected: "$10"},
+		{name: "postgres_uppercase", driverName: "POSTGRES", position: 1, expected: "$1"},
+		{name: "postgres_mixed_case", driverName: "Postgres", position: 3, expected: "$3"},
 
 		// MySQL
-		{"mysql_lowercase_1", "mysql", 1, "?"},
-		{"mysql_lowercase_2", "mysql", 2, "?"},
-		{"mysql_lowercase_10", "mysql", 10, "?"},
-		{"mysql_uppercase", "MYSQL", 1, "?"},
-		{"mysql_mixed_case", "MySql", 5, "?"},
+		{name: "mysql_lowercase_1", driverName: "mysql", position: 1, expected: "?"},
+		{name: "mysql_lowercase_2", driverName: "mysql", position: 2, expected: "?"},
+		{name: "mysql_lowercase_10", driverName: "mysql", position: 10, expected: "?"},
+		{name: "mysql_uppercase", driverName: "MYSQL", position: 1, expected: "?"},
+		{name: "mysql_mixed_case", driverName: "MySql", position: 5, expected: "?"},
 
 		// SQLite
-		{"sqlite3_lowercase_1", "sqlite3", 1, "?"},
-		{"sqlite3_lowercase_2", "sqlite3", 2, "?"},
-		{"sqlite3_lowercase_10", "sqlite3", 10, "?"},
-		{"sqlite3_uppercase", "SQLITE3", 1, "?"},
-		{"sqlite3_mixed_case", "Sqlite3", 7, "?"},
+		{name: "sqlite3_lowercase_1", driverName: "sqlite3", position: 1, expected: "?"},
+		{name: "sqlite3_lowercase_2", driverName: "sqlite3", position: 2, expected: "?"},
+		{name: "sqlite3_lowercase_10", driverName: "sqlite3", position: 10, expected: "?"},
+		{name: "sqlite3_uppercase", driverName: "SQLITE3", position: 1, expected: "?"},
+		{name: "sqlite3_mixed_case", driverName: "Sqlite3", position: 7, expected: "?"},
 
 		// SQL Server
-		{"sqlserver_lowercase_1", "sqlserver", 1, "@p1"},
-		{"sqlserver_lowercase_2", "sqlserver", 2, "@p2"},
-		{"sqlserver_lowercase_10", "sqlserver", 10, "@p10"},
-		{"sqlserver_uppercase", "SQLSERVER", 1, "@p1"},
-		{"sqlserver_mixed_case", "SqlServer", 3, "@p3"},
+		{name: "sqlserver_lowercase_1", driverName: "sqlserver", position: 1, expected: "@p1"},
+		{name: "sqlserver_lowercase_2", driverName: "sqlserver", position: 2, expected: "@p2"},
+		{name: "sqlserver_lowercase_10", driverName: "sqlserver", position: 10, expected: "@p10"},
+		{name: "sqlserver_uppercase", driverName: "SQLSERVER", position: 1, expected: "@p1"},
+		{name: "sqlserver_mixed_case", driverName: "SqlServer", position: 3, expected: "@p3"},
 
 		// MSSQL (alias for SQL Server)
-		{"mssql_lowercase_1", "mssql", 1, "@p1"},
-		{"mssql_lowercase_2", "mssql", 2, "@p2"},
-		{"mssql_lowercase_10", "mssql", 10, "@p10"},
-		{"mssql_uppercase", "MSSQL", 1, "@p1"},
-		{"mssql_mixed_case", "MsSql", 4, "@p4"},
+		{name: "mssql_lowercase_1", driverName: "mssql", position: 1, expected: "@p1"},
+		{name: "mssql_lowercase_2", driverName: "mssql", position: 2, expected: "@p2"},
+		{name: "mssql_lowercase_10", driverName: "mssql", position: 10, expected: "@p10"},
+		{name: "mssql_uppercase", driverName: "MSSQL", position: 1, expected: "@p1"},
+		{name: "mssql_mixed_case", driverName: "MsSql", position: 4, expected: "@p4"},
 
 		// Oracle
-		{"oracle_lowercase_1", "oracle", 1, ":1"},
-		{"oracle_lowercase_2", "oracle", 2, ":2"},
-		{"oracle_lowercase_10", "oracle", 10, ":10"},
-		{"oracle_uppercase", "ORACLE", 1, ":1"},
-		{"oracle_mixed_case", "Oracle", 6, ":6"},
+		{name: "oracle_lowercase_1", driverName: "oracle", position: 1, expected: ":1"},
+		{name: "oracle_lowercase_2", driverName: "oracle", position: 2, expected: ":2"},
+		{name: "oracle_lowercase_10", driverName: "oracle", position: 10, expected: ":10"},
+		{name: "oracle_uppercase", driverName: "ORACLE", position: 1, expected: ":1"},
+		{name: "oracle_mixed_case", driverName: "Oracle", position: 6, expected: ":6"},
 
 		// Default/Unknown (defaults to PostgreSQL style)
 		{"unknown_driver_1", "unknown", 1, "$1"},
