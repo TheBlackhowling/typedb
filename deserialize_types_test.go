@@ -208,7 +208,7 @@ func TestDeserializeInt64(t *testing.T) {
 		{value: int32(789), name: "int32", want: 789},
 		{value: uint64(999), name: "uint64", want: 999},
 		{value: float64(111), name: "float64", want: 111},
-		{"string", "222", 222},
+		{value: "222", name: "string", want: 222},
 	}
 
 	for _, tt := range tests {
