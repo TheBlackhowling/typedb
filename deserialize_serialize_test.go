@@ -209,10 +209,10 @@ func TestSerialize(t *testing.T) {
 		want  any
 		name  string
 	}{
-		{"int", 123, 123},
-		{"int64", int64(456), int64(456)},
-		{"int32", int32(789), int32(789)},
-		{"uint", uint(999), uint(999)},
+		{value: 123, want: 123, name: "int"},
+		{value: int64(456), want: int64(456), name: "int64"},
+		{value: int32(789), want: int32(789), name: "int32"},
+		{value: uint(999), want: uint(999), name: "uint"},
 		{"float64", float64(1.5), float64(1.5)},
 		{"float32", float32(2.5), float32(2.5)},
 		{"string", "hello", "hello"},
