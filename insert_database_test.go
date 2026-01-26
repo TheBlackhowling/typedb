@@ -15,7 +15,7 @@ func TestInsert_SQLite_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "sqlite3", 5*time.Second)
 	ctx := context.Background()
@@ -47,7 +47,7 @@ func TestInsert_SQLServer_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "sqlserver", 5*time.Second)
 	ctx := context.Background()
@@ -80,7 +80,7 @@ func TestInsert_Oracle_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "oracle", 5*time.Second)
 	ctx := context.Background()
@@ -118,7 +118,7 @@ func TestInsert_UnknownDriver_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "unknown", 5*time.Second)
 	ctx := context.Background()
@@ -150,7 +150,7 @@ func TestInsert_MySQL_ExecError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "mysql", 5*time.Second)
 	ctx := context.Background()
@@ -180,7 +180,7 @@ func TestInsert_MySQL_LastInsertIdError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "mysql", 5*time.Second)
 	ctx := context.Background()
@@ -211,7 +211,7 @@ func TestInsert_QueryRowMapError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -241,7 +241,7 @@ func TestInsert_PrimaryKeyNotFound_Error(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -274,7 +274,7 @@ func TestInsert_PrimaryKeyUppercase_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -307,7 +307,7 @@ func TestInsert_Oracle_InsertAndReturnError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "oracle", 5*time.Second)
 	ctx := context.Background()
@@ -401,7 +401,7 @@ func TestInsert_DbInsertFalse_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -436,7 +436,7 @@ func TestInsert_DbUpdateFalse_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -472,7 +472,7 @@ func TestInsert_BothTagsFalse_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()

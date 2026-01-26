@@ -141,7 +141,7 @@ func TestUpdate_PartialUpdate_OnlyChangedFields(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -159,8 +159,8 @@ func TestUpdate_PartialUpdate_OnlyChangedFields(t *testing.T) {
 		"name":  "John",
 		"email": "john@example.com",
 	}
-	if err := deserialize(row, user); err != nil {
-		t.Fatalf("Failed to deserialize: %v", err)
+	if deserializeErr := deserialize(row, user); deserializeErr != nil {
+		t.Fatalf("Failed to deserialize: %v", deserializeErr)
 	}
 
 	// Modify only name
@@ -188,7 +188,7 @@ func TestUpdate_PartialUpdate_NoOriginalCopy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -221,7 +221,7 @@ func TestUpdate_PartialUpdate_MultipleChangedFields(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -238,8 +238,8 @@ func TestUpdate_PartialUpdate_MultipleChangedFields(t *testing.T) {
 		"name":  "John",
 		"email": "john@example.com",
 	}
-	if err := deserialize(row, user); err != nil {
-		t.Fatalf("Failed to deserialize: %v", err)
+	if deserializeErr := deserialize(row, user); deserializeErr != nil {
+		t.Fatalf("Failed to deserialize: %v", deserializeErr)
 	}
 
 	// Modify both name and email
@@ -268,7 +268,7 @@ func TestUpdate_NonPartialUpdate_AllNonZeroFields(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -302,7 +302,7 @@ func TestUpdate_NonPartialUpdate_OnlySetFields(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -337,7 +337,7 @@ func TestUpdate_PartialUpdate_UnchangedFieldsExcluded(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -355,8 +355,8 @@ func TestUpdate_PartialUpdate_UnchangedFieldsExcluded(t *testing.T) {
 		"name":  "John",
 		"email": "john@example.com",
 	}
-	if err := deserialize(row, user); err != nil {
-		t.Fatalf("Failed to deserialize: %v", err)
+	if deserializeErr := deserialize(row, user); deserializeErr != nil {
+		t.Fatalf("Failed to deserialize: %v", deserializeErr)
 	}
 
 	// Modify only name, keep email unchanged
@@ -385,7 +385,7 @@ func TestUpdate_PostgreSQL_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -411,7 +411,7 @@ func TestUpdate_MySQL_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "mysql", 5*time.Second)
 	ctx := context.Background()
@@ -437,7 +437,7 @@ func TestUpdate_SQLite_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "sqlite3", 5*time.Second)
 	ctx := context.Background()
@@ -463,7 +463,7 @@ func TestUpdate_SQLServer_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "sqlserver", 5*time.Second)
 	ctx := context.Background()
@@ -489,7 +489,7 @@ func TestUpdate_Oracle_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "oracle", 5*time.Second)
 	ctx := context.Background()
@@ -515,7 +515,7 @@ func TestUpdate_NoTableName_Error(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -540,7 +540,7 @@ func TestUpdate_NoPrimaryKey_Error(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -565,7 +565,7 @@ func TestUpdate_PrimaryKeyNotSet_Error(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -590,7 +590,7 @@ func TestUpdate_DotNotation_Error(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -615,7 +615,7 @@ func TestUpdate_AllZeroFields_Error(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -640,7 +640,7 @@ func TestUpdate_ZeroFieldsExcluded(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -666,7 +666,7 @@ func TestUpdate_ExecError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -695,7 +695,7 @@ func TestUpdate_SkipTagDash_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -726,7 +726,7 @@ func TestUpdate_DbUpdateFalseTagValue_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -757,7 +757,7 @@ func TestUpdate_SkipTagDashWithNonZeroValue_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -788,7 +788,7 @@ func TestUpdate_DbInsertFalse_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -820,7 +820,7 @@ func TestUpdate_DbUpdateFalse_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -852,7 +852,7 @@ func TestUpdate_BothTagsFalse_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -885,7 +885,7 @@ func TestUpdate_AutoTimestamp_PostgreSQL(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -918,7 +918,7 @@ func TestUpdate_AutoTimestamp_MySQL(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "mysql", 5*time.Second)
 	ctx := context.Background()
@@ -949,7 +949,7 @@ func TestUpdate_AutoTimestamp_SQLite(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "sqlite3", 5*time.Second)
 	ctx := context.Background()
@@ -980,7 +980,7 @@ func TestUpdate_AutoTimestamp_SQLServer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "sqlserver", 5*time.Second)
 	ctx := context.Background()
@@ -1012,7 +1012,7 @@ func TestUpdate_AutoTimestamp_Oracle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "oracle", 5*time.Second)
 	ctx := context.Background()
@@ -1043,7 +1043,7 @@ func TestUpdate_AutoTimestamp_OnlyAutoField(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
@@ -1074,7 +1074,7 @@ func TestUpdate_AutoTimestamp_WithRegularFields(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()

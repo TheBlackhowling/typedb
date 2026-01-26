@@ -174,7 +174,7 @@ func TestSerializationNolog_QueryAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	typedbDB := NewDBWithLoggerAndFlags(db, "postgres", 5*time.Second, logger, true, true)

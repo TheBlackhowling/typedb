@@ -10,7 +10,7 @@ import (
 
 func TestSQLite_Load(t *testing.T) {
 	db := setupTestDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
@@ -29,7 +29,7 @@ func TestSQLite_Load(t *testing.T) {
 
 func TestSQLite_LoadByField(t *testing.T) {
 	db := setupTestDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
@@ -48,7 +48,7 @@ func TestSQLite_LoadByField(t *testing.T) {
 
 func TestSQLite_LoadByComposite(t *testing.T) {
 	db := setupTestDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
@@ -64,7 +64,7 @@ func TestSQLite_LoadByComposite(t *testing.T) {
 
 func TestSQLite_Transaction(t *testing.T) {
 	db := setupTestDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()

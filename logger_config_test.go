@@ -15,7 +15,7 @@ func TestLogQueriesConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	ctx := context.Background()
@@ -29,7 +29,7 @@ func TestLogQueriesConfig(t *testing.T) {
 			// OpenWithoutValidation will fail with invalid DSN, but we can use NewDBWithLoggerAndFlags directly
 			typedbDB = NewDBWithLoggerAndFlags(db, "test", 5*time.Second, logger, true, true)
 		} else {
-			typedbDB.Close()
+			_ = typedbDB.Close()
 			typedbDB = NewDBWithLoggerAndFlags(db, "test", 5*time.Second, logger, true, true)
 		}
 
@@ -96,7 +96,7 @@ func TestLogArgsConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	ctx := context.Background()
@@ -179,7 +179,7 @@ func TestLogConfigOptions(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
-	defer db.Close()
+	defer closeSQLDB(t, db)
 
 	logger := &testLogger{}
 	ctx := context.Background()

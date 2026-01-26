@@ -10,7 +10,7 @@ import (
 
 func TestSQLite_Insert(t *testing.T) {
 	db := setupTestDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
@@ -45,7 +45,7 @@ func TestSQLite_Insert(t *testing.T) {
 
 func TestSQLite_InsertAndLoad(t *testing.T) {
 	db := setupTestDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
@@ -86,7 +86,7 @@ func TestSQLite_InsertAndLoad(t *testing.T) {
 
 func TestSQLite_InsertAndGetId(t *testing.T) {
 	db := setupTestDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
@@ -123,7 +123,7 @@ func TestSQLite_InsertAndGetId(t *testing.T) {
 
 func TestSQLite_InsertAndGetId_MissingIdColumn(t *testing.T) {
 	db := setupTestDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
 
 	ctx := context.Background()
