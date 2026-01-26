@@ -391,8 +391,8 @@ func TestGeneratePlaceholder(t *testing.T) {
 		{name: "unknown_driver_2", driverName: "unknown", position: 2, expected: "$2"},
 		{name: "empty_driver_1", driverName: "", position: 1, expected: "$1"},
 		{name: "empty_driver_5", driverName: "", position: 5, expected: "$5"},
-		{"custom_driver_1", "customdb", 1, "$1"},
-		{"custom_driver_10", "customdb", 10, "$10"},
+		{name: "custom_driver_1", driverName: "customdb", position: 1, expected: "$1"},
+		{name: "custom_driver_10", driverName: "customdb", position: 10, expected: "$10"},
 	}
 
 	for _, tt := range tests {
@@ -523,13 +523,13 @@ func TestCheckDotNotationRecursive(t *testing.T) {
 		{typ: reflect.TypeOf(StructWithPointerEmbeddedDot{}), name: "struct_with_pointer_embedded_dot", expected: true},
 
 		// Deep embedding with dot notation (2-3 levels)
-		{"deep_embedded_dot", reflect.TypeOf(StructWithDeepEmbeddedDot{}), true},
+		{typ: reflect.TypeOf(StructWithDeepEmbeddedDot{}), name: "deep_embedded_dot", expected: true},
 
 		// Unexported fields (should be skipped, so no dot notation detected)
-		{"unexported_field", reflect.TypeOf(StructWithUnexportedField{}), false},
+		{typ: reflect.TypeOf(StructWithUnexportedField{}), name: "unexported_field", expected: false},
 
 		// Dash tag (should be skipped)
-		{"dash_tag", reflect.TypeOf(StructWithDashTag{}), true}, // Has users.id, so should return true
+		{typ: reflect.TypeOf(StructWithDashTag{}), name: "dash_tag", expected: true}, // Has users.id, so should return true
 	}
 
 	for _, tt := range tests {
