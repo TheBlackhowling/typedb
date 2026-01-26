@@ -75,6 +75,8 @@ linters-settings:
   govet:
     check-shadowing: true
     enable-all: true
+    disable:
+      - fieldalignment # Field alignment is an optimization suggestion, not a bug
   
   misspell:
     locale: US
