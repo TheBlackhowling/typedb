@@ -677,9 +677,9 @@ func deserializeUint64(value any) (uint64, error) {
 	case int64:
 		return convertSignedToUint64(v)
 	case int:
-		return convertSignedToUint64(int64(v))
+		return convertSignedToUint64(int64(v)) //nolint:unconvert // int must be converted to int64 for function signature
 	case int32:
-		return convertSignedToUint64(int64(v))
+		return convertSignedToUint64(int64(v)) //nolint:unconvert // int32 must be converted to int64 for function signature
 	case string:
 		return strconv.ParseUint(v, 10, 64)
 	case float64:
@@ -704,7 +704,8 @@ func convertIntToUint32(v int) (uint32, error) {
 	if v < 0 {
 		return 0, fmt.Errorf("typedb: cannot convert negative int to uint32")
 	}
-	if v > int(^uint32(0)) {
+	maxUint32 := int(math.MaxUint32)
+	if v > maxUint32 {
 		return 0, fmt.Errorf("typedb: int value %d overflows uint32", v)
 	}
 	return uint32(v), nil
@@ -800,7 +801,8 @@ func deserializeUint(value any) (uint, error) {
 func convertIntToInt32(v int) (int32, error) {
 	maxInt32 := int64(math.MaxInt32)
 	minInt32 := int64(math.MinInt32)
-	if int64(v) < minInt32 || int64(v) > maxInt32 {
+	v64 := int64(v)
+	if v64 < minInt32 || v64 > maxInt32 {
 		return 0, fmt.Errorf("typedb: int value %d overflows int32", v)
 	}
 	return int32(v), nil
