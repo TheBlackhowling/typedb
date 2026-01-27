@@ -181,6 +181,8 @@ go get github.com/TheBlackHowling/typedb
 
 **Security Note:** Go 1.23.12+ is required to address vulnerabilities GO-2025-3849 and GO-2025-3750. We test on Go 1.23.12, 1.24, and 1.25.
 
+**Important:** While `go.mod` specifies `go 1.23`, you must use Go 1.23.12 or later (patch version) to avoid security vulnerabilities. Run `go version` to verify your Go version meets this requirement.
+
 ### Quick Start
 
 Get started with typedb in 5 minutes. This example shows connection, query, insert, and update:
