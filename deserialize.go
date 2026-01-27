@@ -808,7 +808,7 @@ func convertIntToInt32(v int) (int32, error) {
 		return 0, fmt.Errorf("typedb: int value %d overflows int32", v)
 	}
 	// Bounds check ensures v fits in int32, safe to convert
-	return int32(v), nil
+	return int32(v), nil // #nosec G115 // integer overflow conversion - bounds checked above
 }
 
 // convertInt64ToInt32 safely converts int64 to int32 with overflow check
