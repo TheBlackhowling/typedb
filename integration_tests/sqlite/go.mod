@@ -1,4 +1,4 @@
-module github.com/TheBlackHowling/typedb/examples/sqlite
+module github.com/TheBlackHowling/typedb/integration_tests/sqlite
 
 go 1.24.0
 
