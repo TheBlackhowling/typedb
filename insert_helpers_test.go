@@ -441,14 +441,14 @@ type Level1Struct struct {
 
 // Level2Struct has embedded struct that embeds another struct (level 2)
 type Level2Struct struct {
-	Level1Struct
 	Extra string `db:"extra"`
+	Level1Struct
 }
 
 // Level3Struct has 3 levels of embedding
 type Level3Struct struct {
-	Level2Struct
 	Final string `db:"final"`
+	Level2Struct
 }
 
 // StructWithEmbeddedDot has embedded struct with dot notation
@@ -465,8 +465,8 @@ type StructWithPointerEmbeddedDot struct {
 
 // StructWithDeepEmbeddedDot has 2-level embedding where second level has dot notation
 type StructWithDeepEmbeddedDot struct {
-	Level1Struct
 	DeepField string `db:"deep.field"`
+	Level1Struct
 }
 
 // StructWithUnexportedField has unexported field with dot notation (should be skipped)
