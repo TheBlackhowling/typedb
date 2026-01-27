@@ -1,6 +1,6 @@
 # typedb
 
-![Go Version](https://img.shields.io/badge/go-1.18+-00ADD8?style=flat-square&logo=go)
+![Go Version](https://img.shields.io/badge/go-1.23+-00ADD8?style=flat-square&logo=go)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)
 ![Status](https://img.shields.io/badge/status-active-success.svg?style=flat-square)
 
@@ -139,7 +139,7 @@ typedb shines in these common scenarios:
 
 ## Features
 
-- ✅ **Type-Safe Generic Queries** - Uses Go 1.18+ generics for compile-time type safety
+- ✅ **Type-Safe Generic Queries** - Uses Go 1.23.12+ generics for compile-time type safety
 - ✅ **Database-Agnostic** - Works with any `database/sql` driver (PostgreSQL, MySQL, SQLite, MSSQL, Oracle)
 - ✅ **SQL-First Philosophy** - You write SQL, typedb handles type safety and deserialization
 - ✅ **Flexible Deserialization** - Custom deserialization via interfaces and struct tags
@@ -175,8 +175,11 @@ go get github.com/TheBlackHowling/typedb
 
 ### Requirements
 
-- Go 1.18 or later (for generics support)
+- **Go 1.23.12 or later** (minimum required for security fixes)
+- **Go 1.24+ recommended** for best security and performance
 - Any `database/sql` driver
+
+**Security Note:** Go 1.23.12+ is required to address vulnerabilities GO-2025-3849 and GO-2025-3750. We test on Go 1.23.12, 1.24, and 1.25.
 
 ### Quick Start
 
