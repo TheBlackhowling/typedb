@@ -312,7 +312,7 @@ func TestDeserializeForType(t *testing.T) {
 }
 
 func TestDeserialize_NilDest(t *testing.T) {
-	var user *DeserializeUser = nil
+	var user *DeserializeUser
 	row := map[string]any{"id": 123}
 
 	err := deserialize(row, user)
