@@ -182,7 +182,14 @@ func Update[T ModelInterface](ctx context.Context, exec Executor, model T) error
 
 	// If partial update is enabled, refresh the original copy after successful update
 	if opts.PartialUpdate {
-		_ = saveOriginalCopyIfEnabled(model) // Ignore error - update succeeded, original copy will refresh on next deserialization
+		// Save original copy for change tracking - error is non-critical since update succeeded
+		// Original copy will refresh on next deserialization if this fails
+		// Error is intentionally ignored as this is a non-critical operation
+		if saveErr := saveOriginalCopyIfEnabled(model); saveErr != nil {
+			// Update succeeded, so we don't fail on this non-critical error
+			// The original copy is only used for change detection and will refresh on next load
+			_ = saveErr
+		}
 	}
 
 	return nil
