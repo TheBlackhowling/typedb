@@ -41,23 +41,24 @@ Add validation during `RegisterModel` or `RegisterModelWithOptions` to catch mis
 
 ### 3. Refactor DB vs Tx Method Duplication
 **Priority:** High  
-**Status:** ✅ Complete
+**Status:** In Progress
 
-~~Significant code duplication exists between `DB` and `Tx` methods in `executor.go`~~
+Significant code duplication exists between `DB` and `Tx` methods in `executor.go`:
+- `getLogger()` - identical implementations (lines 37-42 vs 380-385)
+- `withTimeout()` - identical implementations (lines 47-56 vs 388-397)
+- `Exec()` - nearly identical (lines 60-70 vs 248-257)
+- `QueryAll()` - nearly identical (lines 74-92 vs 260-278)
+- `QueryRowMap()` - similar, but Tx has less logging (lines 97-130 vs 281-309)
+- `GetInto()` - nearly identical (lines 135-150 vs 312-327)
+- `QueryDo()` - nearly identical (lines 154-178 vs 330-354)
 
-**Completed:** All DB and Tx methods now use shared helper functions:
-- `execHelper()` - used by both DB.Exec and Tx.Exec
-- `queryAllHelper()` - used by both DB.QueryAll and Tx.QueryAll
-- `queryRowMapHelper()` - used by both DB.QueryRowMap and Tx.QueryRowMap
-- `getIntoHelper()` - used by both DB.GetInto and Tx.GetInto
-- `queryDoHelper()` - used by both DB.QueryDo and Tx.QueryDo
-- `getLoggerHelper()` - shared helper for logger access
-- `withTimeoutHelper()` - shared helper for timeout handling
-
-**Result:** Code duplication eliminated, ~150+ lines of duplication removed. All methods now delegate to shared helpers that accept the `sqlQueryExecutor` interface.
+**Approach:**
+- Extract shared logic into helper functions that accept an interface or executor helper
+- Create a common executor interface/helper to reduce duplication
+- Ensure logging consistency between DB and Tx methods
 
 **Related Code:**
-- `executor.go`: All helper functions implemented and used by both DB and Tx methods
+- `executor.go`: DB and Tx method implementations (~150+ lines of duplication)
 
 ### 4. Refactor Open() vs OpenWithoutValidation() Duplication
 **Priority:** Medium  
@@ -103,70 +104,3 @@ Multiple `processFields` closures exist with similar field iteration logic:
 - `insert.go`: serializeModelFields()
 - `update.go`: serializeModelFieldsForUpdate(), buildFieldMapForComparison()
 - `deserialize.go`: Field iteration logic
-
-## Pre-1.0.0 Release Checklist
-
-### 6. API Stability Review
-**Priority:** High  
-**Status:** Backlog
-
-Before releasing v1.0.0, conduct a comprehensive API stability review:
-
-- Review all public APIs for breaking changes
-- Document any planned breaking changes
-- Ensure backward compatibility plan is in place
-- Update API documentation to reflect stable APIs
-- Consider deprecation warnings for any APIs that will change
-
-**Related Code:**
-- All public functions and types in the codebase
-- `API.md`: API documentation
-
-### 7. Complete Documentation for 1.0.0
-**Priority:** High  
-**Status:** Backlog
-
-Ensure all documentation is complete and ready for 1.0.0:
-
-- Update README.md to remove "Early Development" warnings
-- Complete API.md with all public APIs documented
-- Add migration guide if any breaking changes are planned
-- Update examples to reflect stable API
-- Add performance benchmarks and guidance
-
-**Related Files:**
-- `README.md`
-- `API.md`
-- `examples/` directory
-
-### 8. Performance Benchmarks Documentation
-**Priority:** Medium  
-**Status:** Backlog
-
-Document performance characteristics and benchmarks:
-
-- Add benchmark results to documentation
-- Document performance trade-offs
-- Provide guidance on when typedb is appropriate vs. raw database/sql
-- Include real-world performance examples
-
-**Related Code:**
-- Performance section in README.md
-- Consider adding benchmark tests
-
-### 9. Final Code Quality Pass
-**Priority:** Medium  
-**Status:** Backlog
-
-Before 1.0.0, ensure code quality standards are met:
-
-- Run all static analysis tools and fix any remaining issues
-- Ensure test coverage is comprehensive
-- Review and fix any remaining linter warnings
-- Verify all examples compile and run correctly
-- Check that all integration tests pass
-
-**Related Code:**
-- `scripts/static-analysis.sh` and `scripts/static-analysis.ps1`
-- All test files
-- All example files
