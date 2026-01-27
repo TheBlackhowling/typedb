@@ -21,11 +21,9 @@ func getModelType(model any) reflect.Type {
 // Searches through embedded structs (like Model base).
 // Requires a pointer type.
 // Returns the field and true if found, nil and false otherwise.
-// tagKey is currently always "load" but kept for API flexibility.
+// tagKey specifies which struct tag key to search (e.g., "load", "nolog").
 func findFieldByTag(model any, tagKey, tagValue string) (*reflect.StructField, bool) {
 	t := getModelType(model)
-	// tagKey is reserved for future use - currently always "load"
-	_ = tagKey
 	return findFieldByTagRecursive(t, tagKey, tagValue)
 }
 
