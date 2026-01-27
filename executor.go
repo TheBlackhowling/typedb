@@ -845,78 +845,8 @@ func extractNologMaskIndicesFromArgs(args []any) []int {
 
 // hasNologFields checks if a model struct has any fields with nolog:"true" tags.
 func hasNologFields(model ModelInterface) bool {
-	modelValue := reflect.ValueOf(model)
-	if modelValue.Kind() != reflect.Ptr || modelValue.IsNil() {
-		return false
-	}
-
-	modelValue = modelValue.Elem()
-	if modelValue.Kind() != reflect.Struct {
-		return false
-	}
-
-	// Iterate through all fields to find nolog tags
-	found := false
-	iterateStructFieldsForNolog(modelValue.Type(), modelValue, func(field reflect.StructField, fieldValue reflect.Value) bool {
-		// Check for nolog tag
-		if field.Tag.Get("nolog") == "true" {
-			found = true
-			return false // Found nolog field, stop iteration
-		}
-		return true // Continue iteration
-	})
+	_, found := findFieldByTag(model, "nolog", "true")
 	return found
-}
-
-// iterateStructFieldsForNolog iterates through struct fields to check for nolog tags.
-// Similar to iterateStructFields but doesn't filter by db tags or primary keys.
-// Returns false if iteration should stop (e.g., nolog field found), true to continue.
-func iterateStructFieldsForNolog(structType reflect.Type, structValue reflect.Value, visitor func(reflect.StructField, reflect.Value) bool) bool {
-	if structType.Kind() != reflect.Struct {
-		return true
-	}
-
-	var processFields func(reflect.Type, reflect.Value) bool
-	processFields = func(t reflect.Type, v reflect.Value) bool {
-		if t.Kind() != reflect.Struct {
-			return true
-		}
-
-		for i := 0; i < t.NumField(); i++ {
-			field := t.Field(i)
-			if !field.IsExported() {
-				continue
-			}
-
-			fieldValue := v.Field(i)
-
-			// Handle embedded structs
-			if field.Anonymous {
-				embeddedType := field.Type
-				if embeddedType.Kind() == reflect.Ptr {
-					if fieldValue.IsNil() {
-						continue
-					}
-					embeddedType = embeddedType.Elem()
-					fieldValue = fieldValue.Elem()
-				}
-				if embeddedType.Kind() == reflect.Struct {
-					if !processFields(embeddedType, fieldValue) {
-						return false
-					}
-					continue
-				}
-			}
-
-			// Check all exported fields for nolog tags
-			if !visitor(field, fieldValue) {
-				return false
-			}
-		}
-		return true
-	}
-
-	return processFields(structType, structValue)
 }
 
 // getLoggingFlagsAndArgs extracts logging flags from context and applies masking if needed.
