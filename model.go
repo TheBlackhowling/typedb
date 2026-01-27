@@ -36,7 +36,7 @@ func (m *Model) deserialize(row map[string]any) error {
 
 	// The outer struct pointer has the same address as the Model pointer
 	// (since Model is embedded as the first field)
-	outerPtr := unsafe.Pointer(m) //nolint:gosec // G103: intentional use of unsafe for reflection
+	outerPtr := unsafe.Pointer(m) // #nosec G103 // intentional use of unsafe for reflection
 
 	// Try to find the outer struct type from registered models
 	registeredModels := GetRegisteredModels()

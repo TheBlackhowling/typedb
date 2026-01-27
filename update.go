@@ -289,7 +289,7 @@ func extractOriginalCopy(structValue reflect.Value) interface{} {
 		if field.Anonymous && field.Type == reflect.TypeOf(Model{}) {
 			// Use unsafe to access unexported field
 			modelFieldValue := structValue.Field(i)
-			modelFieldPtr := unsafe.Pointer(modelFieldValue.UnsafeAddr()) //nolint:gosec // G103: intentional use of unsafe for unexported field access
+			modelFieldPtr := unsafe.Pointer(modelFieldValue.UnsafeAddr())
 			originalCopyFieldType := field.Type.Field(0) // Model.originalCopy field
 			originalCopyFieldPtr := unsafe.Add(modelFieldPtr, originalCopyFieldType.Offset)
 			originalCopy := *(*interface{})(originalCopyFieldPtr)
