@@ -84,7 +84,7 @@ func TestSQLite_InsertAndLoad(t *testing.T) {
 	}
 }
 
-func TestSQLite_InsertAndGetId(t *testing.T) {
+func TestSQLite_InsertAndGetID(t *testing.T) {
 	db := setupTestDB(t)
 	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
@@ -98,11 +98,11 @@ func TestSQLite_InsertAndGetId(t *testing.T) {
 	}
 
 	// Insert post and get ID (SQLite supports RETURNING)
-	postID, err := typedb.InsertAndGetId(ctx, db,
+	postID, err := typedb.InsertAndGetID(ctx, db,
 		"INSERT INTO posts (user_id, title, content, tags, metadata, created_at) VALUES (?, ?, ?, ?, ?, ?) RETURNING id",
 		firstUser.ID, "Test Post ID", "Test content", `["go"]`, `{"test":true}`, "2024-01-01 00:00:00")
 	if err != nil {
-		t.Fatalf("InsertAndGetId failed: %v", err)
+		t.Fatalf("InsertAndGetID failed: %v", err)
 	}
 
 	// Verify ID was returned
@@ -121,7 +121,7 @@ func TestSQLite_InsertAndGetId(t *testing.T) {
 	}
 }
 
-func TestSQLite_InsertAndGetId_MissingIdColumn(t *testing.T) {
+func TestSQLite_InsertAndGetID_MissingIdColumn(t *testing.T) {
 	db := setupTestDB(t)
 	defer closeDB(t, db)
 	defer os.Remove(getTestDSN())
@@ -135,7 +135,7 @@ func TestSQLite_InsertAndGetId_MissingIdColumn(t *testing.T) {
 	}
 
 	// Insert post with RETURNING clause that doesn't return 'id' column
-	_, err = typedb.InsertAndGetId(ctx, db,
+	_, err = typedb.InsertAndGetID(ctx, db,
 		"INSERT INTO posts (user_id, title, content, tags, metadata, created_at) VALUES (?, ?, ?, ?, ?, ?) RETURNING title",
 		firstUser.ID, "Test Post", "Test content", `["go"]`, `{"test":true}`, "2024-01-01 00:00:00")
 
@@ -143,7 +143,7 @@ func TestSQLite_InsertAndGetId_MissingIdColumn(t *testing.T) {
 		t.Fatal("Expected error for missing ID column")
 	}
 
-	expectedError := "typedb: InsertAndGetId RETURNING/OUTPUT clause did not return 'id' column"
+	expectedError := "typedb: InsertAndGetID RETURNING/OUTPUT clause did not return 'id' column"
 	if err.Error() != expectedError {
 		t.Errorf("Expected error '%s', got '%s'", expectedError, err.Error())
 	}

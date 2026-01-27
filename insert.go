@@ -9,10 +9,10 @@ import (
 	"strings"
 )
 
-// supportsLastInsertId checks if the driver supports LastInsertId().
+// supportsLastInsertID checks if the driver supports LastInsertId().
 // Only MySQL and SQLite support LastInsertId().
 // PostgreSQL and SQL Server require RETURNING/OUTPUT clauses.
-func supportsLastInsertId(driverName string) bool {
+func supportsLastInsertID(driverName string) bool {
 	driverName = strings.ToLower(driverName)
 	return driverName == "mysql" || driverName == "sqlite3"
 }
@@ -33,7 +33,7 @@ func getDriverName(exec Executor) string {
 	}
 }
 
-// InsertAndGetId executes an INSERT statement and returns the inserted ID as int64.
+// InsertAndGetID executes an INSERT statement and returns the inserted ID as int64.
 // This is a convenience helper that works with all supported databases.
 //
 // For databases with RETURNING/OUTPUT support (PostgreSQL, SQLite, SQL Server, Oracle),
@@ -50,22 +50,22 @@ func getDriverName(exec Executor) string {
 //
 // Example (PostgreSQL/SQLite/SQL Server/Oracle):
 //
-//	id, err := typedb.InsertAndGetId(ctx, db,
+//	id, err := typedb.InsertAndGetID(ctx, db,
 //		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id",
 //		"John", "john@example.com")
 //
 // Example (MySQL):
 //
-//	id, err := typedb.InsertAndGetId(ctx, db,
+//	id, err := typedb.InsertAndGetID(ctx, db,
 //		"INSERT INTO users (name, email) VALUES (?, ?)",
 //		"John", "john@example.com")
 //
-// insertAndGetIdOracle handles Oracle-specific insert and get ID logic
-func insertAndGetIdOracle(ctx context.Context, exec Executor, insertQuery string, args []any) (int64, error) {
+// insertAndGetIDOracle handles Oracle-specific insert and get ID logic
+func insertAndGetIDOracle(ctx context.Context, exec Executor, insertQuery string, args []any) (int64, error) {
 	queryUpper := strings.ToUpper(insertQuery)
 	returningIdx := strings.Index(queryUpper, "RETURNING")
 	if returningIdx == -1 {
-		return 0, fmt.Errorf("typedb: InsertAndGetId Oracle query must contain RETURNING clause")
+		return 0, fmt.Errorf("typedb: InsertAndGetID Oracle query must contain RETURNING clause")
 	}
 
 	returningPart := insertQuery[returningIdx+9:]
@@ -82,7 +82,7 @@ func insertAndGetIdOracle(ctx context.Context, exec Executor, insertQuery string
 
 		_, err := exec.Exec(ctx, insertQuery, argsWithOut...)
 		if err != nil {
-			return 0, fmt.Errorf("typedb: InsertAndGetId failed: %w", err)
+			return 0, fmt.Errorf("typedb: InsertAndGetID failed: %w", err)
 		}
 		return id, nil
 	}
@@ -105,13 +105,13 @@ func insertAndGetIdOracle(ctx context.Context, exec Executor, insertQuery string
 
 	_, err := exec.Exec(ctx, newQuery, argsWithOut...)
 	if err != nil {
-		return 0, fmt.Errorf("typedb: InsertAndGetId failed: %w", err)
+		return 0, fmt.Errorf("typedb: InsertAndGetID failed: %w", err)
 	}
 	return id, nil
 }
 
-// convertIdToInt64 converts various ID types to int64
-func convertIdToInt64(idValue any) (int64, error) {
+// convertIDToInt64 converts various ID types to int64
+func convertIDToInt64(idValue any) (int64, error) {
 	switch v := idValue.(type) {
 	case int64:
 		return v, nil
@@ -124,41 +124,41 @@ func convertIdToInt64(idValue any) (int64, error) {
 	case float64:
 		return int64(v), nil
 	default:
-		return 0, fmt.Errorf("typedb: InsertAndGetId returned non-integer ID type: %T", idValue)
+		return 0, fmt.Errorf("typedb: InsertAndGetID returned non-integer ID type: %T", idValue)
 	}
 }
 
-// extractIdFromRow extracts ID value from QueryRowMap result
-func extractIdFromRow(row map[string]any) (any, error) {
+// extractIDFromRow extracts ID value from QueryRowMap result
+func extractIDFromRow(row map[string]any) (any, error) {
 	idValue, ok := row["id"]
 	if !ok {
 		idValue, ok = row["ID"]
 		if !ok {
-			return nil, fmt.Errorf("typedb: InsertAndGetId RETURNING/OUTPUT clause did not return 'id' column")
+			return nil, fmt.Errorf("typedb: InsertAndGetID RETURNING/OUTPUT clause did not return 'id' column")
 		}
 	}
 	return idValue, nil
 }
 
-func InsertAndGetId(ctx context.Context, exec Executor, insertQuery string, args ...any) (int64, error) {
+func InsertAndGetID(ctx context.Context, exec Executor, insertQuery string, args ...any) (int64, error) {
 	queryUpper := strings.ToUpper(insertQuery)
 	hasReturning := strings.Contains(queryUpper, "RETURNING") || strings.Contains(queryUpper, "OUTPUT")
 
 	if !hasReturning {
 		// MySQL/SQLite path
 		driverName := getDriverName(exec)
-		if !supportsLastInsertId(driverName) {
-			return 0, fmt.Errorf("typedb: InsertAndGetId requires RETURNING or OUTPUT clause for %s. Only MySQL and SQLite support LastInsertId() without RETURNING/OUTPUT", driverName)
+		if !supportsLastInsertID(driverName) {
+			return 0, fmt.Errorf("typedb: InsertAndGetID requires RETURNING or OUTPUT clause for %s. Only MySQL and SQLite support LastInsertId() without RETURNING/OUTPUT", driverName)
 		}
 
 		result, err := exec.Exec(ctx, insertQuery, args...)
 		if err != nil {
-			return 0, fmt.Errorf("typedb: InsertAndGetId INSERT failed: %w", err)
+			return 0, fmt.Errorf("typedb: InsertAndGetID INSERT failed: %w", err)
 		}
 
 		id, err := result.LastInsertId()
 		if err != nil {
-			return 0, fmt.Errorf("typedb: InsertAndGetId LastInsertId failed: %w", err)
+			return 0, fmt.Errorf("typedb: InsertAndGetID LastInsertId failed: %w", err)
 		}
 		return id, nil
 	}
@@ -167,21 +167,21 @@ func InsertAndGetId(ctx context.Context, exec Executor, insertQuery string, args
 	driverName := getDriverName(exec)
 	driverNameLower := strings.ToLower(driverName)
 	if driverNameLower == "oracle" {
-		return insertAndGetIdOracle(ctx, exec, insertQuery, args)
+		return insertAndGetIDOracle(ctx, exec, insertQuery, args)
 	}
 
 	// Standard RETURNING/OUTPUT path
 	row, err := exec.QueryRowMap(ctx, insertQuery, args...)
 	if err != nil {
-		return 0, fmt.Errorf("typedb: InsertAndGetId failed: %w", err)
+		return 0, fmt.Errorf("typedb: InsertAndGetID failed: %w", err)
 	}
 
-	idValue, err := extractIdFromRow(row)
+	idValue, err := extractIDFromRow(row)
 	if err != nil {
 		return 0, err
 	}
 
-	return convertIdToInt64(idValue)
+	return convertIDToInt64(idValue)
 }
 
 // getTableName gets the table name from a model using TableName() method.

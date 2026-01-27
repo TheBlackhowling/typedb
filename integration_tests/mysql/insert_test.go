@@ -104,7 +104,7 @@ func TestMySQL_InsertAndLoad(t *testing.T) {
 	}
 }
 
-func TestMySQL_InsertAndGetId(t *testing.T) {
+func TestMySQL_InsertAndGetID(t *testing.T) {
 	ctx := context.Background()
 	db, err := typedb.Open("mysql", getTestDSN())
 	if err != nil {
@@ -123,11 +123,11 @@ func TestMySQL_InsertAndGetId(t *testing.T) {
 	}
 
 	// Insert post and get ID (MySQL uses LastInsertId)
-	postID, err := typedb.InsertAndGetId(ctx, db,
+	postID, err := typedb.InsertAndGetID(ctx, db,
 		"INSERT INTO posts (user_id, title, content, tags, metadata, created_at) VALUES (?, ?, ?, ?, ?, ?)",
 		firstUser.ID, "Test Post ID", "Test content", `["go"]`, `{"test":true}`, "2024-01-01 00:00:00")
 	if err != nil {
-		t.Fatalf("InsertAndGetId failed: %v", err)
+		t.Fatalf("InsertAndGetID failed: %v", err)
 	}
 
 	// Clean up

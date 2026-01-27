@@ -57,8 +57,8 @@ func TestMySQL_Insert_Security_ValidIdentifiers(t *testing.T) {
 	}
 }
 
-// TestMySQL_InsertAndGetId_Security tests InsertAndGetId which uses quoteIdentifier internally
-func TestMySQL_InsertAndGetId_Security(t *testing.T) {
+// TestMySQL_InsertAndGetID_Security tests InsertAndGetID which uses quoteIdentifier internally
+func TestMySQL_InsertAndGetID_Security(t *testing.T) {
 	ctx := context.Background()
 	db, err := typedb.Open("mysql", getTestDSN())
 	if err != nil {
@@ -75,13 +75,13 @@ func TestMySQL_InsertAndGetId_Security(t *testing.T) {
 		t.Fatal("Need at least one user in database for foreign key")
 	}
 
-	// Test InsertAndGetId with valid query
+	// Test InsertAndGetID with valid query
 	uniqueTitle := fmt.Sprintf("Test Post %d", time.Now().UnixNano())
-	postID, err := typedb.InsertAndGetId(ctx, db,
+	postID, err := typedb.InsertAndGetID(ctx, db,
 		"INSERT INTO posts (user_id, title, content, tags, metadata, created_at) VALUES (?, ?, ?, ?, ?, ?)",
 		firstUser.ID, uniqueTitle, "Test content", `["go","database"]`, `{"test":true}`, "2024-01-01 00:00:00")
 	if err != nil {
-		t.Fatalf("InsertAndGetId failed: %v", err)
+		t.Fatalf("InsertAndGetID failed: %v", err)
 	}
 
 	// Cleanup

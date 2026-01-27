@@ -17,7 +17,6 @@ linters:
     - unused            # Check for unused code
     
     # Code quality
-    - copyloopvar       # Detect copying loop variable reference (Go 1.22+)
     - gocritic          # Opinionated Go code analyzer
     - gocyclo           # Check cyclomatic complexity
     - gofmt             # Check code formatting
