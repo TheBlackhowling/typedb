@@ -328,5 +328,5 @@ go tool cover -html=coverage.out -o coverage.html
 
 **Note:** Coverage files (`coverage.out`, `coverage.html`) are ignored by `.gitignore` and should not be committed.
 
-The CI workflow (`.github/workflows/test.yml`) automatically runs tests with race detection and generates coverage reports for Go 1.22.
+The CI workflow (`.github/workflows/test.yml`) automatically runs tests with race detection and generates coverage reports. Tests run on Go 1.23.12, 1.24, and 1.25.
 
