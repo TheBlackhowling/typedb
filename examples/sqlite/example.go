@@ -77,7 +77,7 @@ func runMigrations(dsn string) error {
 	}
 
 	migrationFile := filepath.Join("migrations", "000001_create_tables.up.sql")
-	sqlBytes, err := os.ReadFile(migrationFile)
+	sqlBytes, err := os.ReadFile(migrationFile) // #nosec G304 // file path is safe - relative path constructed with filepath.Join, not user input
 	if err != nil {
 		return fmt.Errorf("failed to read migration file: %w", err)
 	}
