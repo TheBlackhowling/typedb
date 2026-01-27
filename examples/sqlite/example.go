@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -78,7 +77,7 @@ func runMigrations(dsn string) error {
 	}
 
 	migrationFile := filepath.Join("migrations", "000001_create_tables.up.sql")
-	sqlBytes, err := ioutil.ReadFile(migrationFile)
+	sqlBytes, err := os.ReadFile(migrationFile)
 	if err != nil {
 		return fmt.Errorf("failed to read migration file: %w", err)
 	}
