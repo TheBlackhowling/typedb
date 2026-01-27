@@ -13,9 +13,9 @@ import (
 // InsertTestModel is a simple model for testing Insert functions
 type InsertTestModel struct {
 	Model
-	ID        int64  `db:"id" load:"primary"`
 	Name      string `db:"name"`
 	CreatedAt string `db:"created_at"`
+	ID        int64  `db:"id" load:"primary"`
 }
 
 func (m *InsertTestModel) TableName() string {
@@ -30,7 +30,7 @@ func init() {
 	RegisterModel[*InsertTestModel]()
 }
 
-func TestInsertAndGetId_WithReturning_Success(t *testing.T) {
+func TestInsertAndGetID_WithReturning_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -46,12 +46,12 @@ func TestInsertAndGetId_WithReturning_Success(t *testing.T) {
 		WithArgs("John Doe", "john@example.com").
 		WillReturnRows(rows)
 
-	id, err := InsertAndGetId(ctx, typedbDB,
+	id, err := InsertAndGetID(ctx, typedbDB,
 		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id",
 		"John Doe", "john@example.com")
 
 	if err != nil {
-		t.Fatalf("InsertAndGetId failed: %v", err)
+		t.Fatalf("InsertAndGetID failed: %v", err)
 	}
 
 	if id != 123 {
@@ -63,7 +63,7 @@ func TestInsertAndGetId_WithReturning_Success(t *testing.T) {
 	}
 }
 
-func TestInsertAndGetId_WithOutput_Success(t *testing.T) {
+func TestInsertAndGetID_WithOutput_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -79,12 +79,12 @@ func TestInsertAndGetId_WithOutput_Success(t *testing.T) {
 		WithArgs("John Doe", "john@example.com").
 		WillReturnRows(rows)
 
-	id, err := InsertAndGetId(ctx, typedbDB,
+	id, err := InsertAndGetID(ctx, typedbDB,
 		"INSERT INTO users (name, email) OUTPUT INSERTED.id VALUES (@p1, @p2)",
 		"John Doe", "john@example.com")
 
 	if err != nil {
-		t.Fatalf("InsertAndGetId failed: %v", err)
+		t.Fatalf("InsertAndGetID failed: %v", err)
 	}
 
 	if id != 123 {
@@ -96,7 +96,7 @@ func TestInsertAndGetId_WithOutput_Success(t *testing.T) {
 	}
 }
 
-func TestInsertAndGetId_MySQL_WithoutReturning_Success(t *testing.T) {
+func TestInsertAndGetID_MySQL_WithoutReturning_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -110,12 +110,12 @@ func TestInsertAndGetId_MySQL_WithoutReturning_Success(t *testing.T) {
 		WithArgs("John Doe", "john@example.com").
 		WillReturnResult(sqlmock.NewResult(123, 1))
 
-	id, err := InsertAndGetId(ctx, typedbDB,
+	id, err := InsertAndGetID(ctx, typedbDB,
 		"INSERT INTO users (name, email) VALUES (?, ?)",
 		"John Doe", "john@example.com")
 
 	if err != nil {
-		t.Fatalf("InsertAndGetId failed: %v", err)
+		t.Fatalf("InsertAndGetID failed: %v", err)
 	}
 
 	if id != 123 {
@@ -127,7 +127,7 @@ func TestInsertAndGetId_MySQL_WithoutReturning_Success(t *testing.T) {
 	}
 }
 
-func TestInsertAndGetId_SQLite_WithoutReturning_Success(t *testing.T) {
+func TestInsertAndGetID_SQLite_WithoutReturning_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -141,12 +141,12 @@ func TestInsertAndGetId_SQLite_WithoutReturning_Success(t *testing.T) {
 		WithArgs("John Doe", "john@example.com").
 		WillReturnResult(sqlmock.NewResult(123, 1))
 
-	id, err := InsertAndGetId(ctx, typedbDB,
+	id, err := InsertAndGetID(ctx, typedbDB,
 		"INSERT INTO users (name, email) VALUES (?, ?)",
 		"John Doe", "john@example.com")
 
 	if err != nil {
-		t.Fatalf("InsertAndGetId failed: %v", err)
+		t.Fatalf("InsertAndGetID failed: %v", err)
 	}
 
 	if id != 123 {
@@ -158,7 +158,7 @@ func TestInsertAndGetId_SQLite_WithoutReturning_Success(t *testing.T) {
 	}
 }
 
-func TestInsertAndGetId_PostgreSQL_WithoutReturning_Error(t *testing.T) {
+func TestInsertAndGetID_PostgreSQL_WithoutReturning_Error(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -168,7 +168,7 @@ func TestInsertAndGetId_PostgreSQL_WithoutReturning_Error(t *testing.T) {
 	typedbDB := NewDB(db, "postgres", 5*time.Second)
 	ctx := context.Background()
 
-	id, err := InsertAndGetId(ctx, typedbDB,
+	id, err := InsertAndGetID(ctx, typedbDB,
 		"INSERT INTO users (name, email) VALUES ($1, $2)",
 		"John Doe", "john@example.com")
 
@@ -176,7 +176,7 @@ func TestInsertAndGetId_PostgreSQL_WithoutReturning_Error(t *testing.T) {
 		t.Fatal("Expected error for missing RETURNING clause")
 	}
 
-	expectedErrorMsg := "typedb: InsertAndGetId requires RETURNING or OUTPUT clause for postgres"
+	expectedErrorMsg := "typedb: InsertAndGetID requires RETURNING or OUTPUT clause for postgres"
 	if !strings.Contains(err.Error(), expectedErrorMsg) {
 		t.Errorf("Expected error message containing %q, got: %v", expectedErrorMsg, err)
 	}
@@ -190,7 +190,7 @@ func TestInsertAndGetId_PostgreSQL_WithoutReturning_Error(t *testing.T) {
 	}
 }
 
-func TestInsertAndGetId_SQLServer_WithoutReturning_Error(t *testing.T) {
+func TestInsertAndGetID_SQLServer_WithoutReturning_Error(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -200,7 +200,7 @@ func TestInsertAndGetId_SQLServer_WithoutReturning_Error(t *testing.T) {
 	typedbDB := NewDB(db, "sqlserver", 5*time.Second)
 	ctx := context.Background()
 
-	id, err := InsertAndGetId(ctx, typedbDB,
+	id, err := InsertAndGetID(ctx, typedbDB,
 		"INSERT INTO users (name, email) VALUES (@p1, @p2)",
 		"John Doe", "john@example.com")
 
@@ -208,7 +208,7 @@ func TestInsertAndGetId_SQLServer_WithoutReturning_Error(t *testing.T) {
 		t.Fatal("Expected error for missing OUTPUT clause")
 	}
 
-	expectedErrorMsg := "typedb: InsertAndGetId requires RETURNING or OUTPUT clause for sqlserver"
+	expectedErrorMsg := "typedb: InsertAndGetID requires RETURNING or OUTPUT clause for sqlserver"
 	if !strings.Contains(err.Error(), expectedErrorMsg) {
 		t.Errorf("Expected error message containing %q, got: %v", expectedErrorMsg, err)
 	}
@@ -222,7 +222,7 @@ func TestInsertAndGetId_SQLServer_WithoutReturning_Error(t *testing.T) {
 	}
 }
 
-func TestInsertAndGetId_MySQL_ExecError(t *testing.T) {
+func TestInsertAndGetID_MySQL_ExecError(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -236,7 +236,7 @@ func TestInsertAndGetId_MySQL_ExecError(t *testing.T) {
 		WithArgs("John Doe", "john@example.com").
 		WillReturnError(errors.New("database error"))
 
-	id, err := InsertAndGetId(ctx, typedbDB,
+	id, err := InsertAndGetID(ctx, typedbDB,
 		"INSERT INTO users (name, email) VALUES (?, ?)",
 		"John Doe", "john@example.com")
 
@@ -253,7 +253,7 @@ func TestInsertAndGetId_MySQL_ExecError(t *testing.T) {
 	}
 }
 
-func TestInsertAndGetId_MySQL_LastInsertIdError(t *testing.T) {
+func TestInsertAndGetID_MySQL_LastInsertIdError(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -268,7 +268,7 @@ func TestInsertAndGetId_MySQL_LastInsertIdError(t *testing.T) {
 		WithArgs("John Doe", "john@example.com").
 		WillReturnResult(result)
 
-	id, err := InsertAndGetId(ctx, typedbDB,
+	id, err := InsertAndGetID(ctx, typedbDB,
 		"INSERT INTO users (name, email) VALUES (?, ?)",
 		"John Doe", "john@example.com")
 
@@ -285,7 +285,7 @@ func TestInsertAndGetId_MySQL_LastInsertIdError(t *testing.T) {
 	}
 }
 
-func TestInsertAndGetId_WithReturning_InsertAndReturnError(t *testing.T) {
+func TestInsertAndGetID_WithReturning_InsertAndReturnError(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -299,12 +299,12 @@ func TestInsertAndGetId_WithReturning_InsertAndReturnError(t *testing.T) {
 		WithArgs("John Doe", "john@example.com").
 		WillReturnError(errors.New("database error"))
 
-	id, err := InsertAndGetId(ctx, typedbDB,
+	id, err := InsertAndGetID(ctx, typedbDB,
 		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id",
 		"John Doe", "john@example.com")
 
 	if err == nil {
-		t.Fatal("Expected error from InsertAndGetId")
+		t.Fatal("Expected error from InsertAndGetID")
 	}
 
 	if id != 0 {
@@ -316,7 +316,7 @@ func TestInsertAndGetId_WithReturning_InsertAndReturnError(t *testing.T) {
 	}
 }
 
-func TestInsertAndGetId_UnknownDriver_WithoutReturning_Error(t *testing.T) {
+func TestInsertAndGetID_UnknownDriver_WithoutReturning_Error(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -326,7 +326,7 @@ func TestInsertAndGetId_UnknownDriver_WithoutReturning_Error(t *testing.T) {
 	typedbDB := NewDB(db, "unknown", 5*time.Second)
 	ctx := context.Background()
 
-	id, err := InsertAndGetId(ctx, typedbDB,
+	id, err := InsertAndGetID(ctx, typedbDB,
 		"INSERT INTO users (name, email) VALUES ($1, $2)",
 		"John Doe", "john@example.com")
 
@@ -334,7 +334,7 @@ func TestInsertAndGetId_UnknownDriver_WithoutReturning_Error(t *testing.T) {
 		t.Fatal("Expected error for unknown driver without RETURNING")
 	}
 
-	expectedErrorMsg := "typedb: InsertAndGetId requires RETURNING or OUTPUT clause for unknown"
+	expectedErrorMsg := "typedb: InsertAndGetID requires RETURNING or OUTPUT clause for unknown"
 	if !strings.Contains(err.Error(), expectedErrorMsg) {
 		t.Errorf("Expected error message containing %q, got: %v", expectedErrorMsg, err)
 	}
@@ -348,7 +348,7 @@ func TestInsertAndGetId_UnknownDriver_WithoutReturning_Error(t *testing.T) {
 	}
 }
 
-func TestInsertAndGetId_Transaction_Success(t *testing.T) {
+func TestInsertAndGetID_Transaction_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -370,12 +370,12 @@ func TestInsertAndGetId_Transaction_Success(t *testing.T) {
 		WithArgs("John Doe", "john@example.com").
 		WillReturnRows(rows)
 
-	id, err := InsertAndGetId(ctx, tx,
+	id, err := InsertAndGetID(ctx, tx,
 		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id",
 		"John Doe", "john@example.com")
 
 	if err != nil {
-		t.Fatalf("InsertAndGetId failed: %v", err)
+		t.Fatalf("InsertAndGetID failed: %v", err)
 	}
 
 	if id != 123 {
@@ -387,7 +387,7 @@ func TestInsertAndGetId_Transaction_Success(t *testing.T) {
 	}
 }
 
-func TestInsertAndGetId_Oracle_WithInto_Success(t *testing.T) {
+func TestInsertAndGetID_Oracle_WithInto_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -408,12 +408,12 @@ func TestInsertAndGetId_Oracle_WithInto_Success(t *testing.T) {
 	// Wrap the DB to intercept Exec calls and populate sql.Out
 	wrappedDB := &oracleTestWrapper{DB: typedbDB, testID: 123}
 
-	id, err := InsertAndGetId(ctx, wrappedDB,
+	id, err := InsertAndGetID(ctx, wrappedDB,
 		"INSERT INTO users (name, email) VALUES (:1, :2) RETURNING id INTO :3",
 		"John Doe", "john@example.com")
 
 	if err != nil {
-		t.Fatalf("InsertAndGetId failed: %v", err)
+		t.Fatalf("InsertAndGetID failed: %v", err)
 	}
 
 	if id != 123 {
@@ -425,7 +425,7 @@ func TestInsertAndGetId_Oracle_WithInto_Success(t *testing.T) {
 	}
 }
 
-func TestInsertAndGetId_Oracle_WithoutInto_Success(t *testing.T) {
+func TestInsertAndGetID_Oracle_WithoutInto_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -445,12 +445,12 @@ func TestInsertAndGetId_Oracle_WithoutInto_Success(t *testing.T) {
 	// Wrap the DB to intercept Exec calls and populate sql.Out
 	wrappedDB := &oracleTestWrapper{DB: typedbDB, testID: 456}
 
-	id, err := InsertAndGetId(ctx, wrappedDB,
+	id, err := InsertAndGetID(ctx, wrappedDB,
 		"INSERT INTO users (name, email) VALUES (:1, :2) RETURNING id",
 		"John Doe", "john@example.com")
 
 	if err != nil {
-		t.Fatalf("InsertAndGetId failed: %v", err)
+		t.Fatalf("InsertAndGetID failed: %v", err)
 	}
 
 	if id != 456 {
@@ -462,7 +462,7 @@ func TestInsertAndGetId_Oracle_WithoutInto_Success(t *testing.T) {
 	}
 }
 
-func TestInsertAndGetId_Oracle_MissingReturning_Error(t *testing.T) {
+func TestInsertAndGetID_Oracle_MissingReturning_Error(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -474,7 +474,7 @@ func TestInsertAndGetId_Oracle_MissingReturning_Error(t *testing.T) {
 
 	// Oracle query without RETURNING clause should return error
 	// Note: This error occurs before Oracle-specific code because Oracle doesn't support LastInsertId
-	id, err := InsertAndGetId(ctx, typedbDB,
+	id, err := InsertAndGetID(ctx, typedbDB,
 		"INSERT INTO users (name, email) VALUES (:1, :2)",
 		"John Doe", "john@example.com")
 
@@ -483,7 +483,7 @@ func TestInsertAndGetId_Oracle_MissingReturning_Error(t *testing.T) {
 	}
 
 	// Oracle doesn't support LastInsertId, so it returns error about requiring RETURNING/OUTPUT
-	expectedErrorMsg := "typedb: InsertAndGetId requires RETURNING or OUTPUT clause for oracle"
+	expectedErrorMsg := "typedb: InsertAndGetID requires RETURNING or OUTPUT clause for oracle"
 	if !strings.Contains(err.Error(), expectedErrorMsg) {
 		t.Errorf("Expected error message containing %q, got: %v", expectedErrorMsg, err)
 	}
@@ -497,7 +497,7 @@ func TestInsertAndGetId_Oracle_MissingReturning_Error(t *testing.T) {
 	}
 }
 
-func TestInsertAndGetId_Oracle_ExecError_WithInto(t *testing.T) {
+func TestInsertAndGetID_Oracle_ExecError_WithInto(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -512,7 +512,7 @@ func TestInsertAndGetId_Oracle_ExecError_WithInto(t *testing.T) {
 		WithArgs("John Doe", "john@example.com", sqlmock.AnyArg()).
 		WillReturnError(errors.New("database error"))
 
-	id, err := InsertAndGetId(ctx, typedbDB,
+	id, err := InsertAndGetID(ctx, typedbDB,
 		"INSERT INTO users (name, email) VALUES (:1, :2) RETURNING id INTO :3",
 		"John Doe", "john@example.com")
 
@@ -524,8 +524,8 @@ func TestInsertAndGetId_Oracle_ExecError_WithInto(t *testing.T) {
 		t.Errorf("Expected ID 0 on error, got %d", id)
 	}
 
-	if !strings.Contains(err.Error(), "InsertAndGetId failed") {
-		t.Errorf("Expected error message to contain 'InsertAndGetId failed', got: %v", err)
+	if !strings.Contains(err.Error(), "InsertAndGetID failed") {
+		t.Errorf("Expected error message to contain 'InsertAndGetID failed', got: %v", err)
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
@@ -533,7 +533,7 @@ func TestInsertAndGetId_Oracle_ExecError_WithInto(t *testing.T) {
 	}
 }
 
-func TestInsertAndGetId_Oracle_ExecError_WithoutInto(t *testing.T) {
+func TestInsertAndGetID_Oracle_ExecError_WithoutInto(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -548,7 +548,7 @@ func TestInsertAndGetId_Oracle_ExecError_WithoutInto(t *testing.T) {
 		WithArgs("John Doe", "john@example.com", sqlmock.AnyArg()).
 		WillReturnError(errors.New("database error"))
 
-	id, err := InsertAndGetId(ctx, typedbDB,
+	id, err := InsertAndGetID(ctx, typedbDB,
 		"INSERT INTO users (name, email) VALUES (:1, :2) RETURNING id",
 		"John Doe", "john@example.com")
 
@@ -560,8 +560,8 @@ func TestInsertAndGetId_Oracle_ExecError_WithoutInto(t *testing.T) {
 		t.Errorf("Expected ID 0 on error, got %d", id)
 	}
 
-	if !strings.Contains(err.Error(), "InsertAndGetId failed") {
-		t.Errorf("Expected error message to contain 'InsertAndGetId failed', got: %v", err)
+	if !strings.Contains(err.Error(), "InsertAndGetID failed") {
+		t.Errorf("Expected error message to contain 'InsertAndGetID failed', got: %v", err)
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
@@ -740,8 +740,8 @@ func TestGetDriverName(t *testing.T) {
 func TestDeserialize_AddressableValue(t *testing.T) {
 	type TestModel struct {
 		Model
-		ID   int64  `db:"id"`
 		Name string `db:"name"`
+		ID   int64  `db:"id"`
 	}
 
 	model := &TestModel{}
@@ -771,8 +771,8 @@ func TestDeserialize_AddressableValue(t *testing.T) {
 func TestDeserialize_NonAddressableValue(t *testing.T) {
 	type TestModelNonAddr struct {
 		Model
-		ID   int64  `db:"id"`
 		Name string `db:"name"`
+		ID   int64  `db:"id"`
 	}
 
 	// Register the model for Model.Deserialize to work
@@ -807,8 +807,8 @@ func TestValidateIdentifier(t *testing.T) {
 	tests := []struct {
 		name       string
 		identifier string
-		wantErr    bool
 		errMsg     string
+		wantErr    bool
 	}{
 		{
 			name:       "valid simple identifier",
@@ -1084,7 +1084,7 @@ func TestQuoteIdentifierEscaping(t *testing.T) {
 	}
 }
 
-func TestInsertAndGetId_MissingIdColumn_PostgreSQL(t *testing.T) {
+func TestInsertAndGetID_MissingIdColumn_PostgreSQL(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -1101,7 +1101,7 @@ func TestInsertAndGetId_MissingIdColumn_PostgreSQL(t *testing.T) {
 		WithArgs("John Doe", "john@example.com").
 		WillReturnRows(rows)
 
-	_, err = InsertAndGetId(ctx, typedbDB,
+	_, err = InsertAndGetID(ctx, typedbDB,
 		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING name, email",
 		"John Doe", "john@example.com")
 
@@ -1109,7 +1109,7 @@ func TestInsertAndGetId_MissingIdColumn_PostgreSQL(t *testing.T) {
 		t.Fatal("Expected error for missing ID column")
 	}
 
-	expectedError := "typedb: InsertAndGetId RETURNING/OUTPUT clause did not return 'id' column"
+	expectedError := "typedb: InsertAndGetID RETURNING/OUTPUT clause did not return 'id' column"
 	if err.Error() != expectedError {
 		t.Errorf("Expected error '%s', got '%s'", expectedError, err.Error())
 	}
@@ -1119,7 +1119,7 @@ func TestInsertAndGetId_MissingIdColumn_PostgreSQL(t *testing.T) {
 	}
 }
 
-func TestInsertAndGetId_MissingIdColumn_MSSQL(t *testing.T) {
+func TestInsertAndGetID_MissingIdColumn_MSSQL(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -1136,7 +1136,7 @@ func TestInsertAndGetId_MissingIdColumn_MSSQL(t *testing.T) {
 		WithArgs("John Doe", "john@example.com").
 		WillReturnRows(rows)
 
-	_, err = InsertAndGetId(ctx, typedbDB,
+	_, err = InsertAndGetID(ctx, typedbDB,
 		"INSERT INTO users (name, email) OUTPUT INSERTED.name, INSERTED.email VALUES (@p1, @p2)",
 		"John Doe", "john@example.com")
 
@@ -1144,7 +1144,7 @@ func TestInsertAndGetId_MissingIdColumn_MSSQL(t *testing.T) {
 		t.Fatal("Expected error for missing ID column")
 	}
 
-	expectedError := "typedb: InsertAndGetId RETURNING/OUTPUT clause did not return 'id' column"
+	expectedError := "typedb: InsertAndGetID RETURNING/OUTPUT clause did not return 'id' column"
 	if err.Error() != expectedError {
 		t.Errorf("Expected error '%s', got '%s'", expectedError, err.Error())
 	}
@@ -1154,7 +1154,7 @@ func TestInsertAndGetId_MissingIdColumn_MSSQL(t *testing.T) {
 	}
 }
 
-func TestInsertAndGetId_NonIntegerId_String(t *testing.T) {
+func TestInsertAndGetID_NonIntegerId_String(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -1171,7 +1171,7 @@ func TestInsertAndGetId_NonIntegerId_String(t *testing.T) {
 		WithArgs("John Doe", "john@example.com").
 		WillReturnRows(rows)
 
-	_, err = InsertAndGetId(ctx, typedbDB,
+	_, err = InsertAndGetID(ctx, typedbDB,
 		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id",
 		"John Doe", "john@example.com")
 
@@ -1179,7 +1179,7 @@ func TestInsertAndGetId_NonIntegerId_String(t *testing.T) {
 		t.Fatal("Expected error for non-integer ID type")
 	}
 
-	expectedErrorPrefix := "typedb: InsertAndGetId returned non-integer ID type:"
+	expectedErrorPrefix := "typedb: InsertAndGetID returned non-integer ID type:"
 	if !strings.Contains(err.Error(), expectedErrorPrefix) {
 		t.Errorf("Expected error to contain '%s', got '%s'", expectedErrorPrefix, err.Error())
 	}
@@ -1193,7 +1193,7 @@ func TestInsertAndGetId_NonIntegerId_String(t *testing.T) {
 	}
 }
 
-func TestInsertAndGetId_NonIntegerId_Bool(t *testing.T) {
+func TestInsertAndGetID_NonIntegerId_Bool(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -1210,7 +1210,7 @@ func TestInsertAndGetId_NonIntegerId_Bool(t *testing.T) {
 		WithArgs("John Doe", "john@example.com").
 		WillReturnRows(rows)
 
-	_, err = InsertAndGetId(ctx, typedbDB,
+	_, err = InsertAndGetID(ctx, typedbDB,
 		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id",
 		"John Doe", "john@example.com")
 
@@ -1218,7 +1218,7 @@ func TestInsertAndGetId_NonIntegerId_Bool(t *testing.T) {
 		t.Fatal("Expected error for non-integer ID type")
 	}
 
-	expectedErrorPrefix := "typedb: InsertAndGetId returned non-integer ID type:"
+	expectedErrorPrefix := "typedb: InsertAndGetID returned non-integer ID type:"
 	if !strings.Contains(err.Error(), expectedErrorPrefix) {
 		t.Errorf("Expected error to contain '%s', got '%s'", expectedErrorPrefix, err.Error())
 	}
@@ -1232,7 +1232,7 @@ func TestInsertAndGetId_NonIntegerId_Bool(t *testing.T) {
 	}
 }
 
-func TestInsertAndGetId_NonIntegerId_Slice(t *testing.T) {
+func TestInsertAndGetID_NonIntegerId_Slice(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -1250,7 +1250,7 @@ func TestInsertAndGetId_NonIntegerId_Slice(t *testing.T) {
 		WithArgs("John Doe", "john@example.com").
 		WillReturnRows(rows)
 
-	_, err = InsertAndGetId(ctx, typedbDB,
+	_, err = InsertAndGetID(ctx, typedbDB,
 		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id",
 		"John Doe", "john@example.com")
 
@@ -1258,7 +1258,7 @@ func TestInsertAndGetId_NonIntegerId_Slice(t *testing.T) {
 		t.Fatal("Expected error for non-integer ID type")
 	}
 
-	expectedErrorPrefix := "typedb: InsertAndGetId returned non-integer ID type:"
+	expectedErrorPrefix := "typedb: InsertAndGetID returned non-integer ID type:"
 	if !strings.Contains(err.Error(), expectedErrorPrefix) {
 		t.Errorf("Expected error to contain '%s', got '%s'", expectedErrorPrefix, err.Error())
 	}
@@ -1268,7 +1268,7 @@ func TestInsertAndGetId_NonIntegerId_Slice(t *testing.T) {
 	}
 }
 
-func TestInsertAndGetId_TypeConversion_Int32(t *testing.T) {
+func TestInsertAndGetID_TypeConversion_Int32(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -1285,12 +1285,12 @@ func TestInsertAndGetId_TypeConversion_Int32(t *testing.T) {
 		WithArgs("John Doe", "john@example.com").
 		WillReturnRows(rows)
 
-	id, err := InsertAndGetId(ctx, typedbDB,
+	id, err := InsertAndGetID(ctx, typedbDB,
 		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id",
 		"John Doe", "john@example.com")
 
 	if err != nil {
-		t.Fatalf("InsertAndGetId failed: %v", err)
+		t.Fatalf("InsertAndGetID failed: %v", err)
 	}
 
 	// Verify int32 was converted to int64
@@ -1303,7 +1303,7 @@ func TestInsertAndGetId_TypeConversion_Int32(t *testing.T) {
 	}
 }
 
-func TestInsertAndGetId_TypeConversion_Int16(t *testing.T) {
+func TestInsertAndGetID_TypeConversion_Int16(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -1320,12 +1320,12 @@ func TestInsertAndGetId_TypeConversion_Int16(t *testing.T) {
 		WithArgs("John Doe", "john@example.com").
 		WillReturnRows(rows)
 
-	id, err := InsertAndGetId(ctx, typedbDB,
+	id, err := InsertAndGetID(ctx, typedbDB,
 		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id",
 		"John Doe", "john@example.com")
 
 	if err != nil {
-		t.Fatalf("InsertAndGetId failed: %v", err)
+		t.Fatalf("InsertAndGetID failed: %v", err)
 	}
 
 	// Verify int16 was converted to int64
@@ -1338,7 +1338,7 @@ func TestInsertAndGetId_TypeConversion_Int16(t *testing.T) {
 	}
 }
 
-func TestInsertAndGetId_TypeConversion_Int(t *testing.T) {
+func TestInsertAndGetID_TypeConversion_Int(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -1355,12 +1355,12 @@ func TestInsertAndGetId_TypeConversion_Int(t *testing.T) {
 		WithArgs("John Doe", "john@example.com").
 		WillReturnRows(rows)
 
-	id, err := InsertAndGetId(ctx, typedbDB,
+	id, err := InsertAndGetID(ctx, typedbDB,
 		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id",
 		"John Doe", "john@example.com")
 
 	if err != nil {
-		t.Fatalf("InsertAndGetId failed: %v", err)
+		t.Fatalf("InsertAndGetID failed: %v", err)
 	}
 
 	// Verify int was converted to int64
@@ -1373,7 +1373,7 @@ func TestInsertAndGetId_TypeConversion_Int(t *testing.T) {
 	}
 }
 
-func TestInsertAndGetId_TypeConversion_Float64(t *testing.T) {
+func TestInsertAndGetID_TypeConversion_Float64(t *testing.T) {
 	tests := []struct {
 		name     string
 		floatVal float64
@@ -1419,12 +1419,12 @@ func TestInsertAndGetId_TypeConversion_Float64(t *testing.T) {
 				WithArgs("John Doe", "john@example.com").
 				WillReturnRows(rows)
 
-			id, err := InsertAndGetId(ctx, typedbDB,
+			id, err := InsertAndGetID(ctx, typedbDB,
 				"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id",
 				"John Doe", "john@example.com")
 
 			if err != nil {
-				t.Fatalf("InsertAndGetId failed: %v", err)
+				t.Fatalf("InsertAndGetID failed: %v", err)
 			}
 
 			// Verify float64 was converted to int64

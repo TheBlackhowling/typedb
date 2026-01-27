@@ -33,7 +33,8 @@ The following sections are for maintainers and internal development reference.
    - This file - Contribution guidelines
 
 3. **Set Up Development Environment:**
-   - **Go 1.18+** required (for generics support)
+   - **Go 1.23.12+** required (minimum for security fixes)
+   - **Go 1.24+ recommended** for best compatibility
    - Install Go: https://golang.org/doc/install
    - No external dependencies required (only `database/sql` from standard library)
    - Run tests: `go test ./...`

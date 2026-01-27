@@ -15,6 +15,16 @@ NC='\033[0m' # No Color
 
 ERRORS=0
 
+# 0. Check Go version
+echo "0️⃣  Checking Go version..."
+if bash "$(dirname "$0")/check-go-version.sh"; then
+    echo -e "${GREEN}✅ Go version check passed${NC}"
+else
+    echo -e "${RED}❌ Go version check failed${NC}"
+    ERRORS=$((ERRORS + 1))
+fi
+echo ""
+
 # Check if tools are installed
 check_tool() {
     if ! command -v $1 &> /dev/null; then

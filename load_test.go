@@ -10,9 +10,9 @@ import (
 // LoadTestUser is a test model for Load tests
 type LoadTestUser struct {
 	Model
-	ID    int    `db:"id" load:"primary"`
 	Name  string `db:"name"`
 	Email string `db:"email" load:"unique"`
+	ID    int    `db:"id" load:"primary"`
 }
 
 func (u *LoadTestUser) QueryByID() string {

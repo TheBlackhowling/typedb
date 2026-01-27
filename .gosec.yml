@@ -1,0 +1,10 @@
+# gosec configuration for typedb
+# Exclude examples and integration_tests directories as they have separate go.mod files
+exclude-dirs:
+  - examples
+  - integration_tests
+  - vendor
+
+# Exclude some false positives
+exclude:
+  - G104 # Errors unhandled (we use errcheck for this)

@@ -7,6 +7,18 @@ $errors = 0
 Write-Host "Running static analysis for typedb..." -ForegroundColor Cyan
 Write-Host ""
 
+# 0. Check Go version
+Write-Host "0. Checking Go version..." -ForegroundColor Cyan
+$scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
+& "$scriptPath\check-go-version.ps1"
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "PASS: Go version check passed" -ForegroundColor Green
+} else {
+    Write-Host "FAIL: Go version check failed" -ForegroundColor Red
+    $errors++
+}
+Write-Host ""
+
 function Test-Tool {
     param([string]$ToolName, [string]$InstallCommand)
     

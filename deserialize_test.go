@@ -9,18 +9,18 @@ type DeserializeUser struct {
 	Model
 	CreatedAt time.Time `db:"created_at"` // 24 bytes
 	Name      string    `db:"name"`       // 16 bytes
-	Email     string    `db:"email"`       // 16 bytes
-	ID        int       `db:"id"`          // 8 bytes
-	Active    bool      `db:"active"`      // 1 byte
+	Email     string    `db:"email"`      // 16 bytes
+	ID        int       `db:"id"`         // 8 bytes
+	Active    bool      `db:"active"`     // 1 byte
 }
 
 type DeserializePost struct {
 	Model
 	Title     string `db:"title"`     // 16 bytes
 	Content   string `db:"content"`   // 16 bytes
-	ID        int    `db:"id"`         // 8 bytes
-	UserID    int    `db:"user_id"`    // 8 bytes
-	Published bool   `db:"published"`  // 1 byte
+	ID        int    `db:"id"`        // 8 bytes
+	UserID    int    `db:"user_id"`   // 8 bytes
+	Published bool   `db:"published"` // 1 byte
 }
 
 type DeserializeModelWithPointers struct {
@@ -34,8 +34,8 @@ type DeserializeModelWithPointers struct {
 type DeserializeModelWithArrays struct {
 	Model
 	Tags    []string `db:"tags"`    // 24 bytes (slice header)
-	Numbers []int    `db:"numbers"`  // 24 bytes (slice header)
-	ID      int      `db:"id"`       // 8 bytes
+	Numbers []int    `db:"numbers"` // 24 bytes (slice header)
+	ID      int      `db:"id"`      // 8 bytes
 }
 
 type DeserializeModelWithJSON struct {

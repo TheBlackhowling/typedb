@@ -104,7 +104,7 @@ func TestMSSQL_InsertAndLoad(t *testing.T) {
 	}
 }
 
-func TestMSSQL_InsertAndGetId(t *testing.T) {
+func TestMSSQL_InsertAndGetID(t *testing.T) {
 	ctx := context.Background()
 	db, err := typedb.Open("sqlserver", getTestDSN())
 	if err != nil {
@@ -123,11 +123,11 @@ func TestMSSQL_InsertAndGetId(t *testing.T) {
 	}
 
 	// Insert post and get ID (MSSQL uses OUTPUT clause)
-	postID, err := typedb.InsertAndGetId(ctx, db,
+	postID, err := typedb.InsertAndGetID(ctx, db,
 		"INSERT INTO posts (user_id, title, content, tags, metadata, created_at) OUTPUT INSERTED.id VALUES (@p1, @p2, @p3, @p4, @p5, @p6)",
 		firstUser.ID, "Test Post ID", "Test content", `["go"]`, `{"test":true}`, "2024-01-01T00:00:00Z")
 	if err != nil {
-		t.Fatalf("InsertAndGetId failed: %v", err)
+		t.Fatalf("InsertAndGetID failed: %v", err)
 	}
 
 	// Clean up
@@ -151,7 +151,7 @@ func TestMSSQL_InsertAndGetId(t *testing.T) {
 	}
 }
 
-func TestMSSQL_InsertAndGetId_MissingIdColumn(t *testing.T) {
+func TestMSSQL_InsertAndGetID_MissingIdColumn(t *testing.T) {
 	ctx := context.Background()
 	db, err := typedb.Open("sqlserver", getTestDSN())
 	if err != nil {
@@ -170,7 +170,7 @@ func TestMSSQL_InsertAndGetId_MissingIdColumn(t *testing.T) {
 	}
 
 	// Insert post with OUTPUT clause that doesn't return 'id' column
-	_, err = typedb.InsertAndGetId(ctx, db,
+	_, err = typedb.InsertAndGetID(ctx, db,
 		"INSERT INTO posts (user_id, title, content, tags, metadata, created_at) OUTPUT INSERTED.title VALUES (@p1, @p2, @p3, @p4, @p5, @p6)",
 		firstUser.ID, "Test Post", "Test content", `["go"]`, `{"test":true}`, "2024-01-01T00:00:00Z")
 
@@ -178,7 +178,7 @@ func TestMSSQL_InsertAndGetId_MissingIdColumn(t *testing.T) {
 		t.Fatal("Expected error for missing ID column")
 	}
 
-	expectedError := "typedb: InsertAndGetId RETURNING/OUTPUT clause did not return 'id' column"
+	expectedError := "typedb: InsertAndGetID RETURNING/OUTPUT clause did not return 'id' column"
 	if err.Error() != expectedError {
 		t.Errorf("Expected error '%s', got '%s'", expectedError, err.Error())
 	}

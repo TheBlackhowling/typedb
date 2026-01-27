@@ -10,9 +10,9 @@ import (
 // Test models for reflection tests
 type TestReflectUser struct {
 	Model
-	ID    int    `db:"id" load:"primary"`
 	Email string `db:"email" load:"unique"`
 	Name  string `db:"name"`
+	ID    int    `db:"id" load:"primary"`
 }
 
 func (u *TestReflectUser) Deserialize(row map[string]any) error {
@@ -532,15 +532,15 @@ func TestFindFieldByNameRecursive_BaseModelPattern(t *testing.T) {
 	// Test realistic base model pattern: AdminUser -> BaseUser -> typedb.Model
 	// This represents a common inheritance pattern where multiple user types share a base
 	type BaseUser struct {
-		Model
-		ID        int       `db:"id" load:"primary"`
 		CreatedAt time.Time `db:"created_at"`
 		UpdatedAt time.Time `db:"updated_at"`
+		Model
+		ID int `db:"id" load:"primary"`
 	}
 	type AdminUser struct {
 		BaseUser
-		AdminLevel int    `db:"admin_level"`
 		Department string `db:"department"`
+		AdminLevel int    `db:"admin_level"`
 	}
 
 	model := &AdminUser{
@@ -649,9 +649,9 @@ func TestFindFieldByNameRecursive_MultipleEmbeddedStructs(t *testing.T) {
 func TestFindFieldByNameRecursive_FieldNotFound(t *testing.T) {
 	// Test realistic scenario: field doesn't exist in BaseUser or AdminUser
 	type BaseUser struct {
-		Model
-		ID        int `db:"id" load:"primary"`
 		CreatedAt time.Time
+		Model
+		ID int `db:"id" load:"primary"`
 	}
 	type AdminUser struct {
 		BaseUser

@@ -11,10 +11,10 @@ import (
 // ModelWithNologForSerialization is a test model with nolog tag for testing serialization masking
 type ModelWithNologForSerialization struct {
 	Model
-	ID       int    `db:"id" load:"primary"`
 	Name     string `db:"name"`
 	Email    string `db:"email" nolog:"true"`
 	Password string `db:"password" nolog:"true"`
+	ID       int    `db:"id" load:"primary"`
 }
 
 func (m *ModelWithNologForSerialization) TableName() string {
@@ -32,8 +32,8 @@ func init() {
 // ModelWithoutNolog is a test model without nolog tags
 type ModelWithoutNolog struct {
 	Model
-	ID   int    `db:"id" load:"primary"`
 	Name string `db:"name"`
+	ID   int    `db:"id" load:"primary"`
 }
 
 func (m *ModelWithoutNolog) TableName() string {
