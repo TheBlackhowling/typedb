@@ -8,71 +8,71 @@ import (
 
 func TestIsZeroOrNil(t *testing.T) {
 	tests := []struct {
-		name     string
 		value    any
+		name     string
 		expected bool
 	}{
 		// Nil pointer types
-		{"nil_ptr", (*int)(nil), true},
-		{"nil_slice", ([]int)(nil), true},
-		{"nil_map", (map[string]int)(nil), true},
-		{"nil_chan", (chan int)(nil), true},
-		{"nil_func", (func())(nil), true},
+		{name: "nil_ptr", value: (*int)(nil), expected: true},
+		{name: "nil_slice", value: ([]int)(nil), expected: true},
+		{name: "nil_map", value: (map[string]int)(nil), expected: true},
+		{name: "nil_chan", value: (chan int)(nil), expected: true},
+		{name: "nil_func", value: (func())(nil), expected: true},
 
 		// Non-nil pointer types
-		{"non_nil_ptr", intPtr(42), false},
-		{"non_nil_slice", []int{1, 2, 3}, false},
-		{"non_nil_map", map[string]int{"a": 1}, false},
-		{"non_nil_chan", make(chan int), false},
-		{"non_nil_func", func() {}, false},
+		{name: "non_nil_ptr", value: intPtr(42), expected: false},
+		{name: "non_nil_slice", value: []int{1, 2, 3}, expected: false},
+		{name: "non_nil_map", value: map[string]int{"a": 1}, expected: false},
+		{name: "non_nil_chan", value: make(chan int), expected: false},
+		{name: "non_nil_func", value: func() {}, expected: false},
 
 		// Empty but non-nil
-		{"empty_slice", []int{}, false},        // Empty slice is not nil
-		{"empty_map", map[string]int{}, false}, // Empty map is not nil
+		{name: "empty_slice", value: []int{}, expected: false},        // Empty slice is not nil
+		{name: "empty_map", value: map[string]int{}, expected: false}, // Empty map is not nil
 
 		// String types
-		{"empty_string", "", true},
-		{"non_empty_string", "hello", false},
+		{name: "empty_string", value: "", expected: true},
+		{name: "non_empty_string", value: "hello", expected: false},
 
 		// Integer types
-		{"int_zero", 0, true},
-		{"int_non_zero", 42, false},
-		{"int8_zero", int8(0), true},
-		{"int8_non_zero", int8(42), false},
-		{"int16_zero", int16(0), true},
-		{"int16_non_zero", int16(42), false},
-		{"int32_zero", int32(0), true},
-		{"int32_non_zero", int32(42), false},
-		{"int64_zero", int64(0), true},
-		{"int64_non_zero", int64(42), false},
+		{name: "int_zero", value: 0, expected: true},
+		{name: "int_non_zero", value: 42, expected: false},
+		{name: "int8_zero", value: int8(0), expected: true},
+		{name: "int8_non_zero", value: int8(42), expected: false},
+		{name: "int16_zero", value: int16(0), expected: true},
+		{name: "int16_non_zero", value: int16(42), expected: false},
+		{name: "int32_zero", value: int32(0), expected: true},
+		{name: "int32_non_zero", value: int32(42), expected: false},
+		{name: "int64_zero", value: int64(0), expected: true},
+		{name: "int64_non_zero", value: int64(42), expected: false},
 
 		// Unsigned integer types
-		{"uint_zero", uint(0), true},
-		{"uint_non_zero", uint(42), false},
-		{"uint8_zero", uint8(0), true},
-		{"uint8_non_zero", uint8(42), false},
-		{"uint16_zero", uint16(0), true},
-		{"uint16_non_zero", uint16(42), false},
-		{"uint32_zero", uint32(0), true},
-		{"uint32_non_zero", uint32(42), false},
-		{"uint64_zero", uint64(0), true},
-		{"uint64_non_zero", uint64(42), false},
-		{"uintptr_zero", uintptr(0), true},
-		{"uintptr_non_zero", uintptr(42), false},
+		{name: "uint_zero", value: uint(0), expected: true},
+		{name: "uint_non_zero", value: uint(42), expected: false},
+		{name: "uint8_zero", value: uint8(0), expected: true},
+		{name: "uint8_non_zero", value: uint8(42), expected: false},
+		{name: "uint16_zero", value: uint16(0), expected: true},
+		{name: "uint16_non_zero", value: uint16(42), expected: false},
+		{name: "uint32_zero", value: uint32(0), expected: true},
+		{name: "uint32_non_zero", value: uint32(42), expected: false},
+		{name: "uint64_zero", value: uint64(0), expected: true},
+		{name: "uint64_non_zero", value: uint64(42), expected: false},
+		{name: "uintptr_zero", value: uintptr(0), expected: true},
+		{name: "uintptr_non_zero", value: uintptr(42), expected: false},
 
 		// Float types
-		{"float32_zero", float32(0), true},
-		{"float32_non_zero", float32(3.14), false},
-		{"float64_zero", float64(0), true},
-		{"float64_non_zero", float64(3.14), false},
+		{name: "float32_zero", value: float32(0), expected: true},
+		{name: "float32_non_zero", value: float32(3.14), expected: false},
+		{name: "float64_zero", value: float64(0), expected: true},
+		{name: "float64_non_zero", value: float64(3.14), expected: false},
 
 		// Bool types
-		{"bool_false", false, true},
-		{"bool_true", true, false},
+		{name: "bool_false", value: false, expected: true},
+		{name: "bool_true", value: true, expected: false},
 
 		// Struct types (default case - should return false)
-		{"struct_zero", struct{}{}, false},
-		{"struct_with_fields", struct{ X int }{X: 0}, false},
+		{name: "struct_zero", value: struct{}{}, expected: false},
+		{name: "struct_with_fields", value: struct{ X int }{X: 0}, expected: false},
 	}
 
 	for _, tt := range tests {
@@ -341,58 +341,58 @@ func TestGeneratePlaceholder(t *testing.T) {
 	tests := []struct {
 		name       string
 		driverName string
-		position   int
 		expected   string
+		position   int
 	}{
 		// PostgreSQL
-		{"postgres_lowercase_1", "postgres", 1, "$1"},
-		{"postgres_lowercase_2", "postgres", 2, "$2"},
-		{"postgres_lowercase_10", "postgres", 10, "$10"},
-		{"postgres_uppercase", "POSTGRES", 1, "$1"},
-		{"postgres_mixed_case", "Postgres", 3, "$3"},
+		{name: "postgres_lowercase_1", driverName: "postgres", position: 1, expected: "$1"},
+		{name: "postgres_lowercase_2", driverName: "postgres", position: 2, expected: "$2"},
+		{name: "postgres_lowercase_10", driverName: "postgres", position: 10, expected: "$10"},
+		{name: "postgres_uppercase", driverName: "POSTGRES", position: 1, expected: "$1"},
+		{name: "postgres_mixed_case", driverName: "Postgres", position: 3, expected: "$3"},
 
 		// MySQL
-		{"mysql_lowercase_1", "mysql", 1, "?"},
-		{"mysql_lowercase_2", "mysql", 2, "?"},
-		{"mysql_lowercase_10", "mysql", 10, "?"},
-		{"mysql_uppercase", "MYSQL", 1, "?"},
-		{"mysql_mixed_case", "MySql", 5, "?"},
+		{name: "mysql_lowercase_1", driverName: "mysql", position: 1, expected: "?"},
+		{name: "mysql_lowercase_2", driverName: "mysql", position: 2, expected: "?"},
+		{name: "mysql_lowercase_10", driverName: "mysql", position: 10, expected: "?"},
+		{name: "mysql_uppercase", driverName: "MYSQL", position: 1, expected: "?"},
+		{name: "mysql_mixed_case", driverName: "MySql", position: 5, expected: "?"},
 
 		// SQLite
-		{"sqlite3_lowercase_1", "sqlite3", 1, "?"},
-		{"sqlite3_lowercase_2", "sqlite3", 2, "?"},
-		{"sqlite3_lowercase_10", "sqlite3", 10, "?"},
-		{"sqlite3_uppercase", "SQLITE3", 1, "?"},
-		{"sqlite3_mixed_case", "Sqlite3", 7, "?"},
+		{name: "sqlite3_lowercase_1", driverName: "sqlite3", position: 1, expected: "?"},
+		{name: "sqlite3_lowercase_2", driverName: "sqlite3", position: 2, expected: "?"},
+		{name: "sqlite3_lowercase_10", driverName: "sqlite3", position: 10, expected: "?"},
+		{name: "sqlite3_uppercase", driverName: "SQLITE3", position: 1, expected: "?"},
+		{name: "sqlite3_mixed_case", driverName: "Sqlite3", position: 7, expected: "?"},
 
 		// SQL Server
-		{"sqlserver_lowercase_1", "sqlserver", 1, "@p1"},
-		{"sqlserver_lowercase_2", "sqlserver", 2, "@p2"},
-		{"sqlserver_lowercase_10", "sqlserver", 10, "@p10"},
-		{"sqlserver_uppercase", "SQLSERVER", 1, "@p1"},
-		{"sqlserver_mixed_case", "SqlServer", 3, "@p3"},
+		{name: "sqlserver_lowercase_1", driverName: "sqlserver", position: 1, expected: "@p1"},
+		{name: "sqlserver_lowercase_2", driverName: "sqlserver", position: 2, expected: "@p2"},
+		{name: "sqlserver_lowercase_10", driverName: "sqlserver", position: 10, expected: "@p10"},
+		{name: "sqlserver_uppercase", driverName: "SQLSERVER", position: 1, expected: "@p1"},
+		{name: "sqlserver_mixed_case", driverName: "SqlServer", position: 3, expected: "@p3"},
 
 		// MSSQL (alias for SQL Server)
-		{"mssql_lowercase_1", "mssql", 1, "@p1"},
-		{"mssql_lowercase_2", "mssql", 2, "@p2"},
-		{"mssql_lowercase_10", "mssql", 10, "@p10"},
-		{"mssql_uppercase", "MSSQL", 1, "@p1"},
-		{"mssql_mixed_case", "MsSql", 4, "@p4"},
+		{name: "mssql_lowercase_1", driverName: "mssql", position: 1, expected: "@p1"},
+		{name: "mssql_lowercase_2", driverName: "mssql", position: 2, expected: "@p2"},
+		{name: "mssql_lowercase_10", driverName: "mssql", position: 10, expected: "@p10"},
+		{name: "mssql_uppercase", driverName: "MSSQL", position: 1, expected: "@p1"},
+		{name: "mssql_mixed_case", driverName: "MsSql", position: 4, expected: "@p4"},
 
 		// Oracle
-		{"oracle_lowercase_1", "oracle", 1, ":1"},
-		{"oracle_lowercase_2", "oracle", 2, ":2"},
-		{"oracle_lowercase_10", "oracle", 10, ":10"},
-		{"oracle_uppercase", "ORACLE", 1, ":1"},
-		{"oracle_mixed_case", "Oracle", 6, ":6"},
+		{name: "oracle_lowercase_1", driverName: "oracle", position: 1, expected: ":1"},
+		{name: "oracle_lowercase_2", driverName: "oracle", position: 2, expected: ":2"},
+		{name: "oracle_lowercase_10", driverName: "oracle", position: 10, expected: ":10"},
+		{name: "oracle_uppercase", driverName: "ORACLE", position: 1, expected: ":1"},
+		{name: "oracle_mixed_case", driverName: "Oracle", position: 6, expected: ":6"},
 
 		// Default/Unknown (defaults to PostgreSQL style)
-		{"unknown_driver_1", "unknown", 1, "$1"},
-		{"unknown_driver_2", "unknown", 2, "$2"},
-		{"empty_driver_1", "", 1, "$1"},
-		{"empty_driver_5", "", 5, "$5"},
-		{"custom_driver_1", "customdb", 1, "$1"},
-		{"custom_driver_10", "customdb", 10, "$10"},
+		{name: "unknown_driver_1", driverName: "unknown", position: 1, expected: "$1"},
+		{name: "unknown_driver_2", driverName: "unknown", position: 2, expected: "$2"},
+		{name: "empty_driver_1", driverName: "", position: 1, expected: "$1"},
+		{name: "empty_driver_5", driverName: "", position: 5, expected: "$5"},
+		{name: "custom_driver_1", driverName: "customdb", position: 1, expected: "$1"},
+		{name: "custom_driver_10", driverName: "customdb", position: 10, expected: "$10"},
 	}
 
 	for _, tt := range tests {
@@ -409,8 +409,8 @@ func TestGeneratePlaceholder(t *testing.T) {
 
 // SimpleStructNoDot has no dot notation
 type SimpleStructNoDot struct {
-	ID   int    `db:"id"`
 	Name string `db:"name"`
+	ID   int    `db:"id"`
 }
 
 // SimpleStructWithDot has dot notation in direct field
@@ -435,26 +435,26 @@ type PointerEmbeddedStructWithDot struct {
 
 // Level1Struct has embedded struct (level 1)
 type Level1Struct struct {
-	EmbeddedStructNoDot
 	Field string `db:"field"`
+	EmbeddedStructNoDot
 }
 
 // Level2Struct has embedded struct that embeds another struct (level 2)
 type Level2Struct struct {
-	Level1Struct
 	Extra string `db:"extra"`
+	Level1Struct
 }
 
 // Level3Struct has 3 levels of embedding
 type Level3Struct struct {
-	Level2Struct
 	Final string `db:"final"`
+	Level2Struct
 }
 
 // StructWithEmbeddedDot has embedded struct with dot notation
 type StructWithEmbeddedDot struct {
-	EmbeddedStructWithDot
 	Field string `db:"field"`
+	EmbeddedStructWithDot
 }
 
 // StructWithPointerEmbeddedDot has pointer embedded struct with dot notation
@@ -465,14 +465,14 @@ type StructWithPointerEmbeddedDot struct {
 
 // StructWithDeepEmbeddedDot has 2-level embedding where second level has dot notation
 type StructWithDeepEmbeddedDot struct {
-	Level1Struct
 	DeepField string `db:"deep.field"`
+	Level1Struct
 }
 
 // StructWithUnexportedField has unexported field with dot notation (should be skipped)
 type StructWithUnexportedField struct {
+	name string `db:"users.name"`
 	ID   int    `db:"id"`
-	name string `db:"users.name"` // unexported, should be skipped - intentionally unused for testing
 }
 
 // Reference unexported name field to avoid unused warning
@@ -483,53 +483,53 @@ var _ = func() {
 
 // StructWithDashTag has db:"-" tag (should be skipped)
 type StructWithDashTag struct {
-	ID   int    `db:"id"`
 	Name string `db:"-"`
+	ID   int    `db:"id"`
 	User int    `db:"users.id"`
 }
 
 func TestCheckDotNotationRecursive(t *testing.T) {
 	tests := []struct {
-		name     string
 		typ      reflect.Type
+		name     string
 		expected bool
 	}{
 		// Non-struct types
-		{"int_type", reflect.TypeOf(0), false},
-		{"string_type", reflect.TypeOf(""), false},
-		{"slice_type", reflect.TypeOf([]int{}), false},
-		{"map_type", reflect.TypeOf(map[string]int{}), false},
+		{typ: reflect.TypeOf(0), name: "int_type", expected: false},
+		{typ: reflect.TypeOf(""), name: "string_type", expected: false},
+		{typ: reflect.TypeOf([]int{}), name: "slice_type", expected: false},
+		{typ: reflect.TypeOf(map[string]int{}), name: "map_type", expected: false},
 
 		// Structs with no dot notation
-		{"simple_no_dot", reflect.TypeOf(SimpleStructNoDot{}), false},
-		{"insert_model", reflect.TypeOf(InsertModel{}), false},
+		{typ: reflect.TypeOf(SimpleStructNoDot{}), name: "simple_no_dot", expected: false},
+		{typ: reflect.TypeOf(InsertModel{}), name: "insert_model", expected: false},
 
 		// Structs with dot notation in direct fields
-		{"simple_with_dot", reflect.TypeOf(SimpleStructWithDot{}), true},
-		{"joined_model", reflect.TypeOf(JoinedModel{}), true},
+		{typ: reflect.TypeOf(SimpleStructWithDot{}), name: "simple_with_dot", expected: true},
+		{typ: reflect.TypeOf(JoinedModel{}), name: "joined_model", expected: true},
 
 		// Embedded structs without dot notation
-		{"embedded_no_dot", reflect.TypeOf(EmbeddedStructNoDot{}), false},
-		{"level1_no_dot", reflect.TypeOf(Level1Struct{}), false},
-		{"level2_no_dot", reflect.TypeOf(Level2Struct{}), false},
-		{"level3_no_dot", reflect.TypeOf(Level3Struct{}), false},
+		{typ: reflect.TypeOf(EmbeddedStructNoDot{}), name: "embedded_no_dot", expected: false},
+		{typ: reflect.TypeOf(Level1Struct{}), name: "level1_no_dot", expected: false},
+		{typ: reflect.TypeOf(Level2Struct{}), name: "level2_no_dot", expected: false},
+		{typ: reflect.TypeOf(Level3Struct{}), name: "level3_no_dot", expected: false},
 
 		// Embedded structs with dot notation (non-pointer)
-		{"embedded_with_dot", reflect.TypeOf(EmbeddedStructWithDot{}), true},
-		{"struct_with_embedded_dot", reflect.TypeOf(StructWithEmbeddedDot{}), true},
+		{typ: reflect.TypeOf(EmbeddedStructWithDot{}), name: "embedded_with_dot", expected: true},
+		{typ: reflect.TypeOf(StructWithEmbeddedDot{}), name: "struct_with_embedded_dot", expected: true},
 
 		// Pointer embedded structs with dot notation
-		{"pointer_embedded_with_dot", reflect.TypeOf(PointerEmbeddedStructWithDot{}), true},
-		{"struct_with_pointer_embedded_dot", reflect.TypeOf(StructWithPointerEmbeddedDot{}), true},
+		{typ: reflect.TypeOf(PointerEmbeddedStructWithDot{}), name: "pointer_embedded_with_dot", expected: true},
+		{typ: reflect.TypeOf(StructWithPointerEmbeddedDot{}), name: "struct_with_pointer_embedded_dot", expected: true},
 
 		// Deep embedding with dot notation (2-3 levels)
-		{"deep_embedded_dot", reflect.TypeOf(StructWithDeepEmbeddedDot{}), true},
+		{typ: reflect.TypeOf(StructWithDeepEmbeddedDot{}), name: "deep_embedded_dot", expected: true},
 
 		// Unexported fields (should be skipped, so no dot notation detected)
-		{"unexported_field", reflect.TypeOf(StructWithUnexportedField{}), false},
+		{typ: reflect.TypeOf(StructWithUnexportedField{}), name: "unexported_field", expected: false},
 
 		// Dash tag (should be skipped)
-		{"dash_tag", reflect.TypeOf(StructWithDashTag{}), true}, // Has users.id, so should return true
+		{typ: reflect.TypeOf(StructWithDashTag{}), name: "dash_tag", expected: true}, // Has users.id, so should return true
 	}
 
 	for _, tt := range tests {
@@ -547,36 +547,36 @@ func TestCheckDotNotationRecursive(t *testing.T) {
 // SerializeTestModel is a simple model for testing serializeModelFields
 type SerializeTestModel struct {
 	Model
-	ID    int64  `db:"id" load:"primary"`
 	Name  string `db:"name"`
 	Email string `db:"email"`
+	ID    int64  `db:"id" load:"primary"`
 	Age   int    `db:"age"`
 }
 
 // SerializeModelWithDashTag has db:"-" tag
 type SerializeModelWithDashTag struct {
 	Model
-	ID   int    `db:"id" load:"primary"`
 	Name string `db:"name"`
 	Skip string `db:"-"`
+	ID   int    `db:"id" load:"primary"`
 	Age  int    `db:"age"`
 }
 
 // SerializeModelWithEmptyTag has empty db tag
 type SerializeModelWithEmptyTag struct {
 	Model
-	ID   int    `db:"id" load:"primary"`
 	Name string `db:"name"`
-	Skip string // No db tag
-	Age  int    `db:"age"`
+	Skip string
+	ID   int `db:"id" load:"primary"`
+	Age  int `db:"age"`
 }
 
 // SerializeModelWithDotNotation has dot notation in db tag
 type SerializeModelWithDotNotation struct {
 	Model
+	Bio    string `db:"profiles.bio"`
 	ID     int    `db:"id" load:"primary"`
 	UserID int    `db:"users.id"`
-	Bio    string `db:"profiles.bio"`
 }
 
 // SerializeEmbeddedStruct is embedded in other models
@@ -588,24 +588,24 @@ type SerializeEmbeddedStruct struct {
 type SerializeModelWithEmbedded struct {
 	Model
 	SerializeEmbeddedStruct
-	ID   int    `db:"id" load:"primary"`
 	Name string `db:"name"`
+	ID   int    `db:"id" load:"primary"`
 }
 
 // SerializeModelWithPointerEmbedded has pointer embedded struct
 type SerializeModelWithPointerEmbedded struct {
 	Model
 	*SerializeEmbeddedStruct
-	ID   int    `db:"id" load:"primary"`
 	Name string `db:"name"`
+	ID   int    `db:"id" load:"primary"`
 }
 
 // SerializeModelWithUnexported has unexported field
 type SerializeModelWithUnexported struct {
 	Model
-	ID   int    `db:"id" load:"primary"`
 	Name string `db:"name"`
-	age  int    `db:"age"` // unexported - intentionally unused for testing
+	ID   int    `db:"id" load:"primary"`
+	age  int    `db:"age"`
 }
 
 // Reference unexported age field to avoid unused warning

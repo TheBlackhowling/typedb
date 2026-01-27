@@ -123,9 +123,9 @@ func saveOriginalCopyIfEnabled(model ModelInterface) error {
 				// Found the Model field, access its originalCopy field
 				modelFieldValue := structValue.Field(i)
 				// Use unsafe to set unexported field
-				modelFieldPtr := unsafe.Pointer(modelFieldValue.UnsafeAddr())
-				originalCopyFieldType := field.Type.Field(0) // Model.originalCopy field
-				originalCopyFieldPtr := unsafe.Pointer(uintptr(modelFieldPtr) + originalCopyFieldType.Offset)
+				modelFieldPtr := unsafe.Pointer(modelFieldValue.UnsafeAddr())                                 // #nosec G103 // intentional use of unsafe for unexported field access
+				originalCopyFieldType := field.Type.Field(0)                                                  // Model.originalCopy field
+				originalCopyFieldPtr := unsafe.Pointer(uintptr(modelFieldPtr) + originalCopyFieldType.Offset) // #nosec G103 // intentional use of unsafe for unexported field access
 				*(*interface{})(originalCopyFieldPtr) = originalCopy
 				return nil
 			}
@@ -177,7 +177,7 @@ func buildFieldMapFromPtr(ptrValue, structValue reflect.Value) map[string]reflec
 	// ptrValue is a reflect.Value of a pointer type
 	// We can use Pointer() to get the actual pointer value (what the pointer points to)
 	// Then convert it to unsafe.Pointer to use for field access
-	structAddr := unsafe.Pointer(ptrValue.Pointer())
+	structAddr := unsafe.Pointer(ptrValue.Pointer()) // #nosec G103 // intentional use of unsafe for reflection
 
 	var processFields func(reflect.Type, unsafe.Pointer, []int)
 	processFields = func(t reflect.Type, basePtr unsafe.Pointer, indexPath []int) {
@@ -214,10 +214,10 @@ func buildFieldMapFromPtr(ptrValue, structValue reflect.Value) map[string]reflec
 						// Initialize pointer embedded struct
 						fieldValue.Set(reflect.New(embeddedType.Elem()))
 						// Recalculate fieldPtr after setting the value
-						fieldPtr = unsafe.Pointer(fieldValue.Pointer())
+						fieldPtr = unsafe.Pointer(fieldValue.Pointer()) // #nosec G103 // intentional use of unsafe for reflection
 					} else {
 						// Get the address of what the pointer points to
-						fieldPtr = unsafe.Pointer(fieldValue.Pointer())
+						fieldPtr = unsafe.Pointer(fieldValue.Pointer()) // #nosec G103 // intentional use of unsafe for reflection
 					}
 					embeddedType = embeddedType.Elem()
 				}
@@ -808,8 +808,7 @@ func convertIntToInt32(v int) (int32, error) {
 		return 0, fmt.Errorf("typedb: int value %d overflows int32", v)
 	}
 	// Bounds check ensures v fits in int32, safe to convert
-	//nolint:gosec // G115: integer overflow conversion - bounds checked above
-	return int32(v), nil
+	return int32(v), nil // #nosec G115 // integer overflow conversion - bounds checked above
 }
 
 // convertInt64ToInt32 safely converts int64 to int32 with overflow check

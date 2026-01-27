@@ -30,7 +30,7 @@ func setupTestDBWithLogger(t *testing.T, logger typedb.Logger) *typedb.DB {
 	dsn := getTestDSN()
 
 	// Remove existing test database (for clean state)
-	os.Remove(dsn)
+	_ = os.Remove(dsn) // Ignore error - file may not exist
 
 	// Run migrations if database doesn't exist or is empty
 	// In docker-compose workflow, migrations may already be run, but for local testing we need them

@@ -13,8 +13,8 @@ import (
 // PrimaryKeyNoDbTagModel has primary key without db tag
 type PrimaryKeyNoDbTagModel struct {
 	Model
-	ID   int    `load:"primary"` // Missing db tag
 	Name string `db:"name"`
+	ID   int    `load:"primary"`
 }
 
 func (m *PrimaryKeyNoDbTagModel) TableName() string {
@@ -24,8 +24,8 @@ func (m *PrimaryKeyNoDbTagModel) TableName() string {
 // PrimaryKeyDashTagModel has primary key with db:"-" tag
 type PrimaryKeyDashTagModel struct {
 	Model
-	ID   int    `db:"-" load:"primary"` // db:"-" tag
 	Name string `db:"name"`
+	ID   int    `db:"-" load:"primary"`
 }
 
 func (m *PrimaryKeyDashTagModel) TableName() string {
@@ -35,8 +35,8 @@ func (m *PrimaryKeyDashTagModel) TableName() string {
 // PrimaryKeyDotNotationModel has primary key with dot notation
 type PrimaryKeyDotNotationModel struct {
 	Model
-	UserID int    `db:"users.id" load:"primary"` // Dot notation
 	Name   string `db:"name"`
+	UserID int    `db:"users.id" load:"primary"`
 }
 
 func (m *PrimaryKeyDotNotationModel) TableName() string {
@@ -46,9 +46,9 @@ func (m *PrimaryKeyDotNotationModel) TableName() string {
 // AllZeroFieldsModel has all fields zero/nil
 type AllZeroFieldsModel struct {
 	Model
-	ID    int64  `db:"id" load:"primary"`
 	Name  string `db:"name"`
 	Email string `db:"email"`
+	ID    int64  `db:"id" load:"primary"`
 }
 
 func (m *AllZeroFieldsModel) TableName() string {

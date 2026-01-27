@@ -4,13 +4,10 @@
 run:
   timeout: 5m
   tests: true
-  skip-dirs:
-    - vendor
-    - integration_tests
-    - examples
-  skip-files:
-    - ".*\\.pb\\.go$"
-    - ".*_gen\\.go$"
+
+output:
+  formats:
+    - format: colored-line-number
 
 linters:
   enable:
@@ -24,7 +21,6 @@ linters:
     - unused            # Check for unused code
     
     # Code quality
-    - exportloopref     # Detect exporting loop variable reference
     - gocritic          # Opinionated Go code analyzer
     - gocyclo           # Check cyclomatic complexity
     - gofmt             # Check code formatting
@@ -73,7 +69,6 @@ linters-settings:
       - G307 # Deferring unsafe method "Close" on type
   
   govet:
-    check-shadowing: true
     enable-all: true
     disable: [] # Field alignment checks enabled - core structs optimized
   
@@ -100,10 +95,15 @@ linters-settings:
         severity: error
       - name: defer
         severity: warning
-      - name: return-early
-        severity: warning
 
 issues:
+  exclude-files:
+    - ".*\\.pb\\.go$"
+    - ".*_gen\\.go$"
+  exclude-dirs:
+    - vendor
+    - integration_tests
+    - examples
   exclude-rules:
     # Exclude some linters from test files
     - path: _test\.go
@@ -115,3 +115,4 @@ issues:
   
   max-issues-per-linter: 0
   max-same-issues: 0
+

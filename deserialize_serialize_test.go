@@ -205,27 +205,27 @@ func TestSerializeStringArray_Error(t *testing.T) {
 
 func TestSerialize(t *testing.T) {
 	tests := []struct {
-		name  string
 		value any
 		want  any
+		name  string
 	}{
-		{"int", 123, 123},
-		{"int64", int64(456), int64(456)},
-		{"int32", int32(789), int32(789)},
-		{"uint", uint(999), uint(999)},
-		{"float64", float64(1.5), float64(1.5)},
-		{"float32", float32(2.5), float32(2.5)},
-		{"string", "hello", "hello"},
-		{"bool", true, true},
-		{"[]byte", []byte("bytes"), []byte("bytes")},
-		{"time.Time", time.Date(2023, 1, 1, 12, 0, 0, 0, time.UTC), time.Date(2023, 1, 1, 12, 0, 0, 0, time.UTC)},
-		{"map[string]any", map[string]any{"key": "value"}, `{"key":"value"}`},
-		{"map[string]string", map[string]string{"key": "value"}, `{"key":"value"}`},
-		{"[]int", []int{1, 2, 3}, "{1,2,3}"},
-		{"[]int64", []int64{10, 20}, "{10,20}"},
-		{"[]string", []string{"a", "b"}, "{a,b}"},
-		{"nil", nil, nil},
-		{"custom struct", struct{ Name string }{"test"}, `{"Name":"test"}`},
+		{value: 123, want: 123, name: "int"},
+		{value: int64(456), want: int64(456), name: "int64"},
+		{value: int32(789), want: int32(789), name: "int32"},
+		{value: uint(999), want: uint(999), name: "uint"},
+		{value: float64(1.5), want: float64(1.5), name: "float64"},
+		{value: float32(2.5), want: float32(2.5), name: "float32"},
+		{value: "hello", want: "hello", name: "string"},
+		{value: true, want: true, name: "bool"},
+		{value: []byte("bytes"), want: []byte("bytes"), name: "[]byte"},
+		{value: time.Date(2023, 1, 1, 12, 0, 0, 0, time.UTC), want: time.Date(2023, 1, 1, 12, 0, 0, 0, time.UTC), name: "time.Time"},
+		{value: map[string]any{"key": "value"}, want: `{"key":"value"}`, name: "map[string]any"},
+		{value: map[string]string{"key": "value"}, want: `{"key":"value"}`, name: "map[string]string"},
+		{value: []int{1, 2, 3}, want: "{1,2,3}", name: "[]int"},
+		{value: []int64{10, 20}, want: "{10,20}", name: "[]int64"},
+		{value: []string{"a", "b"}, want: "{a,b}", name: "[]string"},
+		{value: nil, want: nil, name: "nil"},
+		{value: struct{ Name string }{"test"}, want: `{"Name":"test"}`, name: "custom struct"},
 	}
 
 	for _, tt := range tests {
@@ -271,15 +271,15 @@ func TestSerialize(t *testing.T) {
 func TestSerializeJSONB_MoreTypes(t *testing.T) {
 	// Test types that go through JSON marshaling
 	tests := []struct {
-		name  string
 		value any
+		name  string
 	}{
-		{"struct", struct{ Name string }{"test"}},
-		{"slice of maps", []map[string]any{{"a": 1}, {"b": 2}}},
-		{"nested map", map[string]any{"nested": map[string]any{"key": "value"}}},
-		{"[]any", []any{"a", 1, true}},
-		{"[]string", []string{"a", "b", "c"}},
-		{"[]int", []int{1, 2, 3}},
+		{value: struct{ Name string }{"test"}, name: "struct"},
+		{value: []map[string]any{{"a": 1}, {"b": 2}}, name: "slice of maps"},
+		{value: map[string]any{"nested": map[string]any{"key": "value"}}, name: "nested map"},
+		{value: []any{"a", 1, true}, name: "[]any"},
+		{value: []string{"a", "b", "c"}, name: "[]string"},
+		{value: []int{1, 2, 3}, name: "[]int"},
 	}
 
 	for _, tt := range tests {

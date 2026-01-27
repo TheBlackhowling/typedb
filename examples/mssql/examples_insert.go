@@ -38,17 +38,17 @@ func Example7_InsertAndLoad(ctx context.Context, db *typedb.DB, firstUser *User)
 	fmt.Printf("  ✓ Inserted post: %s (ID: %d, CreatedAt: %s)\n", returnedPost.Title, returnedPost.ID, returnedPost.CreatedAt)
 }
 
-// Example8_InsertAndGetId demonstrates InsertAndGetId - Insert and get just the ID
-func Example8_InsertAndGetId(ctx context.Context, db *typedb.DB, firstUser *User) int64 {
-	fmt.Println("\n--- Example 8: InsertAndGetId - Insert and Get ID ---")
+// Example8_InsertAndGetID demonstrates InsertAndGetID - Insert and get just the ID
+func Example8_InsertAndGetID(ctx context.Context, db *typedb.DB, firstUser *User) int64 {
+	fmt.Println("\n--- Example 8: InsertAndGetID - Insert and Get ID ---")
 	anotherPost := &Post{
 		UserID:    firstUser.ID,
 		Title:     "Another Post",
-		Content:   "This post uses InsertAndGetId",
+		Content:   "This post uses InsertAndGetID",
 		Published: false,
 		CreatedAt: "2024-01-01T00:00:00Z",
 	}
-	postID, err := typedb.InsertAndGetId(ctx, db,
+	postID, err := typedb.InsertAndGetID(ctx, db,
 		"INSERT INTO posts (user_id, title, content, published, created_at) OUTPUT INSERTED.id VALUES (@p1, @p2, @p3, @p4, @p5)",
 		anotherPost.UserID, anotherPost.Title, anotherPost.Content, anotherPost.Published, anotherPost.CreatedAt)
 	if err != nil {
@@ -58,10 +58,10 @@ func Example8_InsertAndGetId(ctx context.Context, db *typedb.DB, firstUser *User
 	return postID
 }
 
-// runInsertExamples demonstrates Insert, InsertAndLoad, and InsertAndGetId operations.
+// runInsertExamples demonstrates Insert, InsertAndLoad, and InsertAndGetID operations.
 // Returns the post ID for use in subsequent examples.
 func runInsertExamples(ctx context.Context, db *typedb.DB, firstUser *User) int64 {
 	Example6_Insert(ctx, db)
 	Example7_InsertAndLoad(ctx, db, firstUser)
-	return Example8_InsertAndGetId(ctx, db, firstUser)
+	return Example8_InsertAndGetID(ctx, db, firstUser)
 }
