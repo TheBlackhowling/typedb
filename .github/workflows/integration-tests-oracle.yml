@@ -33,8 +33,11 @@ jobs:
       - name: Download dependencies
         run: go mod download
       
-      - name: Install Oracle driver
-        run: go get github.com/sijms/go-ora/v2
+      - name: Setup integration test dependencies
+        run: |
+          cd integration_tests/oracle
+          go mod tidy
+          go mod download
       
       - name: Try to pull Oracle image without authentication
         id: try_oracle_pull
