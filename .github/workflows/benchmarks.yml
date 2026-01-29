@@ -1,16 +1,18 @@
 name: Benchmarks
 
 on:
-  push:
-    branches: [main]
   pull_request:
+    types: [opened, synchronize, ready_for_review]
     branches: [main]
   workflow_dispatch: # Allow manual runs
 
 jobs:
   benchmark:
-    # Only run on PRs from the same repository (not forks) or on push to main
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+    # Only run on PRs from the same repository (not forks)
+    # This workflow runs when PR is ready for review/merge and blocks merge if benchmarks fail
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    # Set as required status check - merge will be blocked until this passes
+    # Configure in repository settings: Settings > Branches > Branch protection rules > Require status checks
     runs-on: ubuntu-latest
     
     steps:
