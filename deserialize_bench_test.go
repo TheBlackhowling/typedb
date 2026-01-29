@@ -61,7 +61,7 @@ func loadTestData(filename string) []map[string]any {
 		// Other error (permission, etc.)
 		panic("Failed to stat test data file " + filename + ": " + err.Error())
 	}
-	
+
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		panic("Failed to load test data " + filename + ": " + err.Error())
@@ -79,7 +79,7 @@ func loadSplitTestData(baseFilename string) []map[string]any {
 	baseName := filepath.Base(baseFilename)
 	ext := filepath.Ext(baseName)
 	nameWithoutExt := baseName[:len(baseName)-len(ext)]
-	
+
 	// Find all split files matching pattern: basename_*.json
 	pattern := filepath.Join(dir, nameWithoutExt+"_*"+ext)
 	matches, err := filepath.Glob(pattern)
@@ -91,10 +91,10 @@ func loadSplitTestData(baseFilename string) []map[string]any {
 		// Return empty slice instead of panicking - let caller handle it
 		return nil
 	}
-	
+
 	// Sort matches to ensure correct order
 	sort.Strings(matches)
-	
+
 	// Load and combine all split files
 	var allRows []map[string]any
 	for _, match := range matches {
