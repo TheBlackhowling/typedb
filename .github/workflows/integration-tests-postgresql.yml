@@ -48,8 +48,11 @@ jobs:
       - name: Download dependencies
         run: go mod download
       
-      - name: Install PostgreSQL driver
-        run: go get github.com/lib/pq
+      - name: Setup integration test dependencies
+        run: |
+          cd integration_tests/postgresql
+          go mod tidy
+          go mod download
       
       - name: Install golang-migrate
         run: |
