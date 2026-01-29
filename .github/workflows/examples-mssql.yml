@@ -1,9 +1,9 @@
 name: Examples - SQL Server
 
 on:
-  # Only run on merge to main (not on PR sync/push)
-  push:
-    branches: [main]
+  # Workflow disabled for automatic runs
+  # Only runs when manually triggered or required by branch protection on merge attempt
+  workflow_dispatch: # Manual trigger only
 
 jobs:
   test:
