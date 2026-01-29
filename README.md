@@ -860,4 +860,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Status
 
-🚧 **Early Development** - This project is in active development. API may change before v1.0.0.
+✅ **Production Ready** - typedb v1.0.0 provides a stable API for type-safe SQL queries in Go. All public APIs are stable and backward compatible.
