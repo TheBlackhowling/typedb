@@ -1,0 +1,21 @@
+﻿goos: windows
+goarch: amd64
+pkg: github.com/TheBlackHowling/typedb
+cpu: AMD Ryzen 7 7700X 8-Core Processor             
+BenchmarkDeserialize_Simple_10rows_typedb-16       	  113816	     10403 ns/op	    6240 B/op	     141 allocs/op
+BenchmarkDeserialize_Simple_10rows_manual-16       	  940725	      1209 ns/op	    1360 B/op	      11 allocs/op
+BenchmarkDeserialize_Simple_100rows_typedb-16      	   10000	    104453 ns/op	   62496 B/op	    1401 allocs/op
+BenchmarkDeserialize_Simple_1krows_typedb-16       	    1143	   1052925 ns/op	  624192 B/op	   14001 allocs/op
+BenchmarkDeserialize_Simple_10krows_typedb-16      	     100	  10595667 ns/op	 6241920 B/op	  140001 allocs/op
+BenchmarkDeserialize_Simple_100krows_typedb-16     	      10	 105899370 ns/op	62402816 B/op	 1400001 allocs/op
+BenchmarkDeserialize_Simple_1Mrows_typedb-16       	       1	1058982800 ns/op	624003600 B/op	14000001 allocs/op
+BenchmarkDeserialize_Complex_10rows_typedb-16      	   14052	     83611 ns/op	   55866 B/op	     844 allocs/op
+BenchmarkDeserialize_Complex_10rows_manual-16      	  795232	      2423 ns/op	    3600 B/op	      11 allocs/op
+BenchmarkDeserialize_Complex_100rows_typedb-16     	    1356	    869954 ns/op	  556531 B/op	    8388 allocs/op
+BenchmarkDeserialize_Complex_1krows_typedb-16      	     122	   9721228 ns/op	 5572945 B/op	   84055 allocs/op
+BenchmarkDeserialize_Complex_10krows_typedb-16     	      10	 103113940 ns/op	55747400 B/op	  840494 allocs/op
+BenchmarkDeserialize_Complex_100krows_typedb-16    	       2	 974191650 ns/op	557960264 B/op	 8405112 allocs/op
+BenchmarkDeserialize_Complex_1Mrows_typedb-16      	       1	10318284300 ns/op	5584908720 B/op	84051066 allocs/op
+PASS
+ok  	github.com/TheBlackHowling/typedb	60.941s
+
