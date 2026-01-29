@@ -46,10 +46,15 @@ func init() {
 }
 
 func loadTestData(filename string) []map[string]any {
-	// Check if file exists, if not try loading split files
+	// Check if file exists
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		// Try loading split files (e.g., 100000rows.json -> 100000rows_*.json)
-		return loadSplitTestData(filename)
+		splitRows := loadSplitTestData(filename)
+		if len(splitRows) > 0 {
+			return splitRows
+		}
+		// If no split files found, panic with helpful error
+		panic("Failed to load test data " + filename + ": file does not exist and no split files found")
 	}
 	
 	data, err := os.ReadFile(filename)
@@ -74,10 +79,12 @@ func loadSplitTestData(baseFilename string) []map[string]any {
 	pattern := filepath.Join(dir, nameWithoutExt+"_*"+ext)
 	matches, err := filepath.Glob(pattern)
 	if err != nil {
-		panic("Failed to find split test data files: " + err.Error())
+		// Return empty slice instead of panicking - let caller handle it
+		return nil
 	}
 	if len(matches) == 0 {
-		panic("No split test data files found for " + baseFilename)
+		// Return empty slice instead of panicking - let caller handle it
+		return nil
 	}
 	
 	// Sort matches to ensure correct order
