@@ -532,7 +532,7 @@ func deserializeWithReflection(targetElem reflect.Value, value any) error {
 }
 
 // deserializeJSONString handles JSON string deserialization for structs, arrays, and pointers.
-func deserializeJSONString(targetElem reflect.Value, valueValue reflect.Value, valueType, targetType reflect.Type) error {
+func deserializeJSONString(targetElem, valueValue reflect.Value, valueType, targetType reflect.Type) error {
 	if valueType.Kind() != reflect.String {
 		return fmt.Errorf("not a string")
 	}
@@ -554,7 +554,7 @@ func deserializeJSONString(targetElem reflect.Value, valueValue reflect.Value, v
 }
 
 // deserializePointerTypeReflection handles pointer type deserialization using reflection.
-func deserializePointerTypeReflection(targetElem reflect.Value, valueValue reflect.Value, valueType, targetType reflect.Type) error {
+func deserializePointerTypeReflection(targetElem, valueValue reflect.Value, valueType, targetType reflect.Type) error {
 	if targetType.Kind() != reflect.Ptr {
 		return fmt.Errorf("not a pointer type")
 	}

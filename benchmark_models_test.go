@@ -9,8 +9,8 @@ import (
 type SimpleUser struct {
 	Model
 	ID        int64     `db:"id" load:"primary"`
-	Age       int       `db:"age"`
 	Score     float64   `db:"score"`
+	Age       int       `db:"age"`
 	Name      string    `db:"name"`
 	Email     string    `db:"email" load:"unique"`
 	CreatedAt time.Time `db:"created_at"`
@@ -62,9 +62,12 @@ type BenchmarkSettings struct {
 type ComplexUser struct {
 	Model
 	ID          int64                  `db:"id" load:"primary"`
-	Age         int                    `db:"age"`
 	Score       float64                `db:"score"`
 	UserID      int64                  `db:"user_id" load:"composite:user_status"`
+	Balance     *float64               `db:"balance"`    // Nullable float
+	Settings    *BenchmarkSettings     `db:"settings"`   // Pointer to struct (JSONB, nullable)
+	LastLogin   *time.Time             `db:"last_login"` // Nullable time
+	Age         int                    `db:"age"`
 	Name        string                 `db:"name"`
 	Email       string                 `db:"email" load:"unique"`
 	Status      string                 `db:"status"`
@@ -77,9 +80,6 @@ type ComplexUser struct {
 	Preferences map[string]string      `db:"preferences"` // Map field
 	Address     BenchmarkAddress       `db:"address"`     // Nested struct (JSONB)
 	Roles       []BenchmarkRole        `db:"roles"`       // Array of structs (JSONB)
-	Settings    *BenchmarkSettings     `db:"settings"`    // Pointer to struct (JSONB, nullable)
-	LastLogin   *time.Time             `db:"last_login"`  // Nullable time
-	Balance     *float64               `db:"balance"`     // Nullable float
 	Active      bool                   `db:"active"`
 }
 
