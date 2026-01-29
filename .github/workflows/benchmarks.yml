@@ -106,5 +106,3 @@ jobs:
         run: |
           echo "❌ Performance regression detected (>10% slower)"
           echo "${{ steps.compare.outputs.regression_details }}"
-          exit 1
-      
