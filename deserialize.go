@@ -518,6 +518,23 @@ func deserializeWithReflection(targetElem reflect.Value, value any) error {
 		return nil
 	}
 
+	// Handle JSON strings for structs, arrays of structs, and pointer to structs
+	// This is used for JSONB fields from databases
+	if valueType.Kind() == reflect.String {
+		strValue := valueValue.String()
+		// Try JSON unmarshaling for structs, arrays, and pointers
+		if targetType.Kind() == reflect.Struct ||
+			targetType.Kind() == reflect.Slice ||
+			(targetType.Kind() == reflect.Ptr && (targetType.Elem().Kind() == reflect.Struct || targetType.Elem().Kind() == reflect.Slice)) {
+			// Create a pointer to the target type for unmarshaling
+			targetPtr := reflect.New(targetType)
+			if err := json.Unmarshal([]byte(strValue), targetPtr.Interface()); err == nil {
+				targetElem.Set(targetPtr.Elem())
+				return nil
+			}
+		}
+	}
+
 	// Handle pointer types
 	if targetType.Kind() == reflect.Ptr {
 		elemType := targetType.Elem()
@@ -530,6 +547,14 @@ func deserializeWithReflection(targetElem reflect.Value, value any) error {
 			}
 			targetElem.Set(ptrValue)
 			return nil
+		}
+		// Try JSON unmarshaling for pointer to struct/slice from JSON string
+		if valueType.Kind() == reflect.String {
+			ptrValue := reflect.New(elemType)
+			if err := json.Unmarshal([]byte(valueValue.String()), ptrValue.Interface()); err == nil {
+				targetElem.Set(ptrValue)
+				return nil
+			}
 		}
 	}
 
