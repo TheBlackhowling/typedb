@@ -1,18 +1,16 @@
 name: Benchmarks
 
+# Workflow disabled for automatic runs
+# Only runs when manually triggered or required by branch protection on merge attempt
 on:
-  pull_request:
-    types: []  # No automatic triggers - only runs when required by branch protection
-    branches: [main]
-  workflow_dispatch: # Allow manual runs
+  workflow_dispatch: # Manual trigger only
 
 jobs:
   benchmark:
-    # Only run on PRs from the same repository (not forks)
-    # This workflow runs when PR is ready for review/merge and blocks merge if benchmarks fail
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-    # Set as required status check - merge will be blocked until this passes
-    # Configure in repository settings: Settings > Branches > Branch protection rules > Require status checks
+    # This job is intentionally disabled for automatic runs
+    # It will only run when:
+    # 1. Manually triggered via workflow_dispatch
+    # 2. Required by branch protection rules (GitHub will trigger it on merge attempt)
     runs-on: ubuntu-latest
     
     steps:
@@ -22,7 +20,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25'
+          go-version: ''1.25''
           cache-dependency-path: go.sum
       
       - name: Install benchstat
@@ -35,7 +33,11 @@ jobs:
         id: benchmark
         run: |
           mkdir -p benchmark-results
-          go test -run=^$ -bench=BenchmarkDeserialize -benchmem -count=5 > benchmark-results/current.txt 2>&1
+          if ! go test -run=^$ -bench=BenchmarkDeserialize -benchmem -count=5 > benchmark-results/current.txt 2>&1; then
+            echo "❌ Benchmarks failed to run"
+            cat benchmark-results/current.txt
+            exit 1
+          fi
           echo "Benchmarks completed"
       
       - name: Upload benchmark results
@@ -52,12 +54,12 @@ jobs:
             echo "exists=true" >> $GITHUB_OUTPUT
           else
             echo "exists=false" >> $GITHUB_OUTPUT
-            echo "No baseline found - this will be used as the new baseline"
+            echo "No baseline found - skipping comparison"
           fi
       
       - name: Compare against baseline
         id: compare
-        if: steps.baseline.outputs.exists == 'true'
+        if: steps.baseline.outputs.exists == ''true''
         run: |
           # Run benchstat comparison
           benchstat benchmark-results/baseline.txt benchmark-results/current.txt > benchmark-results/comparison.txt 2>&1 || true
@@ -71,7 +73,7 @@ jobs:
             # Look for lines with negative deltas (regressions) exceeding threshold
             if echo "$line" | grep -qE "^-.*[0-9]+\.[0-9]+%"; then
               # Extract percentage (remove % sign and check if > threshold)
-              PERCENT=$(echo "$line" | grep -oE "[0-9]+\.[0-9]+%" | sed 's/%//')
+              PERCENT=$(echo "$line" | grep -oE "[0-9]+\.[0-9]+%" | sed ''s/%//'')
               if [ -n "$PERCENT" ]; then
                 # Use awk for floating point comparison
                 if awk "BEGIN {exit !($PERCENT > $THRESHOLD)}"; then
@@ -96,13 +98,14 @@ jobs:
           fi
       
       - name: Display comparison
-        if: steps.baseline.outputs.exists == 'true'
+        if: steps.baseline.outputs.exists == ''true''
         run: |
           echo "=== Benchmark Comparison ==="
           cat benchmark-results/comparison.txt
       
       - name: Fail on regression
-        if: steps.baseline.outputs.exists == 'true' && steps.compare.outputs.regression == 'true'
+        if: steps.baseline.outputs.exists == ''true'' && steps.compare.outputs.regression == ''true''
         run: |
           echo "❌ Performance regression detected (>10% slower)"
           echo "${{ steps.compare.outputs.regression_details }}"
+          exit 1
