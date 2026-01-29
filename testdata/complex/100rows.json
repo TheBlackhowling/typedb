@@ -1,0 +1,3302 @@
+[
+  {
+    "active": true,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"100 Main St\",\"zip_code\":\"10000\"}",
+    "age": 20,
+    "balance": null,
+    "created_at": "2026-01-01T00:00:00Z",
+    "email": "user1@example.com",
+    "id": 1,
+    "last_login": null,
+    "metadata": {
+      "campaign": "campaign-0",
+      "referrer": "referrer-0.com",
+      "source": "web"
+    },
+    "name": "User 1",
+    "notes": "Notes for user 1",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-01T00:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-01T00:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 50,
+    "settings": null,
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-01T00:00:00Z",
+    "user_id": 100
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"101 Main St\",\"zip_code\":\"10001\"}",
+    "age": 21,
+    "balance": 1001,
+    "created_at": "2026-01-01T01:00:00Z",
+    "email": "user2@example.com",
+    "id": 2,
+    "last_login": "2026-01-01T01:00:00Z",
+    "metadata": {
+      "campaign": "campaign-1",
+      "referrer": "referrer-1.com",
+      "source": "mobile"
+    },
+    "name": "User 2",
+    "notes": "Notes for user 2",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-01T01:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 51,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-01T01:00:00Z",
+    "user_id": 101
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"102 Main St\",\"zip_code\":\"10002\"}",
+    "age": 22,
+    "balance": 1002,
+    "created_at": "2026-01-01T02:00:00Z",
+    "email": "user3@example.com",
+    "id": 3,
+    "last_login": "2026-01-01T02:00:00Z",
+    "metadata": {
+      "campaign": "campaign-2",
+      "referrer": "referrer-2.com",
+      "source": "api"
+    },
+    "name": "User 3",
+    "notes": "Notes for user 3",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-01T02:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 52,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-01T02:00:00Z",
+    "user_id": 102
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"103 Main St\",\"zip_code\":\"10003\"}",
+    "age": 23,
+    "balance": 1003,
+    "created_at": "2026-01-01T03:00:00Z",
+    "email": "user4@example.com",
+    "id": 4,
+    "last_login": "2026-01-01T03:00:00Z",
+    "metadata": {
+      "campaign": "campaign-3",
+      "referrer": "referrer-3.com",
+      "source": "web"
+    },
+    "name": "User 4",
+    "notes": "Notes for user 4",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-01T03:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-01T03:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 53,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":true},\"preferences\":{\"auto_save\":false,\"show_tooltips\":true},\"theme\":\"dark\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-01T03:00:00Z",
+    "user_id": 103
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"104 Main St\",\"zip_code\":\"10004\"}",
+    "age": 24,
+    "balance": 1004,
+    "created_at": "2026-01-01T04:00:00Z",
+    "email": "user5@example.com",
+    "id": 5,
+    "last_login": "2026-01-01T04:00:00Z",
+    "metadata": {
+      "campaign": "campaign-4",
+      "referrer": "referrer-4.com",
+      "source": "mobile"
+    },
+    "name": "User 5",
+    "notes": "Notes for user 5",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-01T04:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 54,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-01T04:00:00Z",
+    "user_id": 104
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"105 Main St\",\"zip_code\":\"10005\"}",
+    "age": 25,
+    "balance": 1005,
+    "created_at": "2026-01-01T05:00:00Z",
+    "email": "user6@example.com",
+    "id": 6,
+    "last_login": null,
+    "metadata": {
+      "campaign": "campaign-5",
+      "referrer": "referrer-0.com",
+      "source": "api"
+    },
+    "name": "User 6",
+    "notes": "Notes for user 6",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-01T05:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 55,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-01T05:00:00Z",
+    "user_id": 105
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"106 Main St\",\"zip_code\":\"10006\"}",
+    "age": 26,
+    "balance": 1006,
+    "created_at": "2026-01-01T06:00:00Z",
+    "email": "user7@example.com",
+    "id": 7,
+    "last_login": "2026-01-01T06:00:00Z",
+    "metadata": {
+      "campaign": "campaign-6",
+      "referrer": "referrer-1.com",
+      "source": "web"
+    },
+    "name": "User 7",
+    "notes": "Notes for user 7",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-01T06:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-01T06:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 56,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":true},\"preferences\":{\"auto_save\":true,\"show_tooltips\":true},\"theme\":\"light\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-01T06:00:00Z",
+    "user_id": 106
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"107 Main St\",\"zip_code\":\"10007\"}",
+    "age": 27,
+    "balance": null,
+    "created_at": "2026-01-01T07:00:00Z",
+    "email": "user8@example.com",
+    "id": 8,
+    "last_login": "2026-01-01T07:00:00Z",
+    "metadata": {
+      "campaign": "campaign-7",
+      "referrer": "referrer-2.com",
+      "source": "mobile"
+    },
+    "name": "User 8",
+    "notes": "Notes for user 8",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-01T07:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 57,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-01T07:00:00Z",
+    "user_id": 107
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"108 Main St\",\"zip_code\":\"10008\"}",
+    "age": 28,
+    "balance": 1008,
+    "created_at": "2026-01-01T08:00:00Z",
+    "email": "user9@example.com",
+    "id": 9,
+    "last_login": "2026-01-01T08:00:00Z",
+    "metadata": {
+      "campaign": "campaign-8",
+      "referrer": "referrer-3.com",
+      "source": "api"
+    },
+    "name": "User 9",
+    "notes": "Notes for user 9",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-01T08:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 58,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-01T08:00:00Z",
+    "user_id": 108
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"109 Main St\",\"zip_code\":\"10009\"}",
+    "age": 29,
+    "balance": 1009,
+    "created_at": "2026-01-01T09:00:00Z",
+    "email": "user10@example.com",
+    "id": 10,
+    "last_login": "2026-01-01T09:00:00Z",
+    "metadata": {
+      "campaign": "campaign-9",
+      "referrer": "referrer-4.com",
+      "source": "web"
+    },
+    "name": "User 10",
+    "notes": "Notes for user 10",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-01T09:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-01T09:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 59,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":true},\"preferences\":{\"auto_save\":false,\"show_tooltips\":true},\"theme\":\"dark\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-01T09:00:00Z",
+    "user_id": 109
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"110 Main St\",\"zip_code\":\"10010\"}",
+    "age": 30,
+    "balance": 1010,
+    "created_at": "2026-01-01T10:00:00Z",
+    "email": "user11@example.com",
+    "id": 11,
+    "last_login": null,
+    "metadata": {
+      "campaign": "campaign-0",
+      "referrer": "referrer-0.com",
+      "source": "mobile"
+    },
+    "name": "User 11",
+    "notes": "Notes for user 11",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-01T10:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 60,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-01T10:00:00Z",
+    "user_id": 110
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"111 Main St\",\"zip_code\":\"10011\"}",
+    "age": 31,
+    "balance": 1011,
+    "created_at": "2026-01-01T11:00:00Z",
+    "email": "user12@example.com",
+    "id": 12,
+    "last_login": "2026-01-01T11:00:00Z",
+    "metadata": {
+      "campaign": "campaign-1",
+      "referrer": "referrer-1.com",
+      "source": "api"
+    },
+    "name": "User 12",
+    "notes": "Notes for user 12",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-01T11:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 61,
+    "settings": null,
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-01T11:00:00Z",
+    "user_id": 111
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"112 Main St\",\"zip_code\":\"10012\"}",
+    "age": 32,
+    "balance": 1012,
+    "created_at": "2026-01-01T12:00:00Z",
+    "email": "user13@example.com",
+    "id": 13,
+    "last_login": "2026-01-01T12:00:00Z",
+    "metadata": {
+      "campaign": "campaign-2",
+      "referrer": "referrer-2.com",
+      "source": "web"
+    },
+    "name": "User 13",
+    "notes": "Notes for user 13",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-01T12:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-01T12:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 62,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":true},\"preferences\":{\"auto_save\":true,\"show_tooltips\":true},\"theme\":\"light\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-01T12:00:00Z",
+    "user_id": 112
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"113 Main St\",\"zip_code\":\"10013\"}",
+    "age": 33,
+    "balance": 1013,
+    "created_at": "2026-01-01T13:00:00Z",
+    "email": "user14@example.com",
+    "id": 14,
+    "last_login": "2026-01-01T13:00:00Z",
+    "metadata": {
+      "campaign": "campaign-3",
+      "referrer": "referrer-3.com",
+      "source": "mobile"
+    },
+    "name": "User 14",
+    "notes": "Notes for user 14",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-01T13:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 63,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-01T13:00:00Z",
+    "user_id": 113
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"114 Main St\",\"zip_code\":\"10014\"}",
+    "age": 34,
+    "balance": null,
+    "created_at": "2026-01-01T14:00:00Z",
+    "email": "user15@example.com",
+    "id": 15,
+    "last_login": "2026-01-01T14:00:00Z",
+    "metadata": {
+      "campaign": "campaign-4",
+      "referrer": "referrer-4.com",
+      "source": "api"
+    },
+    "name": "User 15",
+    "notes": "Notes for user 15",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-01T14:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 64,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-01T14:00:00Z",
+    "user_id": 114
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"115 Main St\",\"zip_code\":\"10015\"}",
+    "age": 35,
+    "balance": 1015,
+    "created_at": "2026-01-01T15:00:00Z",
+    "email": "user16@example.com",
+    "id": 16,
+    "last_login": null,
+    "metadata": {
+      "campaign": "campaign-5",
+      "referrer": "referrer-0.com",
+      "source": "web"
+    },
+    "name": "User 16",
+    "notes": "Notes for user 16",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-01T15:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-01T15:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 65,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":true},\"preferences\":{\"auto_save\":false,\"show_tooltips\":true},\"theme\":\"dark\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-01T15:00:00Z",
+    "user_id": 115
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"116 Main St\",\"zip_code\":\"10016\"}",
+    "age": 36,
+    "balance": 1016,
+    "created_at": "2026-01-01T16:00:00Z",
+    "email": "user17@example.com",
+    "id": 17,
+    "last_login": "2026-01-01T16:00:00Z",
+    "metadata": {
+      "campaign": "campaign-6",
+      "referrer": "referrer-1.com",
+      "source": "mobile"
+    },
+    "name": "User 17",
+    "notes": "Notes for user 17",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-01T16:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 66,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-01T16:00:00Z",
+    "user_id": 116
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"117 Main St\",\"zip_code\":\"10017\"}",
+    "age": 37,
+    "balance": 1017,
+    "created_at": "2026-01-01T17:00:00Z",
+    "email": "user18@example.com",
+    "id": 18,
+    "last_login": "2026-01-01T17:00:00Z",
+    "metadata": {
+      "campaign": "campaign-7",
+      "referrer": "referrer-2.com",
+      "source": "api"
+    },
+    "name": "User 18",
+    "notes": "Notes for user 18",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-01T17:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 67,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-01T17:00:00Z",
+    "user_id": 117
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"118 Main St\",\"zip_code\":\"10018\"}",
+    "age": 38,
+    "balance": 1018,
+    "created_at": "2026-01-01T18:00:00Z",
+    "email": "user19@example.com",
+    "id": 19,
+    "last_login": "2026-01-01T18:00:00Z",
+    "metadata": {
+      "campaign": "campaign-8",
+      "referrer": "referrer-3.com",
+      "source": "web"
+    },
+    "name": "User 19",
+    "notes": "Notes for user 19",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-01T18:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-01T18:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 68,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":true},\"preferences\":{\"auto_save\":true,\"show_tooltips\":true},\"theme\":\"light\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-01T18:00:00Z",
+    "user_id": 118
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"119 Main St\",\"zip_code\":\"10019\"}",
+    "age": 39,
+    "balance": 1019,
+    "created_at": "2026-01-01T19:00:00Z",
+    "email": "user20@example.com",
+    "id": 20,
+    "last_login": "2026-01-01T19:00:00Z",
+    "metadata": {
+      "campaign": "campaign-9",
+      "referrer": "referrer-4.com",
+      "source": "mobile"
+    },
+    "name": "User 20",
+    "notes": "Notes for user 20",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-01T19:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 69,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-01T19:00:00Z",
+    "user_id": 119
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"120 Main St\",\"zip_code\":\"10020\"}",
+    "age": 40,
+    "balance": 1020,
+    "created_at": "2026-01-01T20:00:00Z",
+    "email": "user21@example.com",
+    "id": 21,
+    "last_login": null,
+    "metadata": {
+      "campaign": "campaign-0",
+      "referrer": "referrer-0.com",
+      "source": "api"
+    },
+    "name": "User 21",
+    "notes": "Notes for user 21",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-01T20:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 70,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-01T20:00:00Z",
+    "user_id": 120
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"121 Main St\",\"zip_code\":\"10021\"}",
+    "age": 41,
+    "balance": null,
+    "created_at": "2026-01-01T21:00:00Z",
+    "email": "user22@example.com",
+    "id": 22,
+    "last_login": "2026-01-01T21:00:00Z",
+    "metadata": {
+      "campaign": "campaign-1",
+      "referrer": "referrer-1.com",
+      "source": "web"
+    },
+    "name": "User 22",
+    "notes": "Notes for user 22",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-01T21:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-01T21:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 71,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":true},\"preferences\":{\"auto_save\":false,\"show_tooltips\":true},\"theme\":\"dark\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-01T21:00:00Z",
+    "user_id": 121
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"122 Main St\",\"zip_code\":\"10022\"}",
+    "age": 42,
+    "balance": 1022,
+    "created_at": "2026-01-01T22:00:00Z",
+    "email": "user23@example.com",
+    "id": 23,
+    "last_login": "2026-01-01T22:00:00Z",
+    "metadata": {
+      "campaign": "campaign-2",
+      "referrer": "referrer-2.com",
+      "source": "mobile"
+    },
+    "name": "User 23",
+    "notes": "Notes for user 23",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-01T22:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 72,
+    "settings": null,
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-01T22:00:00Z",
+    "user_id": 122
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"123 Main St\",\"zip_code\":\"10023\"}",
+    "age": 43,
+    "balance": 1023,
+    "created_at": "2026-01-01T23:00:00Z",
+    "email": "user24@example.com",
+    "id": 24,
+    "last_login": "2026-01-01T23:00:00Z",
+    "metadata": {
+      "campaign": "campaign-3",
+      "referrer": "referrer-3.com",
+      "source": "api"
+    },
+    "name": "User 24",
+    "notes": "Notes for user 24",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-01T23:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 73,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-01T23:00:00Z",
+    "user_id": 123
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"124 Main St\",\"zip_code\":\"10024\"}",
+    "age": 44,
+    "balance": 1024,
+    "created_at": "2026-01-02T00:00:00Z",
+    "email": "user25@example.com",
+    "id": 25,
+    "last_login": "2026-01-02T00:00:00Z",
+    "metadata": {
+      "campaign": "campaign-4",
+      "referrer": "referrer-4.com",
+      "source": "web"
+    },
+    "name": "User 25",
+    "notes": "Notes for user 25",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-02T00:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-02T00:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 74,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":true},\"preferences\":{\"auto_save\":true,\"show_tooltips\":true},\"theme\":\"light\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-02T00:00:00Z",
+    "user_id": 124
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"125 Main St\",\"zip_code\":\"10025\"}",
+    "age": 45,
+    "balance": 1025,
+    "created_at": "2026-01-02T01:00:00Z",
+    "email": "user26@example.com",
+    "id": 26,
+    "last_login": null,
+    "metadata": {
+      "campaign": "campaign-5",
+      "referrer": "referrer-0.com",
+      "source": "mobile"
+    },
+    "name": "User 26",
+    "notes": "Notes for user 26",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-02T01:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 75,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-02T01:00:00Z",
+    "user_id": 125
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"126 Main St\",\"zip_code\":\"10026\"}",
+    "age": 46,
+    "balance": 1026,
+    "created_at": "2026-01-02T02:00:00Z",
+    "email": "user27@example.com",
+    "id": 27,
+    "last_login": "2026-01-02T02:00:00Z",
+    "metadata": {
+      "campaign": "campaign-6",
+      "referrer": "referrer-1.com",
+      "source": "api"
+    },
+    "name": "User 27",
+    "notes": "Notes for user 27",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-02T02:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 76,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-02T02:00:00Z",
+    "user_id": 126
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"127 Main St\",\"zip_code\":\"10027\"}",
+    "age": 47,
+    "balance": 1027,
+    "created_at": "2026-01-02T03:00:00Z",
+    "email": "user28@example.com",
+    "id": 28,
+    "last_login": "2026-01-02T03:00:00Z",
+    "metadata": {
+      "campaign": "campaign-7",
+      "referrer": "referrer-2.com",
+      "source": "web"
+    },
+    "name": "User 28",
+    "notes": "Notes for user 28",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-02T03:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-02T03:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 77,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":true},\"preferences\":{\"auto_save\":false,\"show_tooltips\":true},\"theme\":\"dark\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-02T03:00:00Z",
+    "user_id": 127
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"128 Main St\",\"zip_code\":\"10028\"}",
+    "age": 48,
+    "balance": null,
+    "created_at": "2026-01-02T04:00:00Z",
+    "email": "user29@example.com",
+    "id": 29,
+    "last_login": "2026-01-02T04:00:00Z",
+    "metadata": {
+      "campaign": "campaign-8",
+      "referrer": "referrer-3.com",
+      "source": "mobile"
+    },
+    "name": "User 29",
+    "notes": "Notes for user 29",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-02T04:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 78,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-02T04:00:00Z",
+    "user_id": 128
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"129 Main St\",\"zip_code\":\"10029\"}",
+    "age": 49,
+    "balance": 1029,
+    "created_at": "2026-01-02T05:00:00Z",
+    "email": "user30@example.com",
+    "id": 30,
+    "last_login": "2026-01-02T05:00:00Z",
+    "metadata": {
+      "campaign": "campaign-9",
+      "referrer": "referrer-4.com",
+      "source": "api"
+    },
+    "name": "User 30",
+    "notes": "Notes for user 30",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-02T05:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 79,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-02T05:00:00Z",
+    "user_id": 129
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"130 Main St\",\"zip_code\":\"10030\"}",
+    "age": 50,
+    "balance": 1030,
+    "created_at": "2026-01-02T06:00:00Z",
+    "email": "user31@example.com",
+    "id": 31,
+    "last_login": null,
+    "metadata": {
+      "campaign": "campaign-0",
+      "referrer": "referrer-0.com",
+      "source": "web"
+    },
+    "name": "User 31",
+    "notes": "Notes for user 31",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-02T06:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-02T06:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 80,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":true},\"preferences\":{\"auto_save\":true,\"show_tooltips\":true},\"theme\":\"light\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-02T06:00:00Z",
+    "user_id": 130
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"131 Main St\",\"zip_code\":\"10031\"}",
+    "age": 51,
+    "balance": 1031,
+    "created_at": "2026-01-02T07:00:00Z",
+    "email": "user32@example.com",
+    "id": 32,
+    "last_login": "2026-01-02T07:00:00Z",
+    "metadata": {
+      "campaign": "campaign-1",
+      "referrer": "referrer-1.com",
+      "source": "mobile"
+    },
+    "name": "User 32",
+    "notes": "Notes for user 32",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-02T07:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 81,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-02T07:00:00Z",
+    "user_id": 131
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"132 Main St\",\"zip_code\":\"10032\"}",
+    "age": 52,
+    "balance": 1032,
+    "created_at": "2026-01-02T08:00:00Z",
+    "email": "user33@example.com",
+    "id": 33,
+    "last_login": "2026-01-02T08:00:00Z",
+    "metadata": {
+      "campaign": "campaign-2",
+      "referrer": "referrer-2.com",
+      "source": "api"
+    },
+    "name": "User 33",
+    "notes": "Notes for user 33",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-02T08:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 82,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-02T08:00:00Z",
+    "user_id": 132
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"133 Main St\",\"zip_code\":\"10033\"}",
+    "age": 53,
+    "balance": 1033,
+    "created_at": "2026-01-02T09:00:00Z",
+    "email": "user34@example.com",
+    "id": 34,
+    "last_login": "2026-01-02T09:00:00Z",
+    "metadata": {
+      "campaign": "campaign-3",
+      "referrer": "referrer-3.com",
+      "source": "web"
+    },
+    "name": "User 34",
+    "notes": "Notes for user 34",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-02T09:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-02T09:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 83,
+    "settings": null,
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-02T09:00:00Z",
+    "user_id": 133
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"134 Main St\",\"zip_code\":\"10034\"}",
+    "age": 54,
+    "balance": 1034,
+    "created_at": "2026-01-02T10:00:00Z",
+    "email": "user35@example.com",
+    "id": 35,
+    "last_login": "2026-01-02T10:00:00Z",
+    "metadata": {
+      "campaign": "campaign-4",
+      "referrer": "referrer-4.com",
+      "source": "mobile"
+    },
+    "name": "User 35",
+    "notes": "Notes for user 35",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-02T10:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 84,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-02T10:00:00Z",
+    "user_id": 134
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"135 Main St\",\"zip_code\":\"10035\"}",
+    "age": 55,
+    "balance": null,
+    "created_at": "2026-01-02T11:00:00Z",
+    "email": "user36@example.com",
+    "id": 36,
+    "last_login": null,
+    "metadata": {
+      "campaign": "campaign-5",
+      "referrer": "referrer-0.com",
+      "source": "api"
+    },
+    "name": "User 36",
+    "notes": "Notes for user 36",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-02T11:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 85,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-02T11:00:00Z",
+    "user_id": 135
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"136 Main St\",\"zip_code\":\"10036\"}",
+    "age": 56,
+    "balance": 1036,
+    "created_at": "2026-01-02T12:00:00Z",
+    "email": "user37@example.com",
+    "id": 37,
+    "last_login": "2026-01-02T12:00:00Z",
+    "metadata": {
+      "campaign": "campaign-6",
+      "referrer": "referrer-1.com",
+      "source": "web"
+    },
+    "name": "User 37",
+    "notes": "Notes for user 37",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-02T12:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-02T12:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 86,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":true},\"preferences\":{\"auto_save\":true,\"show_tooltips\":true},\"theme\":\"light\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-02T12:00:00Z",
+    "user_id": 136
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"137 Main St\",\"zip_code\":\"10037\"}",
+    "age": 57,
+    "balance": 1037,
+    "created_at": "2026-01-02T13:00:00Z",
+    "email": "user38@example.com",
+    "id": 38,
+    "last_login": "2026-01-02T13:00:00Z",
+    "metadata": {
+      "campaign": "campaign-7",
+      "referrer": "referrer-2.com",
+      "source": "mobile"
+    },
+    "name": "User 38",
+    "notes": "Notes for user 38",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-02T13:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 87,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-02T13:00:00Z",
+    "user_id": 137
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"138 Main St\",\"zip_code\":\"10038\"}",
+    "age": 58,
+    "balance": 1038,
+    "created_at": "2026-01-02T14:00:00Z",
+    "email": "user39@example.com",
+    "id": 39,
+    "last_login": "2026-01-02T14:00:00Z",
+    "metadata": {
+      "campaign": "campaign-8",
+      "referrer": "referrer-3.com",
+      "source": "api"
+    },
+    "name": "User 39",
+    "notes": "Notes for user 39",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-02T14:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 88,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-02T14:00:00Z",
+    "user_id": 138
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"139 Main St\",\"zip_code\":\"10039\"}",
+    "age": 59,
+    "balance": 1039,
+    "created_at": "2026-01-02T15:00:00Z",
+    "email": "user40@example.com",
+    "id": 40,
+    "last_login": "2026-01-02T15:00:00Z",
+    "metadata": {
+      "campaign": "campaign-9",
+      "referrer": "referrer-4.com",
+      "source": "web"
+    },
+    "name": "User 40",
+    "notes": "Notes for user 40",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-02T15:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-02T15:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 89,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":true},\"preferences\":{\"auto_save\":false,\"show_tooltips\":true},\"theme\":\"dark\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-02T15:00:00Z",
+    "user_id": 139
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"140 Main St\",\"zip_code\":\"10040\"}",
+    "age": 60,
+    "balance": 1040,
+    "created_at": "2026-01-02T16:00:00Z",
+    "email": "user41@example.com",
+    "id": 41,
+    "last_login": null,
+    "metadata": {
+      "campaign": "campaign-0",
+      "referrer": "referrer-0.com",
+      "source": "mobile"
+    },
+    "name": "User 41",
+    "notes": "Notes for user 41",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-02T16:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 90,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-02T16:00:00Z",
+    "user_id": 140
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"141 Main St\",\"zip_code\":\"10041\"}",
+    "age": 61,
+    "balance": 1041,
+    "created_at": "2026-01-02T17:00:00Z",
+    "email": "user42@example.com",
+    "id": 42,
+    "last_login": "2026-01-02T17:00:00Z",
+    "metadata": {
+      "campaign": "campaign-1",
+      "referrer": "referrer-1.com",
+      "source": "api"
+    },
+    "name": "User 42",
+    "notes": "Notes for user 42",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-02T17:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 91,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-02T17:00:00Z",
+    "user_id": 141
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"142 Main St\",\"zip_code\":\"10042\"}",
+    "age": 62,
+    "balance": null,
+    "created_at": "2026-01-02T18:00:00Z",
+    "email": "user43@example.com",
+    "id": 43,
+    "last_login": "2026-01-02T18:00:00Z",
+    "metadata": {
+      "campaign": "campaign-2",
+      "referrer": "referrer-2.com",
+      "source": "web"
+    },
+    "name": "User 43",
+    "notes": "Notes for user 43",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-02T18:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-02T18:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 92,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":true},\"preferences\":{\"auto_save\":true,\"show_tooltips\":true},\"theme\":\"light\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-02T18:00:00Z",
+    "user_id": 142
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"143 Main St\",\"zip_code\":\"10043\"}",
+    "age": 63,
+    "balance": 1043,
+    "created_at": "2026-01-02T19:00:00Z",
+    "email": "user44@example.com",
+    "id": 44,
+    "last_login": "2026-01-02T19:00:00Z",
+    "metadata": {
+      "campaign": "campaign-3",
+      "referrer": "referrer-3.com",
+      "source": "mobile"
+    },
+    "name": "User 44",
+    "notes": "Notes for user 44",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-02T19:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 93,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-02T19:00:00Z",
+    "user_id": 143
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"144 Main St\",\"zip_code\":\"10044\"}",
+    "age": 64,
+    "balance": 1044,
+    "created_at": "2026-01-02T20:00:00Z",
+    "email": "user45@example.com",
+    "id": 45,
+    "last_login": "2026-01-02T20:00:00Z",
+    "metadata": {
+      "campaign": "campaign-4",
+      "referrer": "referrer-4.com",
+      "source": "api"
+    },
+    "name": "User 45",
+    "notes": "Notes for user 45",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-02T20:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 94,
+    "settings": null,
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-02T20:00:00Z",
+    "user_id": 144
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"145 Main St\",\"zip_code\":\"10045\"}",
+    "age": 65,
+    "balance": 1045,
+    "created_at": "2026-01-02T21:00:00Z",
+    "email": "user46@example.com",
+    "id": 46,
+    "last_login": null,
+    "metadata": {
+      "campaign": "campaign-5",
+      "referrer": "referrer-0.com",
+      "source": "web"
+    },
+    "name": "User 46",
+    "notes": "Notes for user 46",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-02T21:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-02T21:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 95,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":true},\"preferences\":{\"auto_save\":false,\"show_tooltips\":true},\"theme\":\"dark\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-02T21:00:00Z",
+    "user_id": 145
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"146 Main St\",\"zip_code\":\"10046\"}",
+    "age": 66,
+    "balance": 1046,
+    "created_at": "2026-01-02T22:00:00Z",
+    "email": "user47@example.com",
+    "id": 47,
+    "last_login": "2026-01-02T22:00:00Z",
+    "metadata": {
+      "campaign": "campaign-6",
+      "referrer": "referrer-1.com",
+      "source": "mobile"
+    },
+    "name": "User 47",
+    "notes": "Notes for user 47",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-02T22:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 96,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-02T22:00:00Z",
+    "user_id": 146
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"147 Main St\",\"zip_code\":\"10047\"}",
+    "age": 67,
+    "balance": 1047,
+    "created_at": "2026-01-02T23:00:00Z",
+    "email": "user48@example.com",
+    "id": 48,
+    "last_login": "2026-01-02T23:00:00Z",
+    "metadata": {
+      "campaign": "campaign-7",
+      "referrer": "referrer-2.com",
+      "source": "api"
+    },
+    "name": "User 48",
+    "notes": "Notes for user 48",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-02T23:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 97,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-02T23:00:00Z",
+    "user_id": 147
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"148 Main St\",\"zip_code\":\"10048\"}",
+    "age": 68,
+    "balance": 1048,
+    "created_at": "2026-01-03T00:00:00Z",
+    "email": "user49@example.com",
+    "id": 49,
+    "last_login": "2026-01-03T00:00:00Z",
+    "metadata": {
+      "campaign": "campaign-8",
+      "referrer": "referrer-3.com",
+      "source": "web"
+    },
+    "name": "User 49",
+    "notes": "Notes for user 49",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-03T00:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-03T00:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 98,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":true},\"preferences\":{\"auto_save\":true,\"show_tooltips\":true},\"theme\":\"light\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-03T00:00:00Z",
+    "user_id": 148
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"149 Main St\",\"zip_code\":\"10049\"}",
+    "age": 69,
+    "balance": null,
+    "created_at": "2026-01-03T01:00:00Z",
+    "email": "user50@example.com",
+    "id": 50,
+    "last_login": "2026-01-03T01:00:00Z",
+    "metadata": {
+      "campaign": "campaign-9",
+      "referrer": "referrer-4.com",
+      "source": "mobile"
+    },
+    "name": "User 50",
+    "notes": "Notes for user 50",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-03T01:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 99,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-03T01:00:00Z",
+    "user_id": 149
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"150 Main St\",\"zip_code\":\"10050\"}",
+    "age": 20,
+    "balance": 1050,
+    "created_at": "2026-01-03T02:00:00Z",
+    "email": "user51@example.com",
+    "id": 51,
+    "last_login": null,
+    "metadata": {
+      "campaign": "campaign-0",
+      "referrer": "referrer-0.com",
+      "source": "api"
+    },
+    "name": "User 51",
+    "notes": "Notes for user 51",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-03T02:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 50,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-03T02:00:00Z",
+    "user_id": 150
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"151 Main St\",\"zip_code\":\"10051\"}",
+    "age": 21,
+    "balance": 1051,
+    "created_at": "2026-01-03T03:00:00Z",
+    "email": "user52@example.com",
+    "id": 52,
+    "last_login": "2026-01-03T03:00:00Z",
+    "metadata": {
+      "campaign": "campaign-1",
+      "referrer": "referrer-1.com",
+      "source": "web"
+    },
+    "name": "User 52",
+    "notes": "Notes for user 52",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-03T03:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-03T03:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 51,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":true},\"preferences\":{\"auto_save\":false,\"show_tooltips\":true},\"theme\":\"dark\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-03T03:00:00Z",
+    "user_id": 151
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"152 Main St\",\"zip_code\":\"10052\"}",
+    "age": 22,
+    "balance": 1052,
+    "created_at": "2026-01-03T04:00:00Z",
+    "email": "user53@example.com",
+    "id": 53,
+    "last_login": "2026-01-03T04:00:00Z",
+    "metadata": {
+      "campaign": "campaign-2",
+      "referrer": "referrer-2.com",
+      "source": "mobile"
+    },
+    "name": "User 53",
+    "notes": "Notes for user 53",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-03T04:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 52,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-03T04:00:00Z",
+    "user_id": 152
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"153 Main St\",\"zip_code\":\"10053\"}",
+    "age": 23,
+    "balance": 1053,
+    "created_at": "2026-01-03T05:00:00Z",
+    "email": "user54@example.com",
+    "id": 54,
+    "last_login": "2026-01-03T05:00:00Z",
+    "metadata": {
+      "campaign": "campaign-3",
+      "referrer": "referrer-3.com",
+      "source": "api"
+    },
+    "name": "User 54",
+    "notes": "Notes for user 54",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-03T05:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 53,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-03T05:00:00Z",
+    "user_id": 153
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"154 Main St\",\"zip_code\":\"10054\"}",
+    "age": 24,
+    "balance": 1054,
+    "created_at": "2026-01-03T06:00:00Z",
+    "email": "user55@example.com",
+    "id": 55,
+    "last_login": "2026-01-03T06:00:00Z",
+    "metadata": {
+      "campaign": "campaign-4",
+      "referrer": "referrer-4.com",
+      "source": "web"
+    },
+    "name": "User 55",
+    "notes": "Notes for user 55",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-03T06:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-03T06:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 54,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":true},\"preferences\":{\"auto_save\":true,\"show_tooltips\":true},\"theme\":\"light\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-03T06:00:00Z",
+    "user_id": 154
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"155 Main St\",\"zip_code\":\"10055\"}",
+    "age": 25,
+    "balance": 1055,
+    "created_at": "2026-01-03T07:00:00Z",
+    "email": "user56@example.com",
+    "id": 56,
+    "last_login": null,
+    "metadata": {
+      "campaign": "campaign-5",
+      "referrer": "referrer-0.com",
+      "source": "mobile"
+    },
+    "name": "User 56",
+    "notes": "Notes for user 56",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-03T07:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 55,
+    "settings": null,
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-03T07:00:00Z",
+    "user_id": 155
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"156 Main St\",\"zip_code\":\"10056\"}",
+    "age": 26,
+    "balance": null,
+    "created_at": "2026-01-03T08:00:00Z",
+    "email": "user57@example.com",
+    "id": 57,
+    "last_login": "2026-01-03T08:00:00Z",
+    "metadata": {
+      "campaign": "campaign-6",
+      "referrer": "referrer-1.com",
+      "source": "api"
+    },
+    "name": "User 57",
+    "notes": "Notes for user 57",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-03T08:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 56,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-03T08:00:00Z",
+    "user_id": 156
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"157 Main St\",\"zip_code\":\"10057\"}",
+    "age": 27,
+    "balance": 1057,
+    "created_at": "2026-01-03T09:00:00Z",
+    "email": "user58@example.com",
+    "id": 58,
+    "last_login": "2026-01-03T09:00:00Z",
+    "metadata": {
+      "campaign": "campaign-7",
+      "referrer": "referrer-2.com",
+      "source": "web"
+    },
+    "name": "User 58",
+    "notes": "Notes for user 58",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-03T09:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-03T09:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 57,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":true},\"preferences\":{\"auto_save\":false,\"show_tooltips\":true},\"theme\":\"dark\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-03T09:00:00Z",
+    "user_id": 157
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"158 Main St\",\"zip_code\":\"10058\"}",
+    "age": 28,
+    "balance": 1058,
+    "created_at": "2026-01-03T10:00:00Z",
+    "email": "user59@example.com",
+    "id": 59,
+    "last_login": "2026-01-03T10:00:00Z",
+    "metadata": {
+      "campaign": "campaign-8",
+      "referrer": "referrer-3.com",
+      "source": "mobile"
+    },
+    "name": "User 59",
+    "notes": "Notes for user 59",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-03T10:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 58,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-03T10:00:00Z",
+    "user_id": 158
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"159 Main St\",\"zip_code\":\"10059\"}",
+    "age": 29,
+    "balance": 1059,
+    "created_at": "2026-01-03T11:00:00Z",
+    "email": "user60@example.com",
+    "id": 60,
+    "last_login": "2026-01-03T11:00:00Z",
+    "metadata": {
+      "campaign": "campaign-9",
+      "referrer": "referrer-4.com",
+      "source": "api"
+    },
+    "name": "User 60",
+    "notes": "Notes for user 60",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-03T11:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 59,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-03T11:00:00Z",
+    "user_id": 159
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"160 Main St\",\"zip_code\":\"10060\"}",
+    "age": 30,
+    "balance": 1060,
+    "created_at": "2026-01-03T12:00:00Z",
+    "email": "user61@example.com",
+    "id": 61,
+    "last_login": null,
+    "metadata": {
+      "campaign": "campaign-0",
+      "referrer": "referrer-0.com",
+      "source": "web"
+    },
+    "name": "User 61",
+    "notes": "Notes for user 61",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-03T12:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-03T12:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 60,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":true},\"preferences\":{\"auto_save\":true,\"show_tooltips\":true},\"theme\":\"light\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-03T12:00:00Z",
+    "user_id": 160
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"161 Main St\",\"zip_code\":\"10061\"}",
+    "age": 31,
+    "balance": 1061,
+    "created_at": "2026-01-03T13:00:00Z",
+    "email": "user62@example.com",
+    "id": 62,
+    "last_login": "2026-01-03T13:00:00Z",
+    "metadata": {
+      "campaign": "campaign-1",
+      "referrer": "referrer-1.com",
+      "source": "mobile"
+    },
+    "name": "User 62",
+    "notes": "Notes for user 62",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-03T13:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 61,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-03T13:00:00Z",
+    "user_id": 161
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"162 Main St\",\"zip_code\":\"10062\"}",
+    "age": 32,
+    "balance": 1062,
+    "created_at": "2026-01-03T14:00:00Z",
+    "email": "user63@example.com",
+    "id": 63,
+    "last_login": "2026-01-03T14:00:00Z",
+    "metadata": {
+      "campaign": "campaign-2",
+      "referrer": "referrer-2.com",
+      "source": "api"
+    },
+    "name": "User 63",
+    "notes": "Notes for user 63",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-03T14:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 62,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-03T14:00:00Z",
+    "user_id": 162
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"163 Main St\",\"zip_code\":\"10063\"}",
+    "age": 33,
+    "balance": null,
+    "created_at": "2026-01-03T15:00:00Z",
+    "email": "user64@example.com",
+    "id": 64,
+    "last_login": "2026-01-03T15:00:00Z",
+    "metadata": {
+      "campaign": "campaign-3",
+      "referrer": "referrer-3.com",
+      "source": "web"
+    },
+    "name": "User 64",
+    "notes": "Notes for user 64",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-03T15:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-03T15:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 63,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":true},\"preferences\":{\"auto_save\":false,\"show_tooltips\":true},\"theme\":\"dark\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-03T15:00:00Z",
+    "user_id": 163
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"164 Main St\",\"zip_code\":\"10064\"}",
+    "age": 34,
+    "balance": 1064,
+    "created_at": "2026-01-03T16:00:00Z",
+    "email": "user65@example.com",
+    "id": 65,
+    "last_login": "2026-01-03T16:00:00Z",
+    "metadata": {
+      "campaign": "campaign-4",
+      "referrer": "referrer-4.com",
+      "source": "mobile"
+    },
+    "name": "User 65",
+    "notes": "Notes for user 65",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-03T16:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 64,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-03T16:00:00Z",
+    "user_id": 164
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"165 Main St\",\"zip_code\":\"10065\"}",
+    "age": 35,
+    "balance": 1065,
+    "created_at": "2026-01-03T17:00:00Z",
+    "email": "user66@example.com",
+    "id": 66,
+    "last_login": null,
+    "metadata": {
+      "campaign": "campaign-5",
+      "referrer": "referrer-0.com",
+      "source": "api"
+    },
+    "name": "User 66",
+    "notes": "Notes for user 66",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-03T17:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 65,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-03T17:00:00Z",
+    "user_id": 165
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"166 Main St\",\"zip_code\":\"10066\"}",
+    "age": 36,
+    "balance": 1066,
+    "created_at": "2026-01-03T18:00:00Z",
+    "email": "user67@example.com",
+    "id": 67,
+    "last_login": "2026-01-03T18:00:00Z",
+    "metadata": {
+      "campaign": "campaign-6",
+      "referrer": "referrer-1.com",
+      "source": "web"
+    },
+    "name": "User 67",
+    "notes": "Notes for user 67",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-03T18:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-03T18:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 66,
+    "settings": null,
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-03T18:00:00Z",
+    "user_id": 166
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"167 Main St\",\"zip_code\":\"10067\"}",
+    "age": 37,
+    "balance": 1067,
+    "created_at": "2026-01-03T19:00:00Z",
+    "email": "user68@example.com",
+    "id": 68,
+    "last_login": "2026-01-03T19:00:00Z",
+    "metadata": {
+      "campaign": "campaign-7",
+      "referrer": "referrer-2.com",
+      "source": "mobile"
+    },
+    "name": "User 68",
+    "notes": "Notes for user 68",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-03T19:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 67,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-03T19:00:00Z",
+    "user_id": 167
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"168 Main St\",\"zip_code\":\"10068\"}",
+    "age": 38,
+    "balance": 1068,
+    "created_at": "2026-01-03T20:00:00Z",
+    "email": "user69@example.com",
+    "id": 69,
+    "last_login": "2026-01-03T20:00:00Z",
+    "metadata": {
+      "campaign": "campaign-8",
+      "referrer": "referrer-3.com",
+      "source": "api"
+    },
+    "name": "User 69",
+    "notes": "Notes for user 69",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-03T20:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 68,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-03T20:00:00Z",
+    "user_id": 168
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"169 Main St\",\"zip_code\":\"10069\"}",
+    "age": 39,
+    "balance": 1069,
+    "created_at": "2026-01-03T21:00:00Z",
+    "email": "user70@example.com",
+    "id": 70,
+    "last_login": "2026-01-03T21:00:00Z",
+    "metadata": {
+      "campaign": "campaign-9",
+      "referrer": "referrer-4.com",
+      "source": "web"
+    },
+    "name": "User 70",
+    "notes": "Notes for user 70",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-03T21:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-03T21:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 69,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":true},\"preferences\":{\"auto_save\":false,\"show_tooltips\":true},\"theme\":\"dark\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-03T21:00:00Z",
+    "user_id": 169
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"170 Main St\",\"zip_code\":\"10070\"}",
+    "age": 40,
+    "balance": null,
+    "created_at": "2026-01-03T22:00:00Z",
+    "email": "user71@example.com",
+    "id": 71,
+    "last_login": null,
+    "metadata": {
+      "campaign": "campaign-0",
+      "referrer": "referrer-0.com",
+      "source": "mobile"
+    },
+    "name": "User 71",
+    "notes": "Notes for user 71",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-03T22:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 70,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-03T22:00:00Z",
+    "user_id": 170
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"171 Main St\",\"zip_code\":\"10071\"}",
+    "age": 41,
+    "balance": 1071,
+    "created_at": "2026-01-03T23:00:00Z",
+    "email": "user72@example.com",
+    "id": 72,
+    "last_login": "2026-01-03T23:00:00Z",
+    "metadata": {
+      "campaign": "campaign-1",
+      "referrer": "referrer-1.com",
+      "source": "api"
+    },
+    "name": "User 72",
+    "notes": "Notes for user 72",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-03T23:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 71,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-03T23:00:00Z",
+    "user_id": 171
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"172 Main St\",\"zip_code\":\"10072\"}",
+    "age": 42,
+    "balance": 1072,
+    "created_at": "2026-01-04T00:00:00Z",
+    "email": "user73@example.com",
+    "id": 73,
+    "last_login": "2026-01-04T00:00:00Z",
+    "metadata": {
+      "campaign": "campaign-2",
+      "referrer": "referrer-2.com",
+      "source": "web"
+    },
+    "name": "User 73",
+    "notes": "Notes for user 73",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-04T00:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-04T00:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 72,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":true},\"preferences\":{\"auto_save\":true,\"show_tooltips\":true},\"theme\":\"light\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-04T00:00:00Z",
+    "user_id": 172
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"173 Main St\",\"zip_code\":\"10073\"}",
+    "age": 43,
+    "balance": 1073,
+    "created_at": "2026-01-04T01:00:00Z",
+    "email": "user74@example.com",
+    "id": 74,
+    "last_login": "2026-01-04T01:00:00Z",
+    "metadata": {
+      "campaign": "campaign-3",
+      "referrer": "referrer-3.com",
+      "source": "mobile"
+    },
+    "name": "User 74",
+    "notes": "Notes for user 74",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-04T01:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 73,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-04T01:00:00Z",
+    "user_id": 173
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"174 Main St\",\"zip_code\":\"10074\"}",
+    "age": 44,
+    "balance": 1074,
+    "created_at": "2026-01-04T02:00:00Z",
+    "email": "user75@example.com",
+    "id": 75,
+    "last_login": "2026-01-04T02:00:00Z",
+    "metadata": {
+      "campaign": "campaign-4",
+      "referrer": "referrer-4.com",
+      "source": "api"
+    },
+    "name": "User 75",
+    "notes": "Notes for user 75",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-04T02:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 74,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-04T02:00:00Z",
+    "user_id": 174
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"175 Main St\",\"zip_code\":\"10075\"}",
+    "age": 45,
+    "balance": 1075,
+    "created_at": "2026-01-04T03:00:00Z",
+    "email": "user76@example.com",
+    "id": 76,
+    "last_login": null,
+    "metadata": {
+      "campaign": "campaign-5",
+      "referrer": "referrer-0.com",
+      "source": "web"
+    },
+    "name": "User 76",
+    "notes": "Notes for user 76",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-04T03:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-04T03:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 75,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":true},\"preferences\":{\"auto_save\":false,\"show_tooltips\":true},\"theme\":\"dark\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-04T03:00:00Z",
+    "user_id": 175
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"176 Main St\",\"zip_code\":\"10076\"}",
+    "age": 46,
+    "balance": 1076,
+    "created_at": "2026-01-04T04:00:00Z",
+    "email": "user77@example.com",
+    "id": 77,
+    "last_login": "2026-01-04T04:00:00Z",
+    "metadata": {
+      "campaign": "campaign-6",
+      "referrer": "referrer-1.com",
+      "source": "mobile"
+    },
+    "name": "User 77",
+    "notes": "Notes for user 77",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-04T04:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 76,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-04T04:00:00Z",
+    "user_id": 176
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"177 Main St\",\"zip_code\":\"10077\"}",
+    "age": 47,
+    "balance": null,
+    "created_at": "2026-01-04T05:00:00Z",
+    "email": "user78@example.com",
+    "id": 78,
+    "last_login": "2026-01-04T05:00:00Z",
+    "metadata": {
+      "campaign": "campaign-7",
+      "referrer": "referrer-2.com",
+      "source": "api"
+    },
+    "name": "User 78",
+    "notes": "Notes for user 78",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-04T05:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 77,
+    "settings": null,
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-04T05:00:00Z",
+    "user_id": 177
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"178 Main St\",\"zip_code\":\"10078\"}",
+    "age": 48,
+    "balance": 1078,
+    "created_at": "2026-01-04T06:00:00Z",
+    "email": "user79@example.com",
+    "id": 79,
+    "last_login": "2026-01-04T06:00:00Z",
+    "metadata": {
+      "campaign": "campaign-8",
+      "referrer": "referrer-3.com",
+      "source": "web"
+    },
+    "name": "User 79",
+    "notes": "Notes for user 79",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-04T06:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-04T06:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 78,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":true},\"preferences\":{\"auto_save\":true,\"show_tooltips\":true},\"theme\":\"light\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-04T06:00:00Z",
+    "user_id": 178
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"179 Main St\",\"zip_code\":\"10079\"}",
+    "age": 49,
+    "balance": 1079,
+    "created_at": "2026-01-04T07:00:00Z",
+    "email": "user80@example.com",
+    "id": 80,
+    "last_login": "2026-01-04T07:00:00Z",
+    "metadata": {
+      "campaign": "campaign-9",
+      "referrer": "referrer-4.com",
+      "source": "mobile"
+    },
+    "name": "User 80",
+    "notes": "Notes for user 80",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-04T07:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 79,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-04T07:00:00Z",
+    "user_id": 179
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"180 Main St\",\"zip_code\":\"10080\"}",
+    "age": 50,
+    "balance": 1080,
+    "created_at": "2026-01-04T08:00:00Z",
+    "email": "user81@example.com",
+    "id": 81,
+    "last_login": null,
+    "metadata": {
+      "campaign": "campaign-0",
+      "referrer": "referrer-0.com",
+      "source": "api"
+    },
+    "name": "User 81",
+    "notes": "Notes for user 81",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-04T08:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 80,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-04T08:00:00Z",
+    "user_id": 180
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"181 Main St\",\"zip_code\":\"10081\"}",
+    "age": 51,
+    "balance": 1081,
+    "created_at": "2026-01-04T09:00:00Z",
+    "email": "user82@example.com",
+    "id": 82,
+    "last_login": "2026-01-04T09:00:00Z",
+    "metadata": {
+      "campaign": "campaign-1",
+      "referrer": "referrer-1.com",
+      "source": "web"
+    },
+    "name": "User 82",
+    "notes": "Notes for user 82",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-04T09:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-04T09:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 81,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":true},\"preferences\":{\"auto_save\":false,\"show_tooltips\":true},\"theme\":\"dark\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-04T09:00:00Z",
+    "user_id": 181
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"182 Main St\",\"zip_code\":\"10082\"}",
+    "age": 52,
+    "balance": 1082,
+    "created_at": "2026-01-04T10:00:00Z",
+    "email": "user83@example.com",
+    "id": 83,
+    "last_login": "2026-01-04T10:00:00Z",
+    "metadata": {
+      "campaign": "campaign-2",
+      "referrer": "referrer-2.com",
+      "source": "mobile"
+    },
+    "name": "User 83",
+    "notes": "Notes for user 83",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-04T10:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 82,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-04T10:00:00Z",
+    "user_id": 182
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"183 Main St\",\"zip_code\":\"10083\"}",
+    "age": 53,
+    "balance": 1083,
+    "created_at": "2026-01-04T11:00:00Z",
+    "email": "user84@example.com",
+    "id": 84,
+    "last_login": "2026-01-04T11:00:00Z",
+    "metadata": {
+      "campaign": "campaign-3",
+      "referrer": "referrer-3.com",
+      "source": "api"
+    },
+    "name": "User 84",
+    "notes": "Notes for user 84",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-04T11:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 83,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-04T11:00:00Z",
+    "user_id": 183
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"184 Main St\",\"zip_code\":\"10084\"}",
+    "age": 54,
+    "balance": null,
+    "created_at": "2026-01-04T12:00:00Z",
+    "email": "user85@example.com",
+    "id": 85,
+    "last_login": "2026-01-04T12:00:00Z",
+    "metadata": {
+      "campaign": "campaign-4",
+      "referrer": "referrer-4.com",
+      "source": "web"
+    },
+    "name": "User 85",
+    "notes": "Notes for user 85",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-04T12:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-04T12:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 84,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":true},\"preferences\":{\"auto_save\":true,\"show_tooltips\":true},\"theme\":\"light\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-04T12:00:00Z",
+    "user_id": 184
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"185 Main St\",\"zip_code\":\"10085\"}",
+    "age": 55,
+    "balance": 1085,
+    "created_at": "2026-01-04T13:00:00Z",
+    "email": "user86@example.com",
+    "id": 86,
+    "last_login": null,
+    "metadata": {
+      "campaign": "campaign-5",
+      "referrer": "referrer-0.com",
+      "source": "mobile"
+    },
+    "name": "User 86",
+    "notes": "Notes for user 86",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-04T13:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 85,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-04T13:00:00Z",
+    "user_id": 185
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"186 Main St\",\"zip_code\":\"10086\"}",
+    "age": 56,
+    "balance": 1086,
+    "created_at": "2026-01-04T14:00:00Z",
+    "email": "user87@example.com",
+    "id": 87,
+    "last_login": "2026-01-04T14:00:00Z",
+    "metadata": {
+      "campaign": "campaign-6",
+      "referrer": "referrer-1.com",
+      "source": "api"
+    },
+    "name": "User 87",
+    "notes": "Notes for user 87",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-04T14:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 86,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-04T14:00:00Z",
+    "user_id": 186
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"187 Main St\",\"zip_code\":\"10087\"}",
+    "age": 57,
+    "balance": 1087,
+    "created_at": "2026-01-04T15:00:00Z",
+    "email": "user88@example.com",
+    "id": 88,
+    "last_login": "2026-01-04T15:00:00Z",
+    "metadata": {
+      "campaign": "campaign-7",
+      "referrer": "referrer-2.com",
+      "source": "web"
+    },
+    "name": "User 88",
+    "notes": "Notes for user 88",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-04T15:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-04T15:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 87,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":true},\"preferences\":{\"auto_save\":false,\"show_tooltips\":true},\"theme\":\"dark\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-04T15:00:00Z",
+    "user_id": 187
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"188 Main St\",\"zip_code\":\"10088\"}",
+    "age": 58,
+    "balance": 1088,
+    "created_at": "2026-01-04T16:00:00Z",
+    "email": "user89@example.com",
+    "id": 89,
+    "last_login": "2026-01-04T16:00:00Z",
+    "metadata": {
+      "campaign": "campaign-8",
+      "referrer": "referrer-3.com",
+      "source": "mobile"
+    },
+    "name": "User 89",
+    "notes": "Notes for user 89",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-04T16:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 88,
+    "settings": null,
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-04T16:00:00Z",
+    "user_id": 188
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"189 Main St\",\"zip_code\":\"10089\"}",
+    "age": 59,
+    "balance": 1089,
+    "created_at": "2026-01-04T17:00:00Z",
+    "email": "user90@example.com",
+    "id": 90,
+    "last_login": "2026-01-04T17:00:00Z",
+    "metadata": {
+      "campaign": "campaign-9",
+      "referrer": "referrer-4.com",
+      "source": "api"
+    },
+    "name": "User 90",
+    "notes": "Notes for user 90",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-04T17:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 89,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-04T17:00:00Z",
+    "user_id": 189
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"190 Main St\",\"zip_code\":\"10090\"}",
+    "age": 60,
+    "balance": 1090,
+    "created_at": "2026-01-04T18:00:00Z",
+    "email": "user91@example.com",
+    "id": 91,
+    "last_login": null,
+    "metadata": {
+      "campaign": "campaign-0",
+      "referrer": "referrer-0.com",
+      "source": "web"
+    },
+    "name": "User 91",
+    "notes": "Notes for user 91",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-04T18:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-04T18:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 90,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":true},\"preferences\":{\"auto_save\":true,\"show_tooltips\":true},\"theme\":\"light\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-04T18:00:00Z",
+    "user_id": 190
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"191 Main St\",\"zip_code\":\"10091\"}",
+    "age": 61,
+    "balance": null,
+    "created_at": "2026-01-04T19:00:00Z",
+    "email": "user92@example.com",
+    "id": 92,
+    "last_login": "2026-01-04T19:00:00Z",
+    "metadata": {
+      "campaign": "campaign-1",
+      "referrer": "referrer-1.com",
+      "source": "mobile"
+    },
+    "name": "User 92",
+    "notes": "Notes for user 92",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-04T19:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 91,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-04T19:00:00Z",
+    "user_id": 191
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"192 Main St\",\"zip_code\":\"10092\"}",
+    "age": 62,
+    "balance": 1092,
+    "created_at": "2026-01-04T20:00:00Z",
+    "email": "user93@example.com",
+    "id": 93,
+    "last_login": "2026-01-04T20:00:00Z",
+    "metadata": {
+      "campaign": "campaign-2",
+      "referrer": "referrer-2.com",
+      "source": "api"
+    },
+    "name": "User 93",
+    "notes": "Notes for user 93",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-04T20:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 92,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-04T20:00:00Z",
+    "user_id": 192
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"193 Main St\",\"zip_code\":\"10093\"}",
+    "age": 63,
+    "balance": 1093,
+    "created_at": "2026-01-04T21:00:00Z",
+    "email": "user94@example.com",
+    "id": 94,
+    "last_login": "2026-01-04T21:00:00Z",
+    "metadata": {
+      "campaign": "campaign-3",
+      "referrer": "referrer-3.com",
+      "source": "web"
+    },
+    "name": "User 94",
+    "notes": "Notes for user 94",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-04T21:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-04T21:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 93,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":true},\"preferences\":{\"auto_save\":false,\"show_tooltips\":true},\"theme\":\"dark\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-04T21:00:00Z",
+    "user_id": 193
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"194 Main St\",\"zip_code\":\"10094\"}",
+    "age": 64,
+    "balance": 1094,
+    "created_at": "2026-01-04T22:00:00Z",
+    "email": "user95@example.com",
+    "id": 95,
+    "last_login": "2026-01-04T22:00:00Z",
+    "metadata": {
+      "campaign": "campaign-4",
+      "referrer": "referrer-4.com",
+      "source": "mobile"
+    },
+    "name": "User 95",
+    "notes": "Notes for user 95",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-04T22:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 94,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-04T22:00:00Z",
+    "user_id": 194
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"195 Main St\",\"zip_code\":\"10095\"}",
+    "age": 65,
+    "balance": 1095,
+    "created_at": "2026-01-04T23:00:00Z",
+    "email": "user96@example.com",
+    "id": 96,
+    "last_login": null,
+    "metadata": {
+      "campaign": "campaign-5",
+      "referrer": "referrer-0.com",
+      "source": "api"
+    },
+    "name": "User 96",
+    "notes": "Notes for user 96",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-04T23:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 95,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-04T23:00:00Z",
+    "user_id": 195
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"196 Main St\",\"zip_code\":\"10096\"}",
+    "age": 66,
+    "balance": 1096,
+    "created_at": "2026-01-05T00:00:00Z",
+    "email": "user97@example.com",
+    "id": 97,
+    "last_login": "2026-01-05T00:00:00Z",
+    "metadata": {
+      "campaign": "campaign-6",
+      "referrer": "referrer-1.com",
+      "source": "web"
+    },
+    "name": "User 97",
+    "notes": "Notes for user 97",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-05T00:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-05T00:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 96,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":true},\"preferences\":{\"auto_save\":true,\"show_tooltips\":true},\"theme\":\"light\"}",
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-05T00:00:00Z",
+    "user_id": 196
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"New York\",\"state\":\"NY\",\"street\":\"197 Main St\",\"zip_code\":\"10097\"}",
+    "age": 67,
+    "balance": 1097,
+    "created_at": "2026-01-05T01:00:00Z",
+    "email": "user98@example.com",
+    "id": 98,
+    "last_login": "2026-01-05T01:00:00Z",
+    "metadata": {
+      "campaign": "campaign-7",
+      "referrer": "referrer-2.com",
+      "source": "mobile"
+    },
+    "name": "User 98",
+    "notes": "Notes for user 98",
+    "preferences": {
+      "currency": "EUR",
+      "language": "es",
+      "timezone": "PST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-05T01:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 97,
+    "settings": "{\"notifications\":{\"email\":false,\"push\":true,\"sms\":false},\"preferences\":{\"auto_save\":false,\"show_tooltips\":false},\"theme\":\"dark\"}",
+    "status": "inactive",
+    "status_code": "INACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-05T01:00:00Z",
+    "user_id": 197
+  },
+  {
+    "active": true,
+    "address": "{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street\":\"198 Main St\",\"zip_code\":\"10098\"}",
+    "age": 68,
+    "balance": null,
+    "created_at": "2026-01-05T02:00:00Z",
+    "email": "user99@example.com",
+    "id": 99,
+    "last_login": "2026-01-05T02:00:00Z",
+    "metadata": {
+      "campaign": "campaign-8",
+      "referrer": "referrer-3.com",
+      "source": "api"
+    },
+    "name": "User 99",
+    "notes": "Notes for user 99",
+    "preferences": {
+      "currency": "GBP",
+      "language": "fr",
+      "timezone": "EST"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-05T02:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]}]",
+    "score": 98,
+    "settings": "{\"notifications\":{\"email\":true,\"push\":false,\"sms\":false},\"preferences\":{\"auto_save\":true,\"show_tooltips\":false},\"theme\":\"light\"}",
+    "status": "pending",
+    "status_code": "PENDING",
+    "tags": [
+      "premium",
+      "early-adopter"
+    ],
+    "updated_at": "2026-01-05T02:00:00Z",
+    "user_id": 198
+  },
+  {
+    "active": false,
+    "address": "{\"city\":\"San Francisco\",\"state\":\"CA\",\"street\":\"199 Main St\",\"zip_code\":\"10099\"}",
+    "age": 69,
+    "balance": 1099,
+    "created_at": "2026-01-05T03:00:00Z",
+    "email": "user100@example.com",
+    "id": 100,
+    "last_login": "2026-01-05T03:00:00Z",
+    "metadata": {
+      "campaign": "campaign-9",
+      "referrer": "referrer-4.com",
+      "source": "web"
+    },
+    "name": "User 100",
+    "notes": "Notes for user 100",
+    "preferences": {
+      "currency": "USD",
+      "language": "en",
+      "timezone": "UTC"
+    },
+    "roles": "[{\"granted_at\":\"2026-01-05T03:00:00Z\",\"id\":1,\"name\":\"user\",\"permissions\":[\"read\"]},{\"granted_at\":\"2026-01-05T03:00:00Z\",\"id\":2,\"name\":\"admin\",\"permissions\":[\"read\",\"write\",\"delete\"]}]",
+    "score": 99,
+    "settings": null,
+    "status": "active",
+    "status_code": "ACTIVE",
+    "tags": [
+      "verified",
+      "beta"
+    ],
+    "updated_at": "2026-01-05T03:00:00Z",
+    "user_id": 199
+  }
+]
