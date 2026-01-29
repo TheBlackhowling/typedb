@@ -723,30 +723,32 @@ typedb prioritizes developer productivity and type safety over raw performance. 
 
 ### Performance Characteristics
 
-**Overhead per Query:**
-- **Reflection Overhead**: ~50-200μs per deserialization (field map building, type conversion)
+**Overhead per Query (Measured on Linux, AMD EPYC 7763):**
+- **Simple Structs** (5-10 fields): ~2μs per row overhead
+- **Complex Structs** (15-20 fields, JSONB, arrays, nested types): ~15-18μs per row overhead
 - **Partial Update Overhead**: ~150-700μs per load when enabled (JSON marshaling/unmarshaling for deep copy)
 - **Memory Overhead**: Partial update doubles memory usage for loaded models
 
 **Typical Request Breakdown (Single Row):**
 - Database query: 10-50ms
 - Network overhead: 5-20ms
-- typedb overhead: 0.1-0.5ms (without partial update)
+- typedb overhead: 0.002-0.018ms (simple to complex structs, without partial update)
 - **Total**: 15-70ms
 
-**Bulk Query Considerations (Many Rows):**
-- Reflection overhead scales linearly with row count: ~50-200μs per row
-- A query returning 1,000 rows adds ~50-200ms of reflection overhead
-- A query returning 10,000 rows adds ~500ms-2s of reflection overhead
-- **Example**: Exporting 50,000 records could add 2.5-10 seconds of reflection overhead
+**Bulk Query Performance (Measured Results):**
+- **1,000 rows**: ~2ms overhead (simple) or ~16ms overhead (complex)
+- **10,000 rows**: ~20ms overhead (simple) or ~165ms overhead (complex)
+- **100,000 rows**: ~200ms overhead (simple) or ~1.6s overhead (complex)
+- **1,000,000 rows**: ~2s overhead (simple) or ~18s overhead (complex)
+- **Example**: Exporting 50,000 records adds ~100ms overhead (simple) or ~800ms overhead (complex)
 
 **For single-row or small result sets (<100 rows):**
 - typedb overhead is typically 0.1-1% of total request time - negligible for most applications
 
 **For bulk operations (100+ rows):**
-- Reflection overhead becomes more significant relative to database query time
+- Reflection overhead scales linearly but remains modest: ~2μs per row (simple) or ~15-18μs per row (complex)
 - Consider using `QueryDo` for streaming large result sets to reduce memory usage
-- For very large exports (10K+ rows), consider using `database/sql` directly or pagination
+- For very large exports (100K+ rows), overhead is typically 200ms-2s depending on struct complexity
 
 ### When Bulk Queries (10K+ Rows) Are Reasonable
 
@@ -758,9 +760,9 @@ Even with 50K+ rows, typedb can be a good choice when:
 - Example: Monthly financial reports, data warehouse ETL jobs
 
 **✅ Admin & Reporting Tools**
-- Human-facing interfaces where 2-10 seconds is acceptable
+- Human-facing interfaces where sub-second to few seconds is acceptable
 - Type safety prevents bugs that could corrupt reports
-- Example: Admin dashboards, analytics exports, audit logs
+- Example: Admin dashboards, analytics exports, audit logs (100K rows: ~200ms-1.6s overhead)
 
 **✅ One-Time Operations**
 - Migrations, data exports, or one-off scripts
@@ -768,7 +770,7 @@ Even with 50K+ rows, typedb can be a good choice when:
 - Example: Database migrations, data exports for compliance
 
 **✅ When Database Query Time Dominates**
-- If the database query takes 30+ seconds, 2-10s overhead is acceptable
+- If the database query takes 30+ seconds, 200ms-2s overhead is negligible
 - Complex joins, aggregations, or slow queries make reflection overhead negligible
 - Example: Complex analytics queries, multi-table joins with aggregations
 
@@ -787,7 +789,7 @@ Even with 50K+ rows, typedb can be a good choice when:
 
 **For most applications (1K-100K requests/day):**
 - ✅ Database latency dominates (10-50ms)
-- ✅ typedb overhead is negligible (~0.1-0.5ms)
+- ✅ typedb overhead is negligible (~0.002-0.018ms per row)
 - ✅ Developer productivity gains outweigh minimal cost
 
 **Consider alternatives if:**
@@ -816,19 +818,20 @@ Even with 50K+ rows, typedb can be a good choice when:
    - Use typedb for convenience in less critical paths
 
 5. **Handle Bulk Queries Efficiently**
-   - For queries returning 100+ rows, reflection overhead becomes noticeable
+   - For queries returning 100+ rows, overhead is ~0.2-1.8ms (simple to complex)
    - Use `QueryDo` for streaming large result sets to reduce memory usage
-   - For exports/reports with 10K+ rows, consider pagination or direct `database/sql` usage
-   - Example: Exporting 50K records with typedb adds ~2.5-10s overhead; direct SQL adds ~0.1s
+   - For exports/reports with 100K+ rows, overhead is ~200ms-2s depending on struct complexity
+   - Example: Exporting 50K records with typedb adds ~100ms-800ms overhead (simple to complex)
 
 ### Comparison with Alternatives
 
-| Library | Query Overhead | Type Safety | Convenience |
-|---------|---------------|-------------|-------------|
-| `database/sql` | ~50μs | ❌ Manual scanning | Low |
-| `sqlx` | ~80μs | ❌ Manual scanning | Medium |
-| `typedb` | ~100-200μs | ✅ Generics | High |
-| `typedb` (partial update) | ~250-900μs | ✅ Generics | High |
+| Library | Query Overhead (per row) | Type Safety | Convenience |
+|---------|-------------------------|-------------|-------------|
+| `database/sql` | ~0.2-0.3μs | ❌ Manual scanning | Low |
+| `sqlx` | ~0.3-0.5μs | ❌ Manual scanning | Medium |
+| `typedb` (simple) | ~2μs | ✅ Generics | High |
+| `typedb` (complex) | ~15-18μs | ✅ Generics | High |
+| `typedb` (partial update) | +150-700μs per load | ✅ Generics | High |
 
 **Bottom Line:** For most real-world applications, typedb's performance overhead is acceptable given the productivity and type safety benefits. If you're at extreme scale or have strict latency requirements, consider `database/sql` or `pgx` directly.
 
