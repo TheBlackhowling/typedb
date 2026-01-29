@@ -49,8 +49,11 @@ jobs:
       - name: Download dependencies
         run: go mod download
       
-      - name: Install SQL Server driver
-        run: go get github.com/microsoft/go-mssqldb
+      - name: Setup integration test dependencies
+        run: |
+          cd integration_tests/mssql
+          go mod tidy
+          go mod download
       
       - name: Install golang-migrate
         run: |

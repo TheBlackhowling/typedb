@@ -49,8 +49,11 @@ jobs:
       - name: Download dependencies
         run: go mod download
       
-      - name: Install MySQL driver
-        run: go get github.com/go-sql-driver/mysql
+      - name: Setup integration test dependencies
+        run: |
+          cd integration_tests/mysql
+          go mod tidy
+          go mod download
       
       - name: Install golang-migrate
         run: |
