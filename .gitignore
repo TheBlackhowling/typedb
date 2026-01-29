@@ -76,3 +76,7 @@ backlog/
 benchmark-results/*
 !benchmark-results/baseline.txt
 *.prof
+
+# Large benchmark test data files (generated in CI if needed)
+testdata/**/100000rows.json
+testdata/**/1000000rows.json
