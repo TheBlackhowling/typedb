@@ -1,0 +1,76 @@
+goos: linux
+goarch: amd64
+pkg: github.com/TheBlackHowling/typedb
+cpu: AMD EPYC 7763 64-Core Processor                
+BenchmarkDeserialize_Simple_10rows_typedb-4      	   61776	     19446 ns/op	    6240 B/op	     141 allocs/op
+BenchmarkDeserialize_Simple_10rows_typedb-4      	   61825	     19498 ns/op	    6240 B/op	     141 allocs/op
+BenchmarkDeserialize_Simple_10rows_typedb-4      	   61891	     19427 ns/op	    6240 B/op	     141 allocs/op
+BenchmarkDeserialize_Simple_10rows_typedb-4      	   61875	     19476 ns/op	    6240 B/op	     141 allocs/op
+BenchmarkDeserialize_Simple_10rows_typedb-4      	   61510	     19462 ns/op	    6240 B/op	     141 allocs/op
+BenchmarkDeserialize_Simple_10rows_manual-4      	  513409	      2452 ns/op	    1360 B/op	      11 allocs/op
+BenchmarkDeserialize_Simple_10rows_manual-4      	  504298	      2442 ns/op	    1360 B/op	      11 allocs/op
+BenchmarkDeserialize_Simple_10rows_manual-4      	  498960	      2444 ns/op	    1360 B/op	      11 allocs/op
+BenchmarkDeserialize_Simple_10rows_manual-4      	  510949	      2454 ns/op	    1360 B/op	      11 allocs/op
+BenchmarkDeserialize_Simple_10rows_manual-4      	  497605	      2448 ns/op	    1360 B/op	      11 allocs/op
+BenchmarkDeserialize_Simple_100rows_typedb-4     	    6061	    196310 ns/op	   62496 B/op	    1401 allocs/op
+BenchmarkDeserialize_Simple_100rows_typedb-4     	    6021	    194883 ns/op	   62496 B/op	    1401 allocs/op
+BenchmarkDeserialize_Simple_100rows_typedb-4     	    6128	    194785 ns/op	   62496 B/op	    1401 allocs/op
+BenchmarkDeserialize_Simple_100rows_typedb-4     	    6120	    195040 ns/op	   62496 B/op	    1401 allocs/op
+BenchmarkDeserialize_Simple_100rows_typedb-4     	    6127	    195656 ns/op	   62496 B/op	    1401 allocs/op
+BenchmarkDeserialize_Simple_1krows_typedb-4      	     615	   1946565 ns/op	  624192 B/op	   14001 allocs/op
+BenchmarkDeserialize_Simple_1krows_typedb-4      	     616	   1953782 ns/op	  624192 B/op	   14001 allocs/op
+BenchmarkDeserialize_Simple_1krows_typedb-4      	     615	   1950857 ns/op	  624192 B/op	   14001 allocs/op
+BenchmarkDeserialize_Simple_1krows_typedb-4      	     615	   1951013 ns/op	  624192 B/op	   14001 allocs/op
+BenchmarkDeserialize_Simple_1krows_typedb-4      	     615	   1951623 ns/op	  624192 B/op	   14001 allocs/op
+BenchmarkDeserialize_Simple_10krows_typedb-4     	      60	  19532944 ns/op	 6241920 B/op	  140001 allocs/op
+BenchmarkDeserialize_Simple_10krows_typedb-4     	      60	  19532723 ns/op	 6241920 B/op	  140001 allocs/op
+BenchmarkDeserialize_Simple_10krows_typedb-4     	      60	  19549776 ns/op	 6241920 B/op	  140001 allocs/op
+BenchmarkDeserialize_Simple_10krows_typedb-4     	      60	  19574863 ns/op	 6241920 B/op	  140001 allocs/op
+BenchmarkDeserialize_Simple_10krows_typedb-4     	      60	  19511138 ns/op	 6241920 B/op	  140001 allocs/op
+BenchmarkDeserialize_Simple_100krows_typedb-4    	       6	 197204386 ns/op	62402818 B/op	 1400001 allocs/op
+BenchmarkDeserialize_Simple_100krows_typedb-4    	       6	 198080004 ns/op	62402816 B/op	 1400001 allocs/op
+BenchmarkDeserialize_Simple_100krows_typedb-4    	       6	 197850162 ns/op	62402816 B/op	 1400001 allocs/op
+BenchmarkDeserialize_Simple_100krows_typedb-4    	       6	 197487591 ns/op	62402818 B/op	 1400001 allocs/op
+BenchmarkDeserialize_Simple_100krows_typedb-4    	       6	 198326698 ns/op	62402816 B/op	 1400001 allocs/op
+BenchmarkDeserialize_Simple_1Mrows_typedb-4      	       1	2047497827 ns/op	624003584 B/op	14000001 allocs/op
+BenchmarkDeserialize_Simple_1Mrows_typedb-4      	       1	1988114952 ns/op	624003584 B/op	14000001 allocs/op
+BenchmarkDeserialize_Simple_1Mrows_typedb-4      	       1	1985054949 ns/op	624003584 B/op	14000001 allocs/op
+BenchmarkDeserialize_Simple_1Mrows_typedb-4      	       1	1987968433 ns/op	624003584 B/op	14000001 allocs/op
+BenchmarkDeserialize_Simple_1Mrows_typedb-4      	       1	1985380988 ns/op	624003600 B/op	14000001 allocs/op
+BenchmarkDeserialize_Complex_10rows_typedb-4     	    7358	    154008 ns/op	   56129 B/op	     860 allocs/op
+BenchmarkDeserialize_Complex_10rows_typedb-4     	    7369	    154810 ns/op	   56129 B/op	     860 allocs/op
+BenchmarkDeserialize_Complex_10rows_typedb-4     	    7694	    151637 ns/op	   56129 B/op	     860 allocs/op
+BenchmarkDeserialize_Complex_10rows_typedb-4     	    7682	    151947 ns/op	   56130 B/op	     860 allocs/op
+BenchmarkDeserialize_Complex_10rows_typedb-4     	    7574	    151424 ns/op	   56129 B/op	     860 allocs/op
+BenchmarkDeserialize_Complex_10rows_manual-4     	  484669	      2761 ns/op	    3600 B/op	      11 allocs/op
+BenchmarkDeserialize_Complex_10rows_manual-4     	  494402	      2720 ns/op	    3600 B/op	      11 allocs/op
+BenchmarkDeserialize_Complex_10rows_manual-4     	  493749	      2728 ns/op	    3600 B/op	      11 allocs/op
+BenchmarkDeserialize_Complex_10rows_manual-4     	  480495	      2742 ns/op	    3600 B/op	      11 allocs/op
+BenchmarkDeserialize_Complex_10rows_manual-4     	  476731	      2738 ns/op	    3600 B/op	      11 allocs/op
+BenchmarkDeserialize_Complex_100rows_typedb-4    	     772	   1559111 ns/op	  559227 B/op	    8558 allocs/op
+BenchmarkDeserialize_Complex_100rows_typedb-4    	     780	   1530730 ns/op	  559227 B/op	    8558 allocs/op
+BenchmarkDeserialize_Complex_100rows_typedb-4    	     794	   1534333 ns/op	  559225 B/op	    8558 allocs/op
+BenchmarkDeserialize_Complex_100rows_typedb-4    	     784	   1537115 ns/op	  559227 B/op	    8558 allocs/op
+BenchmarkDeserialize_Complex_100rows_typedb-4    	     792	   1539229 ns/op	  559229 B/op	    8558 allocs/op
+BenchmarkDeserialize_Complex_1krows_typedb-4     	      70	  15565073 ns/op	 5600175 B/op	   85769 allocs/op
+BenchmarkDeserialize_Complex_1krows_typedb-4     	      70	  15523564 ns/op	 5600182 B/op	   85769 allocs/op
+BenchmarkDeserialize_Complex_1krows_typedb-4     	      72	  15567166 ns/op	 5600185 B/op	   85769 allocs/op
+BenchmarkDeserialize_Complex_1krows_typedb-4     	      69	  15510831 ns/op	 5600217 B/op	   85769 allocs/op
+BenchmarkDeserialize_Complex_1krows_typedb-4     	      70	  15561870 ns/op	 5600220 B/op	   85769 allocs/op
+BenchmarkDeserialize_Complex_10krows_typedb-4    	       7	 163367398 ns/op	56020053 B/op	  857636 allocs/op
+BenchmarkDeserialize_Complex_10krows_typedb-4    	       7	 167092610 ns/op	56020042 B/op	  857636 allocs/op
+BenchmarkDeserialize_Complex_10krows_typedb-4    	       7	 165424224 ns/op	56020078 B/op	  857636 allocs/op
+BenchmarkDeserialize_Complex_10krows_typedb-4    	       7	 164452785 ns/op	56020046 B/op	  857636 allocs/op
+BenchmarkDeserialize_Complex_10krows_typedb-4    	       7	 163126395 ns/op	56020083 B/op	  857636 allocs/op
+BenchmarkDeserialize_Complex_100krows_typedb-4   	       1	1654216956 ns/op	560685392 B/op	 8576542 allocs/op
+BenchmarkDeserialize_Complex_100krows_typedb-4   	       1	1644668081 ns/op	560687056 B/op	 8576548 allocs/op
+BenchmarkDeserialize_Complex_100krows_typedb-4   	       1	1642099788 ns/op	560685840 B/op	 8576542 allocs/op
+BenchmarkDeserialize_Complex_100krows_typedb-4   	       1	1653765397 ns/op	560686720 B/op	 8576542 allocs/op
+BenchmarkDeserialize_Complex_100krows_typedb-4   	       1	1638740542 ns/op	560686192 B/op	 8576546 allocs/op
+BenchmarkDeserialize_Complex_1Mrows_typedb-4     	       1	18971565192 ns/op	5612168736 B/op	85765359 allocs/op
+BenchmarkDeserialize_Complex_1Mrows_typedb-4     	       1	18405992766 ns/op	5612163216 B/op	85765355 allocs/op
+BenchmarkDeserialize_Complex_1Mrows_typedb-4     	       1	18156333482 ns/op	5612170672 B/op	85765357 allocs/op
+BenchmarkDeserialize_Complex_1Mrows_typedb-4     	       1	17994250942 ns/op	5612163600 B/op	85765353 allocs/op
+BenchmarkDeserialize_Complex_1Mrows_typedb-4     	       1	17934952002 ns/op	5612165840 B/op	85765357 allocs/op
+PASS
+ok  	github.com/TheBlackHowling/typedb	469.429s
