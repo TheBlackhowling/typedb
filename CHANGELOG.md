@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0] - 2026-01-28
 
-**Commit:** [`01c74fc`](https://github.com/TheBlackhowling/typedb/commit/01c74fc)
+**Commit:** [`767fd5b`](https://github.com/TheBlackhowling/typedb/commit/767fd5b)
 
 **Summary:** typedb v1.0.0 - Production Ready Release
 
