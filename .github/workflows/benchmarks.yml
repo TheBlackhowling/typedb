@@ -4,6 +4,7 @@ on:
   pull_request:
     types: []  # No automatic triggers - only runs when required by branch protection
     branches: [main]
+    branches: [main]
   workflow_dispatch: # Allow manual runs
 
 jobs:
