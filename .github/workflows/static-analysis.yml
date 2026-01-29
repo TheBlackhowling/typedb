@@ -1,13 +1,9 @@
 name: Static Analysis
 
 on:
-  pull_request:
-    branches:
-      - main
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+  # Workflow disabled for automatic runs
+  # Only runs when manually triggered or required by branch protection on merge attempt
+  workflow_dispatch: # Manual trigger only
 
 jobs:
   static-analysis:

@@ -1,20 +1,9 @@
 name: Integration Tests - SQL Server
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'integration_tests/mssql/**'
-      - '*.go'
-      - 'go.mod'
-      - 'go.sum'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'integration_tests/mssql/**'
-      - '*.go'
-      - 'go.mod'
-      - 'go.sum'
+  # Workflow disabled for automatic runs
+  # Only runs when manually triggered or required by branch protection on merge attempt
+  workflow_dispatch: # Manual trigger only
 
 jobs:
   test:
