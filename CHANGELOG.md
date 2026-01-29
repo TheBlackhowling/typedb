@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.0.1] - 2026-01-29
+
+**Commit:** [`94214e6`](https://github.com/TheBlackhowling/typedb/commit/94214e64c1acbfded2c580109b43ddb9a037a7e9)
+**Pull Request:** [#64](https://github.com/TheBlackhowling/typedb/pull/64)
+
+**Summary:** Add comprehensive benchmark infrastructure with CI regression detection to measure and track typedb's deserialization overhead
+
+**Key Changes:**
+- ... and 8 more files
+
+**Detailed Changes:** See [versions/1.0.1.md](versions/1.0.1.md)
+
+
 ## [1.0.0] - 2026-01-28
 
 **Commit:** [`767fd5b`](https://github.com/TheBlackhowling/typedb/commit/767fd5b)
