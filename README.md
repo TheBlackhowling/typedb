@@ -729,11 +729,9 @@ typedb prioritizes developer productivity and type safety over raw performance. 
 - **Partial Update Overhead**: ~150-700μs per load when enabled (JSON marshaling/unmarshaling for deep copy)
 - **Memory Overhead**: Partial update doubles memory usage for loaded models
 
-**Typical Request Breakdown (Single Row):**
-- Database query: 10-50ms
-- Network overhead: 5-20ms
+**Single Row Overhead:**
 - typedb overhead: 0.002-0.018ms (simple to complex structs, without partial update)
-- **Total**: 15-70ms
+- Negligible compared to typical database query and network latency
 
 **Bulk Query Performance (Measured Results):**
 - **1,000 rows**: ~2ms overhead (simple) or ~16ms overhead (complex)
@@ -742,8 +740,17 @@ typedb prioritizes developer productivity and type safety over raw performance. 
 - **1,000,000 rows**: ~2s overhead (simple) or ~18s overhead (complex)
 - **Example**: Exporting 50,000 records adds ~100ms overhead (simple) or ~800ms overhead (complex)
 
+**Very Large Dataset Observations (1M+ rows):**
+- **Simple structs (1M rows)**: Overhead remains consistent at ~2s, demonstrating linear scaling
+- **Complex structs (1M rows)**: Overhead increases to ~18s due to JSONB parsing, nested struct deserialization, and array processing
+- **Memory usage**: Scales linearly with row count (~624KB per 1K simple rows, ~5.6MB per 1K complex rows)
+- **Performance characteristics**: Overhead is predictable and consistent across runs, making it suitable for batch processing
+- **When to use**: Ideal for background jobs, ETL pipelines, and data exports where 2-18 seconds overhead is acceptable
+- **When to consider alternatives**: For real-time processing of 1M+ rows or when memory constraints are a concern
+
 **For single-row or small result sets (<100 rows):**
-- typedb overhead is typically 0.1-1% of total request time - negligible for most applications
+- typedb overhead is negligible (microseconds per row)
+- The overhead is typically much smaller than database query and network latency
 
 **For bulk operations (100+ rows):**
 - Reflection overhead scales linearly but remains modest: ~2μs per row (simple) or ~15-18μs per row (complex)
@@ -769,8 +776,8 @@ Even with 50K+ rows, typedb can be a good choice when:
 - Developer productivity > performance optimization
 - Example: Database migrations, data exports for compliance
 
-**✅ When Database Query Time Dominates**
-- If the database query takes 30+ seconds, 200ms-2s overhead is negligible
+**✅ When Query Execution Time Dominates**
+- If the overall query execution takes 30+ seconds, typedb's 200ms-2s overhead is negligible
 - Complex joins, aggregations, or slow queries make reflection overhead negligible
 - Example: Complex analytics queries, multi-table joins with aggregations
 
@@ -788,8 +795,8 @@ Even with 50K+ rows, typedb can be a good choice when:
 ### When Performance Matters
 
 **For most applications (1K-100K requests/day):**
-- ✅ Database latency dominates (10-50ms)
 - ✅ typedb overhead is negligible (~0.002-0.018ms per row)
+- ✅ Overhead is typically much smaller than database query and network latency
 - ✅ Developer productivity gains outweigh minimal cost
 
 **Consider alternatives if:**
@@ -805,9 +812,10 @@ Even with 50K+ rows, typedb can be a good choice when:
    - Cuts memory usage in half
    - Only enable for models that benefit from change tracking
 
-2. **Use Connection Pooling**
-   - typedb overhead is per-query, not per-connection
-   - Proper connection pooling reduces connection overhead
+2. **Memory Considerations for Large Datasets**
+   - Memory usage scales linearly with row count
+   - For 1M+ rows, consider streaming with `QueryDo` to reduce memory footprint
+   - Simple structs use ~624KB per 1K rows; complex structs use ~5.6MB per 1K rows
 
 3. **Profile Your Application**
    - Reflection overhead varies by struct complexity
