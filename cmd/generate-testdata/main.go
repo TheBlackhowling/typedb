@@ -18,12 +18,12 @@ func main() {
 	simpleDir := "testdata/simple"
 	complexDir := "testdata/complex"
 
-	if err := os.MkdirAll(simpleDir, 0755); err != nil {
+	if err := os.MkdirAll(simpleDir, 0o755); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to create simple directory: %v\n", err)
 		os.Exit(1)
 	}
 
-	if err := os.MkdirAll(complexDir, 0755); err != nil {
+	if err := os.MkdirAll(complexDir, 0o755); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to create complex directory: %v\n", err)
 		os.Exit(1)
 	}
@@ -95,22 +95,22 @@ func generateAndSaveComplexDataSplit(totalRows int, dir string, chunkSize int) e
 
 func saveJSONFileSplit(totalRows int, dir string, chunkSize int, data []map[string]any) error {
 	numChunks := (totalRows + chunkSize - 1) / chunkSize
-	
+
 	for i := 0; i < numChunks; i++ {
 		start := i * chunkSize
 		end := start + chunkSize
 		if end > len(data) {
 			end = len(data)
 		}
-		
+
 		chunk := data[start:end]
 		filename := fmt.Sprintf("%s/%drows_%03d.json", dir, totalRows, i+1)
-		
+
 		if err := saveJSONFile(filename, chunk); err != nil {
 			return fmt.Errorf("failed to save chunk %d: %w", i+1, err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -120,7 +120,7 @@ func saveJSONFile(filename string, data []map[string]any) error {
 		return fmt.Errorf("failed to marshal JSON: %w", err)
 	}
 
-	if err := os.WriteFile(filename, jsonData, 0644); err != nil {
+	if err := os.WriteFile(filename, jsonData, 0o600); err != nil {
 		return fmt.Errorf("failed to write file: %w", err)
 	}
 
@@ -201,9 +201,18 @@ func generateComplexData(rowCount int) []map[string]any {
 		}
 
 		// Serialize nested structs as JSON strings (as typedb expects from database)
-		addressJSON, _ := json.Marshal(address)
-		rolesJSON, _ := json.Marshal(roles)
-		settingsJSON, _ := json.Marshal(settings)
+		addressJSON, err := json.Marshal(address)
+		if err != nil {
+			panic(fmt.Errorf("failed to marshal address: %w", err))
+		}
+		rolesJSON, err := json.Marshal(roles)
+		if err != nil {
+			panic(fmt.Errorf("failed to marshal roles: %w", err))
+		}
+		settingsJSON, err := json.Marshal(settings)
+		if err != nil {
+			panic(fmt.Errorf("failed to marshal settings: %w", err))
+		}
 
 		row := map[string]any{
 			"id":         int64(i + 1),

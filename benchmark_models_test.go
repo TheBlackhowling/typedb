@@ -9,13 +9,13 @@ import (
 type SimpleUser struct {
 	Model
 	ID        int64     `db:"id" load:"primary"`
+	Age       int       `db:"age"`
+	Score     float64   `db:"score"`
 	Name      string    `db:"name"`
 	Email     string    `db:"email" load:"unique"`
 	CreatedAt time.Time `db:"created_at"`
 	UpdatedAt time.Time `db:"updated_at"`
 	Active    bool      `db:"active"`
-	Age       int       `db:"age"`
-	Score     float64   `db:"score"`
 }
 
 // TableName returns the table name for SimpleUser.
@@ -51,7 +51,7 @@ type BenchmarkRole struct {
 
 // BenchmarkSettings represents settings nested within ComplexUser.
 type BenchmarkSettings struct {
-	Theme        string         `json:"theme"`
+	Theme         string          `json:"theme"`
 	Notifications map[string]bool `json:"notifications"`
 	Preferences   map[string]any  `json:"preferences"`
 }
@@ -62,25 +62,25 @@ type BenchmarkSettings struct {
 type ComplexUser struct {
 	Model
 	ID          int64                  `db:"id" load:"primary"`
-	Name        string                 `db:"name"`
-	Email       string                 `db:"email" load:"unique"`
-	CreatedAt   time.Time              `db:"created_at"`
-	UpdatedAt   time.Time              `db:"updated_at"`
-	Active      bool                   `db:"active"`
 	Age         int                    `db:"age"`
 	Score       float64                `db:"score"`
-	Metadata    map[string]interface{} `db:"metadata"`        // JSONB field
-	Tags        []string               `db:"tags"`            // Array field
-	Preferences map[string]string      `db:"preferences"`    // Map field
-	Address     BenchmarkAddress       `db:"address"`          // Nested struct (JSONB)
-	Roles       []BenchmarkRole        `db:"roles"`           // Array of structs (JSONB)
-	Settings    *BenchmarkSettings     `db:"settings"`        // Pointer to struct (JSONB, nullable)
-	LastLogin   *time.Time             `db:"last_login"`      // Nullable time
-	Balance     *float64               `db:"balance"`        // Nullable float
+	UserID      int64                  `db:"user_id" load:"composite:user_status"`
+	Name        string                 `db:"name"`
+	Email       string                 `db:"email" load:"unique"`
 	Status      string                 `db:"status"`
 	Notes       string                 `db:"notes"`
-	UserID      int64                  `db:"user_id" load:"composite:user_status"`
 	StatusCode  string                 `db:"status_code" load:"composite:user_status"`
+	CreatedAt   time.Time              `db:"created_at"`
+	UpdatedAt   time.Time              `db:"updated_at"`
+	Metadata    map[string]interface{} `db:"metadata"`    // JSONB field
+	Tags        []string               `db:"tags"`        // Array field
+	Preferences map[string]string      `db:"preferences"` // Map field
+	Address     BenchmarkAddress       `db:"address"`     // Nested struct (JSONB)
+	Roles       []BenchmarkRole        `db:"roles"`       // Array of structs (JSONB)
+	Settings    *BenchmarkSettings     `db:"settings"`    // Pointer to struct (JSONB, nullable)
+	LastLogin   *time.Time             `db:"last_login"`  // Nullable time
+	Balance     *float64               `db:"balance"`     // Nullable float
+	Active      bool                   `db:"active"`
 }
 
 // TableName returns the table name for ComplexUser.

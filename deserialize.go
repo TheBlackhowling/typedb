@@ -519,46 +519,68 @@ func deserializeWithReflection(targetElem reflect.Value, value any) error {
 	}
 
 	// Handle JSON strings for structs, arrays of structs, and pointer to structs
-	// This is used for JSONB fields from databases
-	if valueType.Kind() == reflect.String {
-		strValue := valueValue.String()
-		// Try JSON unmarshaling for structs, arrays, and pointers
-		if targetType.Kind() == reflect.Struct ||
-			targetType.Kind() == reflect.Slice ||
-			(targetType.Kind() == reflect.Ptr && (targetType.Elem().Kind() == reflect.Struct || targetType.Elem().Kind() == reflect.Slice)) {
-			// Create a pointer to the target type for unmarshaling
-			targetPtr := reflect.New(targetType)
-			if err := json.Unmarshal([]byte(strValue), targetPtr.Interface()); err == nil {
-				targetElem.Set(targetPtr.Elem())
-				return nil
-			}
-		}
+	if err := deserializeJSONString(targetElem, valueValue, valueType, targetType); err == nil {
+		return nil
 	}
 
 	// Handle pointer types
-	if targetType.Kind() == reflect.Ptr {
-		elemType := targetType.Elem()
-		if valueType.AssignableTo(elemType) || valueType.ConvertibleTo(elemType) {
-			ptrValue := reflect.New(elemType)
-			if valueType.AssignableTo(elemType) {
-				ptrValue.Elem().Set(valueValue)
-			} else {
-				ptrValue.Elem().Set(valueValue.Convert(elemType))
-			}
-			targetElem.Set(ptrValue)
-			return nil
-		}
-		// Try JSON unmarshaling for pointer to struct/slice from JSON string
-		if valueType.Kind() == reflect.String {
-			ptrValue := reflect.New(elemType)
-			if err := json.Unmarshal([]byte(valueValue.String()), ptrValue.Interface()); err == nil {
-				targetElem.Set(ptrValue)
-				return nil
-			}
-		}
+	if err := deserializePointerTypeReflection(targetElem, valueValue, valueType, targetType); err == nil {
+		return nil
 	}
 
 	return fmt.Errorf("typedb: cannot deserialize %T to %s", value, targetType)
+}
+
+// deserializeJSONString handles JSON string deserialization for structs, arrays, and pointers.
+func deserializeJSONString(targetElem reflect.Value, valueValue reflect.Value, valueType, targetType reflect.Type) error {
+	if valueType.Kind() != reflect.String {
+		return fmt.Errorf("not a string")
+	}
+
+	strValue := valueValue.String()
+	// Try JSON unmarshaling for structs, arrays, and pointers
+	if targetType.Kind() == reflect.Struct ||
+		targetType.Kind() == reflect.Slice ||
+		(targetType.Kind() == reflect.Ptr && (targetType.Elem().Kind() == reflect.Struct || targetType.Elem().Kind() == reflect.Slice)) {
+		// Create a pointer to the target type for unmarshaling
+		targetPtr := reflect.New(targetType)
+		if err := json.Unmarshal([]byte(strValue), targetPtr.Interface()); err == nil {
+			targetElem.Set(targetPtr.Elem())
+			return nil
+		}
+	}
+
+	return fmt.Errorf("not a JSON string")
+}
+
+// deserializePointerTypeReflection handles pointer type deserialization using reflection.
+func deserializePointerTypeReflection(targetElem reflect.Value, valueValue reflect.Value, valueType, targetType reflect.Type) error {
+	if targetType.Kind() != reflect.Ptr {
+		return fmt.Errorf("not a pointer type")
+	}
+
+	elemType := targetType.Elem()
+	if valueType.AssignableTo(elemType) || valueType.ConvertibleTo(elemType) {
+		ptrValue := reflect.New(elemType)
+		if valueType.AssignableTo(elemType) {
+			ptrValue.Elem().Set(valueValue)
+		} else {
+			ptrValue.Elem().Set(valueValue.Convert(elemType))
+		}
+		targetElem.Set(ptrValue)
+		return nil
+	}
+
+	// Try JSON unmarshaling for pointer to struct/slice from JSON string
+	if valueType.Kind() == reflect.String {
+		ptrValue := reflect.New(elemType)
+		if err := json.Unmarshal([]byte(valueValue.String()), ptrValue.Interface()); err == nil {
+			targetElem.Set(ptrValue)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("cannot deserialize to pointer")
 }
 
 // convertInt64ToInt safely converts int64 to int with overflow check
