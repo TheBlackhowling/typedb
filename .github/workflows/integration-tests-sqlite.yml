@@ -48,6 +48,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libsqlite3-dev gcc
       
+      - name: Setup integration test dependencies
+        run: |
+          cd integration_tests/sqlite
+          go mod tidy
+          go mod download
+      
       - name: Run SQLite integration tests
         env:
           CGO_ENABLED: 1
