@@ -106,3 +106,4 @@ jobs:
           echo "${{ steps.compare.outputs.regression_details }}"
           exit 1
       
+      
