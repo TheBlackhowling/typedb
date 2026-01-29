@@ -3,6 +3,8 @@ package typedb
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
+	"sort"
 	"testing"
 	"time"
 )
@@ -44,6 +46,12 @@ func init() {
 }
 
 func loadTestData(filename string) []map[string]any {
+	// Check if file exists, if not try loading split files
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		// Try loading split files (e.g., 100000rows.json -> 100000rows_*.json)
+		return loadSplitTestData(filename)
+	}
+	
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		panic("Failed to load test data " + filename + ": " + err.Error())
@@ -53,6 +61,42 @@ func loadTestData(filename string) []map[string]any {
 		panic("Failed to parse test data " + filename + ": " + err.Error())
 	}
 	return rows
+}
+
+func loadSplitTestData(baseFilename string) []map[string]any {
+	// Extract directory and base name
+	dir := filepath.Dir(baseFilename)
+	baseName := filepath.Base(baseFilename)
+	ext := filepath.Ext(baseName)
+	nameWithoutExt := baseName[:len(baseName)-len(ext)]
+	
+	// Find all split files matching pattern: basename_*.json
+	pattern := filepath.Join(dir, nameWithoutExt+"_*"+ext)
+	matches, err := filepath.Glob(pattern)
+	if err != nil {
+		panic("Failed to find split test data files: " + err.Error())
+	}
+	if len(matches) == 0 {
+		panic("No split test data files found for " + baseFilename)
+	}
+	
+	// Sort matches to ensure correct order
+	sort.Strings(matches)
+	
+	// Load and combine all split files
+	var allRows []map[string]any
+	for _, match := range matches {
+		data, err := os.ReadFile(match)
+		if err != nil {
+			panic("Failed to load split test data " + match + ": " + err.Error())
+		}
+		var rows []map[string]any
+		if err := json.Unmarshal(data, &rows); err != nil {
+			panic("Failed to parse split test data " + match + ": " + err.Error())
+		}
+		allRows = append(allRows, rows...)
+	}
+	return allRows
 }
 
 // Simple data benchmarks - Basic structs (8 fields, primitives/strings/time)
