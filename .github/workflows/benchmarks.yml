@@ -1,0 +1,117 @@
+name: Benchmarks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: # Allow manual runs
+
+jobs:
+  benchmark:
+    # Only run on PRs from the same repository (not forks) or on push to main
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache-dependency-path: go.sum
+      
+      - name: Install benchstat
+        run: go install golang.org/x/perf/cmd/benchstat@latest
+      
+      - name: Download dependencies
+        run: go mod download
+      
+      - name: Run benchmarks
+        id: benchmark
+        run: |
+          mkdir -p benchmark-results
+          go test -run=^$ -bench=BenchmarkDeserialize -benchmem -count=5 > benchmark-results/current.txt 2>&1
+          echo "Benchmarks completed"
+      
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmark-results/current.txt
+          retention-days: 30
+      
+      - name: Check if baseline exists
+        id: baseline
+        run: |
+          if [ -f "benchmark-results/baseline.txt" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "No baseline found - this will be used as the new baseline"
+          fi
+      
+      - name: Compare against baseline
+        id: compare
+        if: steps.baseline.outputs.exists == 'true'
+        run: |
+          # Run benchstat comparison
+          benchstat benchmark-results/baseline.txt benchmark-results/current.txt > benchmark-results/comparison.txt 2>&1 || true
+          
+          # Check for regressions (performance degradation >10%)
+          REGRESSIONS=0
+          THRESHOLD=10.0
+          
+          # Parse benchstat output for regressions
+          while IFS= read -r line; do
+            # Look for lines with negative deltas (regressions) exceeding threshold
+            if echo "$line" | grep -qE "^-.*[0-9]+\.[0-9]+%"; then
+              # Extract percentage (remove % sign and check if > threshold)
+              PERCENT=$(echo "$line" | grep -oE "[0-9]+\.[0-9]+%" | sed 's/%//')
+              if [ -n "$PERCENT" ]; then
+                # Use awk for floating point comparison
+                if awk "BEGIN {exit !($PERCENT > $THRESHOLD)}"; then
+                  echo "Regression detected: $line"
+                  REGRESSIONS=$((REGRESSIONS + 1))
+                fi
+              fi
+            fi
+          done < benchmark-results/comparison.txt
+          
+          if [ $REGRESSIONS -gt 0 ]; then
+            echo "Performance regressions detected: $REGRESSIONS benchmark(s)" >&2
+            cat benchmark-results/comparison.txt >&2
+            echo "regression=true" >> $GITHUB_OUTPUT
+            echo "regression_count=$REGRESSIONS" >> $GITHUB_OUTPUT
+            echo "regression_details<<EOF" >> $GITHUB_OUTPUT
+            cat benchmark-results/comparison.txt >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "No significant regressions detected (threshold: ${THRESHOLD}%)"
+            echo "regression=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Display comparison
+        if: steps.baseline.outputs.exists == 'true'
+        run: |
+          echo "=== Benchmark Comparison ==="
+          cat benchmark-results/comparison.txt
+      
+      - name: Fail on regression
+        if: steps.baseline.outputs.exists == 'true' && steps.compare.outputs.regression == 'true'
+        run: |
+          echo "❌ Performance regression detected (>10% slower)"
+          echo "${{ steps.compare.outputs.regression_details }}"
+          exit 1
+      
+      - name: Update baseline (on main branch)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          cp benchmark-results/current.txt benchmark-results/baseline.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add benchmark-results/baseline.txt
+          git commit -m "chore: update benchmark baseline" || echo "No changes to commit"
+          git push || echo "Nothing to push"
