@@ -15,14 +15,14 @@ To ensure benchmarks run only when a merge is attempted and block merges if they
 
 ## How It Works
 
-- The benchmark workflow runs when a PR is updated (`synchronize` event)
-- When you attempt to merge, GitHub's branch protection will ensure the required status check passes
-- If the check hasn't run recently, GitHub will trigger it automatically before allowing the merge
+- The benchmark workflow has **no automatic triggers** - it only runs when required by branch protection
+- When you attempt to merge, GitHub's branch protection will **automatically trigger** the required status check
+- GitHub will run the benchmark workflow as part of the merge process
 - The workflow will **block the merge** if:
   - Benchmarks fail to run (compilation errors, test failures, etc.)
   - Performance regressions >10% are detected compared to baseline
 - The merge button will be disabled until the benchmark check passes
-- Benchmarks only run when PR is updated or merge is attempted, not on PR open
+- **Benchmarks only run when merge is attempted, not on PR updates or PR open**
 
 ## Alternative: GitHub Merge Queue
 
