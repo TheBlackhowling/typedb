@@ -2,7 +2,7 @@ name: Benchmarks
 
 on:
   pull_request:
-    types: [opened, synchronize, ready_for_review]
+    types: [synchronize]
     branches: [main]
   workflow_dispatch: # Allow manual runs
 
