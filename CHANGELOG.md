@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.0.0] - 2026-01-28
+
+**Commit:** [`01c74fc`](https://github.com/TheBlackhowling/typedb/commit/01c74fc)
+
+**Summary:** typedb v1.0.0 - Production Ready Release
+
+**Key Highlights:**
+- ✅ Stable API - All public APIs are stable and backward compatible
+- ✅ Production Ready - Comprehensive testing and documentation
+- ✅ Security - Requires Go 1.23.12+ for security fixes
+
+**Documentation:** See [API.md](API.md) for complete API reference.
+
+**Detailed Changes:** See [versions/1.0.0.md](versions/1.0.0.md)
+
+
 ## [0.1.47] - 2026-01-25
 
 **Commit:** [`549dd83`](https://github.com/TheBlackhowling/typedb/commit/549dd832bb3ef0d45774be2ac53a1119d4268e93)
