@@ -18,12 +18,12 @@ func main() {
 	simpleDir := "testdata/simple"
 	complexDir := "testdata/complex"
 
-	if err := os.MkdirAll(simpleDir, 0o755); err != nil {
+	if err := os.MkdirAll(simpleDir, 0o750); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to create simple directory: %v\n", err)
 		os.Exit(1)
 	}
 
-	if err := os.MkdirAll(complexDir, 0o755); err != nil {
+	if err := os.MkdirAll(complexDir, 0o750); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to create complex directory: %v\n", err)
 		os.Exit(1)
 	}
