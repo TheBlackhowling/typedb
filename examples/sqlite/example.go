@@ -76,36 +76,50 @@ func runMigrations(dsn string) error {
 		return fmt.Errorf("failed to enable foreign keys: %w", err)
 	}
 
-	migrationFile := filepath.Join("migrations", "000001_create_tables.up.sql")
-	sqlBytes, err := os.ReadFile(migrationFile) // #nosec G304 // file path is safe - relative path constructed with filepath.Join, not user input
-	if err != nil {
-		return fmt.Errorf("failed to read migration file: %w", err)
+	// Run all migration files in order
+	migrationFiles := []string{
+		"000001_create_tables.up.sql",
+		"000002_add_phone_column.up.sql",
 	}
 
-	// Remove comments and clean up the SQL
-	sqlContent := string(sqlBytes)
-	lines := strings.Split(sqlContent, "\n")
-	var cleanedLines []string
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		// Skip comment-only lines
-		if strings.HasPrefix(line, "--") {
-			continue
+	for _, migrationFile := range migrationFiles {
+		migrationPath := filepath.Join("migrations", migrationFile)
+		sqlBytes, err := os.ReadFile(migrationPath) // #nosec G304 // file path is safe - relative path constructed with filepath.Join, not user input
+		if err != nil {
+			// Skip if migration file doesn't exist (for backward compatibility)
+			if os.IsNotExist(err) {
+				continue
+			}
+			return fmt.Errorf("failed to read migration file %s: %w", migrationFile, err)
 		}
-		// Remove inline comments
-		if idx := strings.Index(line, "--"); idx != -1 {
-			line = line[:idx]
+
+		// Remove comments and clean up the SQL
+		sqlContent := string(sqlBytes)
+		lines := strings.Split(sqlContent, "\n")
+		var cleanedLines []string
+		for _, line := range lines {
 			line = strings.TrimSpace(line)
+			// Skip comment-only lines
+			if strings.HasPrefix(line, "--") {
+				continue
+			}
+			// Remove inline comments
+			if idx := strings.Index(line, "--"); idx != -1 {
+				line = line[:idx]
+				line = strings.TrimSpace(line)
+			}
+			if line != "" {
+				cleanedLines = append(cleanedLines, line)
+			}
 		}
-		if line != "" {
-			cleanedLines = append(cleanedLines, line)
-		}
-	}
-	sqlContent = strings.Join(cleanedLines, " ")
+		sqlContent = strings.Join(cleanedLines, " ")
 
-	// Execute all statements - SQLite supports multiple statements in one Exec call
-	if _, err := db.Exec(sqlContent); err != nil {
-		return fmt.Errorf("failed to execute migration: %w", err)
+		// Execute all statements - SQLite supports multiple statements in one Exec call
+		if sqlContent != "" {
+			if _, err := db.Exec(sqlContent); err != nil {
+				return fmt.Errorf("failed to execute migration %s: %w", migrationFile, err)
+			}
+		}
 	}
 
 	fmt.Println("✓ Migrations completed successfully")
