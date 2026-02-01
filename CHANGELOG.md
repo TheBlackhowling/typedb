@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.0.6] - 2026-02-01
+
+**Commit:** [`b3046a5`](https://github.com/TheBlackhowling/typedb/commit/b3046a5214669253f35ea361b5ae659d1d7903c1)
+**Pull Request:** [#71](https://github.com/TheBlackhowling/typedb/pull/71)
+
+**Summary:** correct YAML syntax and ensure workflow_dispatch is enabled
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/1.0.6.md](versions/1.0.6.md)
+
+
 ## [1.0.5] - 2026-02-01
 
 **Commit:** [`fcf8218`](https://github.com/TheBlackhowling/typedb/commit/fcf82180d15a3919209db1f606166e8e10493306)
