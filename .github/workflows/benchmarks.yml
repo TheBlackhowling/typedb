@@ -26,6 +26,16 @@ jobs:
       - name: Download dependencies
         run: go mod download
       
+      - name: Generate testdata if needed
+        run: |
+          # Check if testdata files exist, generate if missing
+          if [ ! -f "testdata/simple/10rows.json" ]; then
+            echo "Generating testdata files..."
+            go run ./cmd/generate-testdata
+          else
+            echo "Testdata files already exist, skipping generation"
+          fi
+      
       - name: Run benchmarks
         id: benchmark
         run: |
