@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.0.4] - 2026-02-01
+
+**Commit:** [`4ff435a`](https://github.com/TheBlackhowling/typedb/commit/4ff435a09c1e3d9e76389767adbe5d8e7e06a83d)
+**Pull Request:** [#68](https://github.com/TheBlackhowling/typedb/pull/68)
+
+**Summary:** run all migrations in SQLite examples
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/1.0.4.md](versions/1.0.4.md)
+
+
 ## [1.0.3] - 2026-02-01
 
 **Commit:** [`8b43bc4`](https://github.com/TheBlackhowling/typedb/commit/8b43bc4fb61f5836d61855a0a5f066bf16c74abf)
