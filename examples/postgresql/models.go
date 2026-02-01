@@ -7,11 +7,12 @@ import (
 // User represents a user in the database
 type User struct {
 	typedb.Model
-	ID        int    `db:"id" load:"primary"`
-	Name      string `db:"name"`
-	Email     string `db:"email" load:"unique"`
-	CreatedAt string `db:"created_at"`
-	UpdatedAt string `db:"updated_at" dbUpdate:"auto-timestamp"`
+	ID        int     `db:"id" load:"primary"`
+	Name      string  `db:"name"`
+	Email     string  `db:"email" load:"unique"`
+	Phone     *string `db:"phone"` // Optional phone number (nullable)
+	CreatedAt string  `db:"created_at"`
+	UpdatedAt string  `db:"updated_at" dbUpdate:"auto-timestamp"`
 }
 
 func (u *User) TableName() string {
@@ -19,11 +20,11 @@ func (u *User) TableName() string {
 }
 
 func (u *User) QueryByID() string {
-	return "SELECT id, name, email, created_at, updated_at FROM users WHERE id = $1"
+	return "SELECT id, name, email, phone, created_at, updated_at FROM users WHERE id = $1"
 }
 
 func (u *User) QueryByEmail() string {
-	return "SELECT id, name, email, created_at, updated_at FROM users WHERE email = $1"
+	return "SELECT id, name, email, phone, created_at, updated_at FROM users WHERE email = $1"
 }
 
 func init() {

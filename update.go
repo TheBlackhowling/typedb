@@ -261,6 +261,18 @@ func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName, dr
 			if !changedFields[columnName] {
 				return true
 			}
+			// If partial update is enabled and field changed to nil, include it
+			// This allows setting fields to nil when they were previously non-nil
+			if isZeroOrNil(fieldValue) {
+				// Field changed from non-nil to nil - include it in the update
+				shouldMask := field.Tag.Get("nolog") == "true"
+				if shouldMask {
+					maskIndices = append(maskIndices, len(values))
+				}
+				columns = append(columns, columnName)
+				values = append(values, nil) // Explicitly set to nil
+				return true
+			}
 		}
 
 		// Skip nil/zero values for regular fields (always exclude zero values)
