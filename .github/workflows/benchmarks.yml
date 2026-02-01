@@ -1,16 +1,13 @@
 name: Benchmarks
 
-# Workflow disabled for automatic runs
-# Only runs when manually triggered or required by branch protection on merge attempt
 on:
-  workflow_dispatch: # Manual trigger only
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Manual trigger also available
 
 jobs:
   benchmark:
-    # This job is intentionally disabled for automatic runs
-    # It will only run when:
-    # 1. Manually triggered via workflow_dispatch
-    # 2. Required by branch protection rules (GitHub will trigger it on merge attempt)
     runs-on: ubuntu-latest
     
     steps:
