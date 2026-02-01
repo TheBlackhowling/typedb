@@ -1,9 +1,9 @@
 name: Integration Tests - SQLite
 
 on:
-  # Workflow disabled for automatic runs
-  # Only runs when manually triggered or required by branch protection on merge attempt
-  workflow_dispatch: # Manual trigger only
+  pull_request:
+    types: [opened]
+  workflow_dispatch: # Manual trigger also available (for re-running after fixes)
 
 jobs:
   test:
