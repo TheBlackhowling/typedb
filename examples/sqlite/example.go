@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/TheBlackHowling/typedb"
@@ -76,20 +77,29 @@ func runMigrations(dsn string) error {
 		return fmt.Errorf("failed to enable foreign keys: %w", err)
 	}
 
-	// Run all migration files in order
-	migrationFiles := []string{
-		"000001_create_tables.up.sql",
-		"000002_add_phone_column.up.sql",
+	// Discover all migration files in the migrations directory
+	migrationsDir := "migrations"
+	entries, err := os.ReadDir(migrationsDir)
+	if err != nil {
+		return fmt.Errorf("failed to read migrations directory: %w", err)
 	}
 
+	// Collect all .up.sql files and sort them by filename
+	var migrationFiles []string
+	for _, entry := range entries {
+		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".up.sql") {
+			migrationFiles = append(migrationFiles, entry.Name())
+		}
+	}
+
+	// Sort migration files by filename to ensure correct order
+	sort.Strings(migrationFiles)
+
+	// Run all migration files in order
 	for _, migrationFile := range migrationFiles {
-		migrationPath := filepath.Join("migrations", migrationFile)
+		migrationPath := filepath.Join(migrationsDir, migrationFile)
 		sqlBytes, err := os.ReadFile(migrationPath) // #nosec G304 // file path is safe - relative path constructed with filepath.Join, not user input
 		if err != nil {
-			// Skip if migration file doesn't exist (for backward compatibility)
-			if os.IsNotExist(err) {
-				continue
-			}
 			return fmt.Errorf("failed to read migration file %s: %w", migrationFile, err)
 		}
 
