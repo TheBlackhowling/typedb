@@ -118,9 +118,10 @@ func init() {
 // UpdateModelWithPartialUpdate is a model with partial update enabled
 type UpdateModelWithPartialUpdate struct {
 	Model
-	Name  string `db:"name"`
-	Email string `db:"email"`
-	ID    int64  `db:"id" load:"primary"`
+	Phone *string `db:"phone"`
+	Name  string  `db:"name"`
+	Email string  `db:"email"`
+	ID    int64   `db:"id" load:"primary"`
 }
 
 func (m *UpdateModelWithPartialUpdate) TableName() string {
@@ -128,7 +129,7 @@ func (m *UpdateModelWithPartialUpdate) TableName() string {
 }
 
 func (m *UpdateModelWithPartialUpdate) QueryByID() string {
-	return "SELECT id, name, email FROM users WHERE id = $1"
+	return "SELECT id, name, email, phone FROM users WHERE id = $1"
 }
 
 func init() {
@@ -366,6 +367,113 @@ func TestUpdate_PartialUpdate_UnchangedFieldsExcluded(t *testing.T) {
 	// Expect UPDATE to only include changed fields (name), NOT unchanged fields (email)
 	mock.ExpectExec(`UPDATE "users" SET "name" = \$1 WHERE "id" = \$2`).
 		WithArgs("John Updated", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+// TestUpdate_PartialUpdate_SetToNil tests that partial update includes nil values when field changes from non-nil to nil
+func TestUpdate_PartialUpdate_SetToNil(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer closeSQLDB(t, db)
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// Create a user with a non-nil phone value and simulate deserialization
+	phoneValue := "123-456-7890"
+	user := &UpdateModelWithPartialUpdate{
+		ID:    123,
+		Name:  "John",
+		Email: "john@example.com",
+		Phone: &phoneValue,
+	}
+
+	// Simulate deserialization by saving original copy
+	row := map[string]any{
+		"id":    int64(123),
+		"name":  "John",
+		"email": "john@example.com",
+		"phone": "123-456-7890",
+	}
+	if deserializeErr := deserialize(row, user); deserializeErr != nil {
+		t.Fatalf("Failed to deserialize: %v", deserializeErr)
+	}
+
+	// Set phone to nil - this should be detected as a change and included in UPDATE
+	user.Phone = nil
+
+	// Expect UPDATE to include phone field set to NULL
+	// When partial update is enabled and field changes from non-nil to nil, it should be included
+	mock.ExpectExec(`UPDATE "users" SET "phone" = \$1 WHERE "id" = \$2`).
+		WithArgs(nil, int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+// UpdateModelWithoutPartialUpdate is a model without partial update enabled (for testing nil exclusion)
+type UpdateModelWithoutPartialUpdate struct {
+	Model
+	Phone *string `db:"phone"`
+	Name  string  `db:"name"`
+	Email string  `db:"email"`
+	ID    int64   `db:"id" load:"primary"`
+}
+
+func (m *UpdateModelWithoutPartialUpdate) TableName() string {
+	return "users"
+}
+
+func (m *UpdateModelWithoutPartialUpdate) QueryByID() string {
+	return "SELECT id, name, email, phone FROM users WHERE id = $1"
+}
+
+func init() {
+	RegisterModel[*UpdateModelWithoutPartialUpdate]() // No partial update
+}
+
+// TestUpdate_NoPartialUpdate_SetToNil tests that nil values are excluded when partial update is disabled
+func TestUpdate_NoPartialUpdate_SetToNil(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer closeSQLDB(t, db)
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// Create a user with a nil phone field
+	// When partial update is NOT enabled, nil values should be excluded from UPDATE
+	user := &UpdateModelWithoutPartialUpdate{
+		ID:    123,
+		Name:  "John",
+		Email: "john@example.com",
+		Phone: nil, // Nil value - should be excluded
+	}
+
+	// Expect UPDATE to NOT include phone field (nil values are excluded)
+	// Only non-nil/non-zero fields should be included
+	mock.ExpectExec(`UPDATE "users" SET "name" = \$1, "email" = \$2 WHERE "id" = \$3`).
+		WithArgs("John", "john@example.com", int64(123)).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
 	err = Update(ctx, typedbDB, user)

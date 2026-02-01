@@ -7,10 +7,11 @@ import (
 // User represents a user in the database
 type User struct {
 	typedb.Model
-	ID        int    `db:"id" load:"primary"`
-	Name      string `db:"name"`
-	Email     string `db:"email" load:"unique"`
-	CreatedAt string `db:"created_at"`
+	ID        int     `db:"id" load:"primary"`
+	Name      string  `db:"name"`
+	Email     string  `db:"email" load:"unique"`
+	Phone     *string `db:"phone"` // Optional phone number (nullable)
+	CreatedAt string  `db:"created_at"`
 }
 
 func (u *User) TableName() string {
@@ -18,15 +19,17 @@ func (u *User) TableName() string {
 }
 
 func (u *User) QueryByID() string {
-	return "SELECT id, name, email, created_at FROM users WHERE id = @p1"
+	return "SELECT id, name, email, phone, created_at FROM users WHERE id = @p1"
 }
 
 func (u *User) QueryByEmail() string {
-	return "SELECT id, name, email, created_at FROM users WHERE email = @p1"
+	return "SELECT id, name, email, phone, created_at FROM users WHERE email = @p1"
 }
 
 func init() {
 	typedb.RegisterModel[*User]()
+	// Register User with partial update enabled for examples
+	typedb.RegisterModelWithOptions[*User](typedb.ModelOptions{PartialUpdate: true})
 }
 
 // Profile represents a user profile (one-to-one with User)
