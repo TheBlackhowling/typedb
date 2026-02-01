@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.0.3] - 2026-02-01
+
+**Commit:** [`8b43bc4`](https://github.com/TheBlackhowling/typedb/commit/8b43bc4fb61f5836d61855a0a5f066bf16c74abf)
+**Pull Request:** [#67](https://github.com/TheBlackhowling/typedb/pull/67)
+
+**Summary:** add phone column migrations for all example databases
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/1.0.3.md](versions/1.0.3.md)
+
+
 ## [1.0.2] - 2026-02-01
 
 **Commit:** [`547d22d`](https://github.com/TheBlackhowling/typedb/commit/547d22d655d509549ce35a9eb0b0a11991d87355)
