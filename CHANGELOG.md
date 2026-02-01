@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.0.5] - 2026-02-01
+
+**Commit:** [`fcf8218`](https://github.com/TheBlackhowling/typedb/commit/fcf82180d15a3919209db1f606166e8e10493306)
+**Pull Request:** [#69](https://github.com/TheBlackhowling/typedb/pull/69)
+
+**Summary:** enable benchmarks to run on merge to main
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/1.0.5.md](versions/1.0.5.md)
+
+
 ## [1.0.4] - 2026-02-01
 
 **Commit:** [`4ff435a`](https://github.com/TheBlackhowling/typedb/commit/4ff435a09c1e3d9e76389767adbe5d8e7e06a83d)
