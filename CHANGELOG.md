@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.0.7] - 2026-02-01
+
+**Commit:** [`57dbf67`](https://github.com/TheBlackhowling/typedb/commit/57dbf674e59f133e474ee7628cd72e23bbfdbf7f)
+**Pull Request:** [#72](https://github.com/TheBlackhowling/typedb/pull/72)
+
+**Summary:** correct all YAML syntax errors with double single quotes
+
+**Key Changes:**
+- See detailed changes below
+
+**Detailed Changes:** See [versions/1.0.7.md](versions/1.0.7.md)
+
+
 ## [1.0.6] - 2026-02-01
 
 **Commit:** [`b3046a5`](https://github.com/TheBlackhowling/typedb/commit/b3046a5214669253f35ea361b5ae659d1d7903c1)
