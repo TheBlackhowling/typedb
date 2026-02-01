@@ -279,7 +279,14 @@ services:
         echo "GRANT CONNECT, RESOURCE TO typedb;" | sqlplus -S system/password@oracle:1521/FREEPDB1 || true
         echo "GRANT CREATE SESSION TO typedb;" | sqlplus -S system/password@oracle:1521/FREEPDB1 || true
         # Use SET SQLBLANKLINES ON to allow blank lines in SQL scripts
-        echo "SET SQLBLANKLINES ON;" | cat - 000001_create_tables.up.sql | sqlplus -S typedb/password@oracle:1521/FREEPDB1 || exit 1
+        echo "SET SQLBLANKLINES ON;" > /tmp/migrate.sql
+        # Run all migration files in sorted order
+        for migration in $(ls -1 /migrations/*.up.sql | sort); do
+          echo "Running migration: $(basename $migration)"
+          cat "$migration" >> /tmp/migrate.sql
+          echo "" >> /tmp/migrate.sql
+        done
+        sqlplus -S typedb/password@oracle:1521/FREEPDB1 < /tmp/migrate.sql || exit 1
         echo "Migrations completed"
     networks:
       - oracle_network
