@@ -8,6 +8,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.0.2] - 2026-02-01
+
+**Commit:** [`547d22d`](https://github.com/TheBlackhowling/typedb/commit/547d22d655d509549ce35a9eb0b0a11991d87355)
+**Pull Request:** [#66](https://github.com/TheBlackhowling/typedb/pull/66)
+
+**Summary:** Add support for setting fields to nil when using partial update, and optimize CI workflows to reduce churn while maintaining quality checks.
+
+**Key Changes:**
+- Modified  - Add logic to include nil values in UPDATE when partial update detects change from non-nil to nil
+- Modified  - Add tests for nil update scenarios (partial and non-partial)
+- Modified  - Add examples for nil updates (raw SQL and partial update)
+- Modified  - Add documentation for nil updates with examples and guidance
+- Modified  - Run on PR open only
+- Modified  - Run on PR open only
+- Modified  - Run on PR open only
+- Modified  - Run on PR open only
+- Modified  - Run on PR open only
+- Modified  - Run on PR open only
+- Modified  - Run on push to main
+- Modified  - Run on push to main
+- Modified  - Run on push to main
+- Modified  - Run on push to main
+- Modified  - Run on push to main
+
+**Detailed Changes:** See [versions/1.0.2.md](versions/1.0.2.md)
+
+
 ## [1.0.1] - 2026-01-29
 
 **Commit:** [`94214e6`](https://github.com/TheBlackhowling/typedb/commit/94214e64c1acbfded2c580109b43ddb9a037a7e9)
