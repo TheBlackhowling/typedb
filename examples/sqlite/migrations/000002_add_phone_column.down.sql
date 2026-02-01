@@ -1,0 +1,3 @@
+-- Remove phone column from users table
+-- SQLite doesn't support DROP COLUMN directly, so this is a no-op
+-- In production, you would need to recreate the table
