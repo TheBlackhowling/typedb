@@ -56,7 +56,7 @@ jobs:
       
       - name: Compare against baseline
         id: compare
-        if: steps.baseline.outputs.exists == ''true''
+        if: steps.baseline.outputs.exists == 'true'
         run: |
           # Run benchstat comparison
           benchstat benchmark-results/baseline.txt benchmark-results/current.txt > benchmark-results/comparison.txt 2>&1 || true
@@ -70,7 +70,7 @@ jobs:
             # Look for lines with negative deltas (regressions) exceeding threshold
             if echo "$line" | grep -qE "^-.*[0-9]+\.[0-9]+%"; then
               # Extract percentage (remove % sign and check if > threshold)
-              PERCENT=$(echo "$line" | grep -oE "[0-9]+\.[0-9]+%" | sed ''s/%//'')
+              PERCENT=$(echo "$line" | grep -oE "[0-9]+\.[0-9]+%" | sed 's/%//')
               if [ -n "$PERCENT" ]; then
                 # Use awk for floating point comparison
                 if awk "BEGIN {exit !($PERCENT > $THRESHOLD)}"; then
@@ -95,13 +95,13 @@ jobs:
           fi
       
       - name: Display comparison
-        if: steps.baseline.outputs.exists == ''true''
+        if: steps.baseline.outputs.exists == 'true'
         run: |
           echo "=== Benchmark Comparison ==="
           cat benchmark-results/comparison.txt
       
       - name: Fail on regression
-        if: steps.baseline.outputs.exists == ''true'' && steps.compare.outputs.regression == ''true''
+        if: steps.baseline.outputs.exists == 'true' && steps.compare.outputs.regression == 'true'
         run: |
           echo "❌ Performance regression detected (>10% slower)"
           echo "${{ steps.compare.outputs.regression_details }}"
