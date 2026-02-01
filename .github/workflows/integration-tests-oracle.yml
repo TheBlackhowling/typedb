@@ -2,7 +2,7 @@ name: Integration Tests - Oracle
 
 on:
   pull_request:
-    types: [opened]
+    types: [opened, synchronize]
   workflow_dispatch: # Manual trigger also available (for re-running after fixes)
 
 jobs:
