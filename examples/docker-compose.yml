@@ -282,13 +282,16 @@ services:
         for migration in $(ls -1 /migrations/*.up.sql | sort); do
           echo "Running migration: $(basename $migration)"
           # Use SET SQLBLANKLINES ON to allow blank lines in SQL scripts
-          (echo "SET SQLBLANKLINES ON;" && cat "$migration") | sqlplus -S typedb/password@oracle:1521/FREEPDB1
-          if [ $? -ne 0 ]; then
-            echo "Migration $(basename $migration) failed!"
+          # Add COMMIT at the end to ensure changes are persisted
+          (echo "SET SQLBLANKLINES ON;" && cat "$migration" && echo "COMMIT;") | sqlplus -S typedb/password@oracle:1521/FREEPDB1
+          EXIT_CODE=$?
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "Migration $(basename $migration) failed with exit code $EXIT_CODE!"
             exit 1
           fi
+          echo "Migration $(basename $migration) completed successfully"
         done
-        echo "Migrations completed"
+        echo "All migrations completed"
     networks:
       - oracle_network
 
