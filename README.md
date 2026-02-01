@@ -570,6 +570,23 @@ err = typedb.Update(ctx, db, user)
 - The comparison uses `reflect.DeepEqual`, so be aware that JSON round-trip conversions (e.g., `int` to `float64`) may be detected as changes for map/slice fields
 - Partial update is optional and disabled by default - models registered with `RegisterModel` will use full updates
 
+**Setting Fields to NULL:**
+
+- **With Partial Update Enabled**: When partial update is enabled, you can set a field to `nil` (NULL) by:
+  1. Loading the model from the database first (to save the original state)
+  2. Setting the field to `nil` in memory
+  3. Calling `Update()` - the field will be included in the UPDATE statement and set to NULL
+  - This only works when the field was previously non-nil (detected as a change)
+  - Example: If a `Phone *string` field was `"123-456-7890"` and you set it to `nil`, it will be updated to NULL
+  
+- **Without Partial Update (or for non-pointer fields)**: To set a field to NULL when partial update is disabled, you must use raw SQL:
+  ```go
+  // Set a field to NULL using raw SQL
+  _, err := db.Exec(ctx, "UPDATE users SET phone = NULL WHERE id = $1", userID)
+  ```
+  - This is necessary because `typedb.Update()` skips nil/zero values to avoid accidentally clearing fields
+  - Raw SQL gives you full control over setting fields to NULL explicitly
+
 **Field Exclusion Tags:**
 - `db:"-"` - Excludes field from all database operations (INSERT, UPDATE, SELECT)
 - `dbInsert:"false"` - Excludes field from INSERT operations only
