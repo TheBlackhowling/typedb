@@ -118,9 +118,9 @@ func init() {
 // UpdateModelWithPartialUpdate is a model with partial update enabled
 type UpdateModelWithPartialUpdate struct {
 	Model
+	Phone *string `db:"phone"`
 	Name  string  `db:"name"`
 	Email string  `db:"email"`
-	Phone *string `db:"phone"` // Optional pointer field for testing nil updates
 	ID    int64   `db:"id" load:"primary"`
 }
 
@@ -432,9 +432,9 @@ func TestUpdate_PartialUpdate_SetToNil(t *testing.T) {
 // UpdateModelWithoutPartialUpdate is a model without partial update enabled (for testing nil exclusion)
 type UpdateModelWithoutPartialUpdate struct {
 	Model
+	Phone *string `db:"phone"`
 	Name  string  `db:"name"`
 	Email string  `db:"email"`
-	Phone *string `db:"phone"` // Optional pointer field for testing nil exclusion
 	ID    int64   `db:"id" load:"primary"`
 }
 
