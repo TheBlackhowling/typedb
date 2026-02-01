@@ -282,15 +282,31 @@ services:
         for migration in $(ls -1 /migrations/*.up.sql | sort); do
           echo "Running migration: $(basename $migration)"
           # Use SET SQLBLANKLINES ON to allow blank lines in SQL scripts
+          # Set WHENEVER SQLERROR EXIT SQL.SQLCODE to fail on SQL errors
           # Add COMMIT at the end to ensure changes are persisted
-          (echo "SET SQLBLANKLINES ON;" && cat "$migration" && echo "COMMIT;") | sqlplus -S typedb/password@oracle:1521/FREEPDB1
+          OUTPUT=$( (echo "SET SQLBLANKLINES ON;" && echo "WHENEVER SQLERROR EXIT SQL.SQLCODE;" && cat "$migration" && echo "COMMIT;") | sqlplus -S typedb/password@oracle:1521/FREEPDB1 2>&1)
           EXIT_CODE=$?
+          echo "$OUTPUT"
           if [ $EXIT_CODE -ne 0 ]; then
             echo "Migration $(basename $migration) failed with exit code $EXIT_CODE!"
             exit 1
           fi
+          # Also check for Oracle error messages in output
+          if echo "$OUTPUT" | grep -qi "ORA-[0-9]"; then
+            echo "Migration $(basename $migration) failed with Oracle error!"
+            echo "$OUTPUT"
+            exit 1
+          fi
           echo "Migration $(basename $migration) completed successfully"
         done
+        # Verify tables were created
+        echo "Verifying tables exist..."
+        TABLE_CHECK=$(echo "SELECT COUNT(*) FROM user_tables WHERE table_name = 'USERS';" | sqlplus -S typedb/password@oracle:1521/FREEPDB1 2>&1 | grep -E "^[[:space:]]*[0-9]+" | tr -d '[:space:]')
+        if [ "$TABLE_CHECK" != "1" ]; then
+          echo "ERROR: USERS table was not created! Count: $TABLE_CHECK"
+          exit 1
+        fi
+        echo "Tables verified successfully"
         echo "All migrations completed"
     networks:
       - oracle_network
