@@ -1,3 +1,6 @@
+//go:build benchmarks
+// +build benchmarks
+
 package typedb
 
 import (

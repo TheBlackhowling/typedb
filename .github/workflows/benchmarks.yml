@@ -32,7 +32,7 @@ jobs:
         run: |
           echo "Running benchmarks..."
           mkdir -p benchmark-results
-          go test -run=^$ -bench=BenchmarkDeserialize -benchmem -benchtime=1s > benchmark-results/current.txt 2>&1 || true
+          go test -tags=benchmarks -run=^$ -bench=BenchmarkDeserialize -benchmem -benchtime=1s > benchmark-results/current.txt 2>&1 || true
           echo "Benchmarks complete"
 
       - name: Check benchmark thresholds
