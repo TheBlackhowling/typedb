@@ -48,7 +48,7 @@ jobs:
         continue-on-error: true
       
       - name: Run tests
-        run: go test -v -race -coverprofile=coverage.out -covermode=atomic $(go list ./... | grep -v deserialize_bench_test)
+        run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
         env:
           CGO_ENABLED: 1
       
