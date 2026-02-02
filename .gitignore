@@ -77,9 +77,6 @@ benchmark-results/*
 !benchmark-results/baseline.txt
 *.prof
 
-# Large benchmark test data files (generated in CI if needed)
-# Exclude both single files and split files
-testdata/**/100000rows.json
-testdata/**/1000000rows.json
-testdata/**/100000rows_*.json
-testdata/**/1000000rows_*.json
+# All testdata files (generated in CI/workflows as needed)
+# Exclude all testdata since it's generated on-demand
+testdata/**/*.json
