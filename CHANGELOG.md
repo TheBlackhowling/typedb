@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
-## [1.0.8] - 2026-02-02
+## [1.0.9] - 2026-02-02
 
 **Commit:** [`f2e9563`](https://github.com/TheBlackhowling/typedb/commit/f2e9563)
 **Pull Request:** TBD
@@ -20,6 +20,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed example and integration test workflows (moved to typedb-examples repository)
 - Updated README.md to reference typedb-examples repository
 - Significantly reduced repository size
+
+**Detailed Changes:** See [versions/1.0.9.md](versions/1.0.9.md)
+
+
+## [1.0.8] - 2026-02-02
+
+**Commit:** [`a1443c6`](https://github.com/TheBlackhowling/typedb/commit/a1443c69a35620596638cf04c9e2e736e870aaad)
+**Pull Request:** [#73](https://github.com/TheBlackhowling/typedb/pull/73)
+
+**Summary:** run all Oracle migrations in order
+
+**Key Changes:**
+- See detailed changes below
 
 **Detailed Changes:** See [versions/1.0.8.md](versions/1.0.8.md)
 
