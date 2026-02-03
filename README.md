@@ -22,7 +22,7 @@ A type-safe, generic database query library for Go that prioritizes SQL-first de
 - [Getting Started](#getting-started)
   - [Requirements](#requirements)
   - [Quick Start](#quick-start)
-  - [Examples](#examples)
+  - [Examples](#examples) (in [typedb-examples](https://github.com/TheBlackhowling/typedb-examples) repository)
 - [API Reference](API.md) - Complete API documentation
 - [API Overview](#api-overview)
   - [Query Functions](#query-functions)
@@ -355,20 +355,19 @@ err := db.WithTx(ctx, func(tx *typedb.Tx) error {
 
 ### Examples
 
-Database-specific examples demonstrating typedb usage are available for all supported databases:
+Database-specific examples demonstrating typedb usage are available in the [typedb-examples](https://github.com/TheBlackhowling/typedb-examples) repository for all supported databases:
 
-- **[PostgreSQL Examples](examples/postgresql/)** - Full-featured examples including arrays and JSONB
-- **[MySQL Examples](examples/mysql/)** - Examples for MySQL database
-- **[SQLite Examples](examples/sqlite/)** - File-based database examples
-- **[SQL Server (MSSQL) Examples](examples/mssql/)** - Microsoft SQL Server examples
-- **[Oracle Examples](examples/oracle/)** - Oracle Database examples
+- **PostgreSQL Examples** - Full-featured examples including arrays and JSONB
+- **MySQL Examples** - Examples for MySQL database
+- **SQLite Examples** - File-based database examples
+- **SQL Server (MSSQL) Examples** - Microsoft SQL Server examples
+- **Oracle Examples** - Oracle Database examples
 
-Each example directory includes:
+The examples repository includes:
 - Complete working examples demonstrating typedb features
 - Database schema and migration files
 - Setup instructions and usage patterns
-
-For comprehensive test coverage (including error cases), see the [Integration Tests](#testing) section below.
+- Comprehensive integration tests covering both happy paths and error cases
 
 ## API Overview
 
@@ -868,7 +867,7 @@ typedb is comprehensively tested across all supported databases to ensure full f
 - **Example Programs** - Working examples for each database demonstrating real-world usage patterns
 - **Cross-Database Validation** - All features are tested against each supported database to ensure consistent behavior
 
-See the [integration_tests/](integration_tests/) directory for complete test coverage.
+See the [typedb-examples](https://github.com/TheBlackhowling/typedb-examples) repository for complete test coverage and examples.
 
 **Additional Database Support:** We are open to expanding our test coverage to include additional databases. If you need support for a database not currently covered, please open an issue to discuss adding it to our test matrix.
 
