@@ -8,20 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
-## [1.0.10] - 2026-02-03
-
-**Commit:** [`5aa89ed`](https://github.com/TheBlackhowling/typedb/commit/5aa89ed77360b5a8c2bc13b453edd2870e9535df)
-**Pull Request:** [#75](https://github.com/TheBlackhowling/typedb/pull/75)
-
-**Summary:** Removing testdata and setting benchmark workflow to build benchmarkdata on the fly
-
-**Key Changes:**
-- ... and 19 more files
-
-**Detailed Changes:** See [versions/1.0.10.md](versions/1.0.10.md)
-
-
-## [1.0.9] - 2026-02-02
+## [1.0.10] - 2026-02-02
 
 **Commit:** [`f2e9563`](https://github.com/TheBlackhowling/typedb/commit/f2e9563)
 **Pull Request:** TBD
@@ -34,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated README.md to reference typedb-examples repository
 - Significantly reduced repository size
 
-**Detailed Changes:** See [versions/1.0.9.md](versions/1.0.9.md)
+**Detailed Changes:** See [versions/1.0.10.md](versions/1.0.10.md)
 
 
 ## [1.0.8] - 2026-02-02
