@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.0.10] - 2026-02-02
+
+**Commit:** [`6ea1d54`](https://github.com/TheBlackhowling/typedb/commit/6ea1d54)
+**Pull Request:** TBD
+
+**Summary:** refactor: move examples and integration tests to separate repository
+
+**Key Changes:**
+- Removed examples/ and integration_tests/ directories (moved to typedb-examples repository)
+- Removed example and integration test workflows (moved to typedb-examples repository)
+- Updated README.md to reference typedb-examples repository
+- Significantly reduced repository size
+
+**Detailed Changes:** See [versions/1.0.10.md](versions/1.0.10.md)
+
+
 ## [1.0.9] - 2026-02-02
 
 **Commit:** [`f2e9563`](https://github.com/TheBlackhowling/typedb/commit/f2e9563)
