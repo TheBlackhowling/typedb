@@ -261,16 +261,21 @@ func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName, dr
 			if !changedFields[columnName] {
 				return true
 			}
-			// If partial update is enabled and field changed to nil, include it
-			// This allows setting fields to nil when they were previously non-nil
+			// Field changed to zero/nil - distinguish pointer types from value types
 			if isZeroOrNil(fieldValue) {
-				// Field changed from non-nil to nil - include it in the update
 				shouldMask := field.Tag.Get("nolog") == "true"
 				if shouldMask {
 					maskIndices = append(maskIndices, len(values))
 				}
 				columns = append(columns, columnName)
-				values = append(values, nil) // Explicitly set to nil
+				if isNilOnly(fieldValue) {
+					// Pointer/slice/map changed to nil - write NULL
+					values = append(values, nil)
+				} else {
+					// Value type changed to zero (false, 0, "", 0.0) - write the actual value.
+					// Important: empty string "" stores as "" (not NULL); SQL treats "" and NULL as distinct.
+					values = append(values, fieldValue.Interface())
+				}
 				return true
 			}
 		}

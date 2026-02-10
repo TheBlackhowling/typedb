@@ -504,6 +504,18 @@ func isZeroOrNil(v reflect.Value) bool {
 	}
 }
 
+// isNilOnly returns true only for nil-able types (ptr, slice, map, etc.) that are actually nil.
+// Value types (bool, int, string, float) always return false—they cannot be nil in Go.
+// Used to distinguish "changed to nil" (write NULL) from "changed to zero value" (write false, 0, "", 0.0).
+func isNilOnly(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Ptr, reflect.Interface, reflect.Slice, reflect.Map, reflect.Chan, reflect.Func:
+		return v.IsNil()
+	default:
+		return false
+	}
+}
+
 // Insert inserts a model into the database by automatically building the INSERT query.
 // The model must:
 //   - Implement TableName() method that returns the table name

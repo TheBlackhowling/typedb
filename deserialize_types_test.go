@@ -306,3 +306,97 @@ func TestDeserializeToField_PointerType(t *testing.T) {
 		t.Errorf("Expected *456, got %v", intPtr)
 	}
 }
+
+// TestDeserialize_PointerToPrimitive tests that *bool, *int, *string deserialize correctly.
+// Pointer-to-primitive types allow nil (omit/NULL) vs explicit zero values in Update.
+func TestDeserialize_PointerToPrimitive(t *testing.T) {
+	type ModelWithPointerPrimitives struct {
+		Model
+		IsActive *bool   `db:"is_active"`
+		Count    *int    `db:"count"`
+		Nickname *string `db:"nickname"`
+		Name     string  `db:"name"`
+		ID       int64   `db:"id"`
+	}
+
+	tests := []struct {
+		row   map[string]any
+		check func(t *testing.T, m *ModelWithPointerPrimitives)
+		name  string
+	}{
+		{
+			name: "*bool true",
+			row:  map[string]any{"id": int64(1), "name": "Alice", "is_active": true},
+			check: func(t *testing.T, m *ModelWithPointerPrimitives) {
+				if m.IsActive == nil || *m.IsActive != true {
+					t.Errorf("IsActive = %v, want *true", m.IsActive)
+				}
+			},
+		},
+		{
+			name: "*bool false",
+			row:  map[string]any{"id": int64(2), "name": "Bob", "is_active": false},
+			check: func(t *testing.T, m *ModelWithPointerPrimitives) {
+				if m.IsActive == nil || *m.IsActive != false {
+					t.Errorf("IsActive = %v, want *false", m.IsActive)
+				}
+			},
+		},
+		{
+			name: "*bool nil",
+			row:  map[string]any{"id": int64(3), "name": "Carol", "is_active": nil},
+			check: func(t *testing.T, m *ModelWithPointerPrimitives) {
+				if m.IsActive != nil {
+					t.Errorf("IsActive = %v, want nil", m.IsActive)
+				}
+			},
+		},
+		{
+			name: "*int zero",
+			row:  map[string]any{"id": int64(4), "name": "Dave", "count": 0},
+			check: func(t *testing.T, m *ModelWithPointerPrimitives) {
+				if m.Count == nil || *m.Count != 0 {
+					t.Errorf("Count = %v, want *0", m.Count)
+				}
+			},
+		},
+		{
+			name: "*int nonzero",
+			row:  map[string]any{"id": int64(5), "name": "Eve", "count": 42},
+			check: func(t *testing.T, m *ModelWithPointerPrimitives) {
+				if m.Count == nil || *m.Count != 42 {
+					t.Errorf("Count = %v, want *42", m.Count)
+				}
+			},
+		},
+		{
+			name: "*string nil",
+			row:  map[string]any{"id": int64(6), "name": "Frank", "nickname": nil},
+			check: func(t *testing.T, m *ModelWithPointerPrimitives) {
+				if m.Nickname != nil {
+					t.Errorf("Nickname = %v, want nil", m.Nickname)
+				}
+			},
+		},
+		{
+			name: "*string empty",
+			row:  map[string]any{"id": int64(7), "name": "Grace", "nickname": ""},
+			check: func(t *testing.T, m *ModelWithPointerPrimitives) {
+				if m.Nickname == nil || *m.Nickname != "" {
+					t.Errorf("Nickname = %v, want *\"\"", m.Nickname)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := &ModelWithPointerPrimitives{}
+			err := deserialize(tt.row, m)
+			if err != nil {
+				t.Fatalf("deserialize failed: %v", err)
+			}
+			tt.check(t, m)
+		})
+	}
+}
