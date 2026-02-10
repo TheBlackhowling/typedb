@@ -941,6 +941,8 @@ type Model struct {
 
 Base struct that models should embed. Provides common functionality for model types.
 
+**Important:** Model must be embedded as the first field in your struct. The memory layout requires this for deserialization to work correctly.
+
 ### ModelInterface
 
 ```go
@@ -1115,6 +1117,10 @@ Multiple validation errors. Implements `error` interface.
 ---
 
 ## Model Requirements
+
+### Struct Layout
+
+**`typedb.Model` must be embedded as the first field in your struct.** The memory layout requires this for deserialization to work correctly when called on an embedded Model. All examples in this document follow this pattern.
 
 ### Required Methods
 

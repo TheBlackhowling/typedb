@@ -9,16 +9,13 @@ import (
 	"strings"
 )
 
-// supportsLastInsertID checks if the driver supports LastInsertId().
-// Only MySQL and SQLite support LastInsertId().
-// PostgreSQL and SQL Server require RETURNING/OUTPUT clauses.
+// supportsLastInsertID returns true for MySQL and SQLite (they support LastInsertId).
 func supportsLastInsertID(driverName string) bool {
 	driverName = strings.ToLower(driverName)
 	return driverName == "mysql" || driverName == "sqlite3"
 }
 
 // getDriverName extracts the driver name from an Executor.
-// Returns empty string if driver name cannot be determined.
 func getDriverName(exec Executor) string {
 	switch e := exec.(type) {
 	case *DB:
@@ -26,7 +23,6 @@ func getDriverName(exec Executor) string {
 	case *Tx:
 		return e.driverName
 	case interface{ GetDriverName() string }:
-		// Handle wrappers that expose driver name (e.g., oracleTestWrapper)
 		return e.GetDriverName()
 	default:
 		return ""
@@ -73,7 +69,6 @@ func insertAndGetIDOracle(ctx context.Context, exec Executor, insertQuery string
 
 	intoIdx := strings.Index(strings.ToUpper(returningPart), " INTO ")
 	if intoIdx != -1 {
-		// Already has INTO clause
 		var id int64
 		outParam := sql.Out{Dest: &id}
 		argsWithOut := make([]any, len(args)+1)
@@ -87,7 +82,6 @@ func insertAndGetIDOracle(ctx context.Context, exec Executor, insertQuery string
 		return id, nil
 	}
 
-	// Need to add INTO clause
 	returningFields := returningPart
 	if spaceIdx := strings.Index(returningFields, " "); spaceIdx != -1 {
 		returningFields = returningFields[:spaceIdx]
@@ -145,7 +139,6 @@ func InsertAndGetID(ctx context.Context, exec Executor, insertQuery string, args
 	hasReturning := strings.Contains(queryUpper, "RETURNING") || strings.Contains(queryUpper, "OUTPUT")
 
 	if !hasReturning {
-		// MySQL/SQLite path
 		driverName := getDriverName(exec)
 		if !supportsLastInsertID(driverName) {
 			return 0, fmt.Errorf("typedb: InsertAndGetID requires RETURNING or OUTPUT clause for %s. Only MySQL and SQLite support LastInsertId() without RETURNING/OUTPUT", driverName)
@@ -163,14 +156,12 @@ func InsertAndGetID(ctx context.Context, exec Executor, insertQuery string, args
 		return id, nil
 	}
 
-	// Oracle path
 	driverName := getDriverName(exec)
 	driverNameLower := strings.ToLower(driverName)
 	if driverNameLower == "oracle" {
 		return insertAndGetIDOracle(ctx, exec, insertQuery, args)
 	}
 
-	// Standard RETURNING/OUTPUT path
 	row, err := exec.QueryRowMap(ctx, insertQuery, args...)
 	if err != nil {
 		return 0, fmt.Errorf("typedb: InsertAndGetID failed: %w", err)
@@ -185,15 +176,12 @@ func InsertAndGetID(ctx context.Context, exec Executor, insertQuery string, args
 }
 
 // getTableName gets the table name from a model using TableName() method.
-// Returns error if TableName() method doesn't exist or returns empty string.
 func getTableName(model ModelInterface) (string, error) {
-	// Try to call TableName() method
 	_, found := findMethod(model, "TableName")
 	if !found {
 		return "", fmt.Errorf("typedb: model must implement TableName() method")
 	}
 
-	// Call the method
 	results := reflect.ValueOf(model).MethodByName("TableName").Call(nil)
 	if len(results) != 1 {
 		return "", fmt.Errorf("typedb: TableName() method must return exactly one value")
@@ -224,13 +212,11 @@ func checkDotNotationRecursive(t reflect.Type) bool {
 			continue
 		}
 
-		// Check db tag for dot notation
 		dbTag := field.Tag.Get("db")
 		if dbTag != "" && dbTag != "-" && strings.Contains(dbTag, ".") {
 			return true
 		}
 
-		// Check embedded structs
 		if field.Anonymous {
 			embeddedType := field.Type
 			if embeddedType.Kind() == reflect.Ptr {
@@ -260,32 +246,21 @@ func generatePlaceholder(driverName string, position int) string {
 	case "oracle":
 		return fmt.Sprintf(":%d", position)
 	default:
-		// Default to PostgreSQL style
 		return fmt.Sprintf("$%d", position)
 	}
 }
 
-// validateIdentifier validates that an identifier contains only allowed characters.
-// Identifiers can contain alphanumeric characters, underscores, dots (for qualified names),
-// and quote characters (which will be escaped). Dangerous characters like semicolons,
-// SQL keywords, etc. are rejected to prevent SQL injection.
-// Returns an error if the identifier is invalid.
+// validateIdentifier checks identifier format; rejects dangerous characters to prevent SQL injection.
 func validateIdentifier(identifier string) error {
 	if identifier == "" {
 		return fmt.Errorf("typedb: identifier cannot be empty")
 	}
 
-	// Allow alphanumeric, underscore, dot, and quote characters
-	// Reject dangerous characters: semicolon, dash, parentheses, etc.
-	// This regex matches: letters, digits, underscore, dot, and quote characters
 	validPattern := regexp.MustCompile(`^[a-zA-Z0-9_."` + "`" + `]+$`)
 	if !validPattern.MatchString(identifier) {
 		return fmt.Errorf("typedb: invalid identifier '%s': identifiers can only contain alphanumeric characters, underscores, dots, and quote characters", identifier)
 	}
 
-	// Additional check: reject identifiers that contain SQL injection patterns
-	// Note: We don't reject SQL keywords as they might be legitimate identifier names
-	// The regex above already rejects semicolons, spaces, and other dangerous characters
 	dangerousPatterns := []string{
 		";",
 		"--",
@@ -305,7 +280,6 @@ func validateIdentifier(identifier string) error {
 // Validates the identifier and escapes quote characters to prevent SQL injection.
 // Panics if identifier is invalid (since identifiers come from struct tags at compile time).
 func quoteIdentifier(driverName, identifier string) string {
-	// Validate identifier first
 	if err := validateIdentifier(identifier); err != nil {
 		// Panic is acceptable here since identifiers come from struct tags (compile-time constants)
 		// If this panics, it indicates a programming error, not a runtime security issue
@@ -364,18 +338,10 @@ func buildReturningClause(driverName, primaryKeyColumn string) string {
 	}
 }
 
-// fieldVisitor is a callback function that processes each field during struct iteration.
-// Parameters:
-//   - field: the struct field metadata
-//   - fieldValue: the field's reflect.Value
-//   - columnName: the extracted column name (handles dot notation)
-//
-// Returns: true if iteration should continue, false to stop
+// fieldVisitor processes each field during struct iteration; returns false to stop.
 type fieldVisitor func(field reflect.StructField, fieldValue reflect.Value, columnName string) bool
 
-// iterateStructFields iterates over struct fields, handling embedded structs and extracting db tags.
-// It calls the visitor function for each valid field (exported, has db tag, not primary key).
-// The visitor receives the field metadata, field value, and extracted column name.
+// iterateStructFields visits struct fields (embedded, db tag); calls visitor for each valid field.
 func iterateStructFields(structType reflect.Type, structValue reflect.Value, primaryKeyFieldName string, visitor fieldVisitor) {
 	if structType.Kind() != reflect.Struct {
 		return
@@ -395,7 +361,6 @@ func iterateStructFields(structType reflect.Type, structValue reflect.Value, pri
 
 			fieldValue := v.Field(i)
 
-			// Handle embedded structs
 			if field.Anonymous {
 				embeddedType := field.Type
 				if embeddedType.Kind() == reflect.Ptr {
@@ -411,25 +376,21 @@ func iterateStructFields(structType reflect.Type, structValue reflect.Value, pri
 				}
 			}
 
-			// Get db tag
 			dbTag := field.Tag.Get("db")
 			if dbTag == "" || dbTag == "-" {
 				continue
 			}
 
-			// Skip if this is the primary key field
 			if field.Name == primaryKeyFieldName {
 				continue
 			}
 
-			// Extract column name (handle dot notation - use last part)
 			columnName := dbTag
 			if strings.Contains(dbTag, ".") {
 				parts := strings.Split(dbTag, ".")
 				columnName = parts[len(parts)-1]
 			}
 
-			// Call visitor - if it returns false, stop iteration
 			if !visitor(field, fieldValue, columnName) {
 				return
 			}
@@ -439,11 +400,7 @@ func iterateStructFields(structType reflect.Type, structValue reflect.Value, pri
 	processFields(structType, structValue)
 }
 
-// serializeModelFields collects non-nil/non-zero fields from a model and returns columns and values.
-// Excludes primary key field, fields with db:"-" tag, and fields with dbInsert:"false" tag.
-// Fields with db:"-" are excluded from all database operations (INSERT, UPDATE, SELECT).
-// Fields with dbInsert:"false" are excluded from INSERT but can still be used in UPDATE and SELECT.
-// Returns: column names, field values, and mask indices (for fields with nolog:"true" tag).
+// serializeModelFields collects non-nil/non-zero fields from a model for INSERT.
 func serializeModelFields(model ModelInterface, primaryKeyFieldName string) (columns []string, values []any, maskIndices []int, err error) {
 	modelValue := reflect.ValueOf(model)
 	if modelValue.Kind() != reflect.Ptr || modelValue.IsNil() {
@@ -460,17 +417,14 @@ func serializeModelFields(model ModelInterface, primaryKeyFieldName string) (col
 	maskIndices = []int{}
 
 	iterateStructFields(modelValue.Type(), modelValue, primaryKeyFieldName, func(field reflect.StructField, fieldValue reflect.Value, columnName string) bool {
-		// Skip fields with dbInsert:"false" tag
 		if field.Tag.Get("dbInsert") == "false" {
 			return true
 		}
 
-		// Skip nil/zero values
 		if isZeroOrNil(fieldValue) {
 			return true
 		}
 
-		// Track if this field should be masked in logs
 		shouldMask := field.Tag.Get("nolog") == "true"
 		if shouldMask {
 			maskIndices = append(maskIndices, len(values))
@@ -648,36 +602,30 @@ func insertWithReturning[T ModelInterface](ctx context.Context, exec Executor, m
 }
 
 func Insert[T ModelInterface](ctx context.Context, exec Executor, model T) error {
-	// Validate model has TableName() method
 	tableName, err := getTableName(model)
 	if err != nil {
 		return fmt.Errorf("typedb: Insert validation failed: %w", err)
 	}
 
-	// Validate model doesn't have dot notation (not a joined model)
 	if hasDotNotation(model) {
 		return fmt.Errorf("typedb: Insert cannot be used with joined models (detected dot notation in db tags)")
 	}
 
-	// Find primary key field
 	primaryField, found := findFieldByTag(model, "load", "primary")
 	if !found {
 		return fmt.Errorf("typedb: Insert requires a field with load:\"primary\" tag")
 	}
 
-	// Get primary key column name from db tag
 	primaryKeyColumn := primaryField.Tag.Get("db")
 	if primaryKeyColumn == "" || primaryKeyColumn == "-" {
 		return fmt.Errorf("typedb: primary key field %s must have a db tag", primaryField.Name)
 	}
 
-	// Extract column name (handle dot notation - use last part)
 	if strings.Contains(primaryKeyColumn, ".") {
 		parts := strings.Split(primaryKeyColumn, ".")
 		primaryKeyColumn = parts[len(parts)-1]
 	}
 
-	// Collect fields and values (excluding primary key and nil/zero values)
 	columns, values, maskIndices, err := serializeModelFields(model, primaryField.Name)
 	if err != nil {
 		return fmt.Errorf("typedb: Insert failed to serialize model: %w", err)
@@ -687,18 +635,12 @@ func Insert[T ModelInterface](ctx context.Context, exec Executor, model T) error
 		return fmt.Errorf("typedb: Insert requires at least one non-nil field to insert")
 	}
 
-	// Store mask indices in context for logging
 	if len(maskIndices) > 0 {
 		ctx = WithMaskIndices(ctx, maskIndices)
 	}
 
-	// Get driver name for database-specific SQL generation
 	driverName := getDriverName(exec)
-
-	// Build common query parts
 	quotedTableName, quotedColumns, placeholders := buildInsertQueryParts(driverName, tableName, columns, values)
-
-	// Route to database-specific handler
 	driverNameLower := strings.ToLower(driverName)
 	switch driverNameLower {
 	case "mysql":

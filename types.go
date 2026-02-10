@@ -27,54 +27,37 @@ type Executor interface {
 
 // DB wraps *sql.DB and provides query execution with timeout handling.
 // DB implements the Executor interface.
-//
-// Fields are ordered for optimal memory alignment (largest to smallest):
-// - 16-byte types (interfaces, string)
-// - 8-byte types (pointers, time.Duration)
-// - 1-byte types (bool) - grouped together to minimize padding
 type DB struct {
-	logger     Logger        // logger for this DB instance (interface = 16 bytes)
-	db         *sql.DB       // underlying database connection
-	driverName string        // database driver name (e.g., "postgres", "mysql")
-	timeout    time.Duration // default timeout for operations
-	logQueries bool          // whether to log SQL queries
-	logArgs    bool          // whether to log query arguments
+	logger     Logger
+	db         *sql.DB
+	driverName string
+	timeout    time.Duration
+	logQueries bool
+	logArgs    bool
 }
 
 // Tx wraps *sql.Tx and provides transaction-scoped query execution.
 // Tx implements the Executor interface.
-//
-// Fields are ordered for optimal memory alignment (largest to smallest):
-// - 16-byte types (interfaces, string)
-// - 8-byte types (pointers, time.Duration)
-// - 1-byte types (bool) - grouped together to minimize padding
 type Tx struct {
-	logger     Logger        // logger for this transaction (inherited from DB) (interface = 16 bytes)
-	tx         *sql.Tx       // underlying transaction
-	driverName string        // database driver name (inherited from DB)
-	timeout    time.Duration // default timeout (inherited from DB)
-	logQueries bool          // whether to log SQL queries (inherited from DB)
-	logArgs    bool          // whether to log query arguments (inherited from DB)
-
+	logger     Logger
+	tx         *sql.Tx
+	driverName string
+	timeout    time.Duration
+	logQueries bool
+	logArgs    bool
 }
 
 // Config holds database connection and pool configuration.
-//
-// Fields are ordered for optimal memory alignment (largest to smallest):
-// - 16-byte types (interfaces, string)
-// - 8-byte types (time.Duration)
-// - 4-byte types (int)
-// - 1-byte types (bool)
 type Config struct {
-	Logger          Logger        // Logger instance (defaults to no-op logger) (interface = 16 bytes)
-	DSN             string        // Connection string
-	ConnMaxLifetime time.Duration // Default: 30m
-	ConnMaxIdleTime time.Duration // Default: 5m
-	OpTimeout       time.Duration // Default: 5s
-	MaxOpenConns    int           // Default: 10
-	MaxIdleConns    int           // Default: 5
-	LogQueries      bool          // Whether to log SQL queries (default: true)
-	LogArgs         bool          // Whether to log query arguments (default: true)
+	Logger          Logger
+	DSN             string
+	ConnMaxLifetime time.Duration
+	ConnMaxIdleTime time.Duration
+	OpTimeout       time.Duration
+	MaxOpenConns    int
+	MaxIdleConns    int
+	LogQueries      bool
+	LogArgs         bool
 }
 
 // ModelInterface defines the contract for model types that can be deserialized.
@@ -89,10 +72,7 @@ type ModelInterface interface {
 // It provides common functionality for model types.
 // Models that embed Model automatically satisfy ModelInterface through Model.deserialize().
 type Model struct {
-	// originalCopy stores a deep copy of the model after deserialization.
-	// Used for partial update tracking when enabled via RegisterModelWithOptions.
-	// This field is only populated when PartialUpdate is enabled for the model.
-	originalCopy interface{} `db:"-"` // Excluded from all database operations
+	originalCopy interface{} `db:"-"`
 }
 
 // Option configures DB connection settings.

@@ -58,8 +58,6 @@ import (
 //	// Modify only name
 //	user.Name = "New Name"
 //	typedb.Update(ctx, db, user) // Only updates name field, not email
-//
-// validateUpdateModel validates model for update operation
 func validateUpdateModel[T ModelInterface](model T) (tableName string, primaryKeyField *reflect.StructField, primaryKeyColumn string, err error) {
 	tableName, err = getTableName(model)
 	if err != nil {
@@ -80,7 +78,6 @@ func validateUpdateModel[T ModelInterface](model T) (tableName string, primaryKe
 		return "", nil, "", fmt.Errorf("typedb: primary key field %s must have a db tag", primaryField.Name)
 	}
 
-	// Extract column name (handle dot notation - use last part)
 	if strings.Contains(primaryKeyColumn, ".") {
 		parts := strings.Split(primaryKeyColumn, ".")
 		primaryKeyColumn = parts[len(parts)-1]
@@ -98,7 +95,6 @@ func buildUpdateQuery(driverName string, tableName string, primaryKeyColumn stri
 	setClauses := make([]string, 0, len(columns)+len(autoUpdateColumns))
 	placeholderIndex := 1
 
-	// Add regular fields with placeholders
 	for _, col := range columns {
 		quotedCol := quoteIdentifier(driverName, col)
 		placeholder := generatePlaceholder(driverName, placeholderIndex)
@@ -122,18 +118,16 @@ func buildUpdateQuery(driverName string, tableName string, primaryKeyColumn stri
 
 	allValues = make([]any, len(values)+1)
 	copy(allValues, values)
-	allValues[len(values)] = nil // Placeholder for primary key value
+	allValues[len(values)] = nil
 	return query, allValues
 }
 
 func Update[T ModelInterface](ctx context.Context, exec Executor, model T) error {
-	// Validation
 	tableName, primaryField, primaryKeyColumn, err := validateUpdateModel(model)
 	if err != nil {
 		return err
 	}
 
-	// Get primary key value
 	primaryKeyValue, err := getFieldValue(model, primaryField.Name)
 	if err != nil {
 		return fmt.Errorf("typedb: Update failed to get primary key value: %w", err)
@@ -143,7 +137,6 @@ func Update[T ModelInterface](ctx context.Context, exec Executor, model T) error
 		return fmt.Errorf("typedb: Update requires primary key field %s to be set (non-zero value)", primaryField.Name)
 	}
 
-	// Get changed fields if partial update enabled
 	driverName := getDriverName(exec)
 	structType := reflect.TypeOf(model).Elem()
 	opts := GetModelOptions(structType)
@@ -165,7 +158,6 @@ func Update[T ModelInterface](ctx context.Context, exec Executor, model T) error
 		return fmt.Errorf("typedb: Update requires at least one non-nil field to update")
 	}
 
-	// Store mask indices
 	if len(maskIndices) > 0 {
 		ctx = WithMaskIndices(ctx, maskIndices)
 	}
@@ -214,13 +206,6 @@ func getTimestampFunction(driverName string) string {
 }
 
 // serializeModelFieldsForUpdate collects non-nil/non-zero fields from a model for UPDATE operations.
-// Excludes primary key field, fields with db:"-" tag, and fields with dbUpdate:"false" tag.
-// Fields with db:"-" are excluded from all database operations (INSERT, UPDATE, SELECT).
-// Fields with dbUpdate:"false" are excluded from UPDATE but can still be used in INSERT and SELECT.
-// Fields with dbUpdate:"auto-timestamp" are automatically populated with database timestamp functions.
-// If changedFields is provided (partial update enabled), only includes fields that have changed.
-// Returns: column names, field values for serialization, auto-update column names, and mask indices (for fields with nolog:"true" tag).
-// driverName parameter is kept for API consistency with serializeModelFields, but is not currently used.
 func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName, driverName string, changedFields map[string]bool) (columns []string, values []any, autoUpdateColumns []string, maskIndices []int, err error) {
 	_ = driverName // Reserved for future use (e.g., database-specific field handling)
 	modelValue := reflect.ValueOf(model)
@@ -280,12 +265,10 @@ func serializeModelFieldsForUpdate(model ModelInterface, primaryKeyFieldName, dr
 			}
 		}
 
-		// Skip nil/zero values for regular fields (always exclude zero values)
 		if isZeroOrNil(fieldValue) {
 			return true
 		}
 
-		// Track if this field should be masked in logs
 		shouldMask := field.Tag.Get("nolog") == "true"
 		if shouldMask {
 			maskIndices = append(maskIndices, len(values))

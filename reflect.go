@@ -37,13 +37,11 @@ func findFieldByTagRecursive(t reflect.Type, tagKey, tagValue string) (*reflect.
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 
-		// Check if this field has the tag value
 		tag := field.Tag.Get(tagKey)
 		if tag == tagValue || containsTagValue(tag, tagValue) {
 			return &field, true
 		}
 
-		// If field is embedded (anonymous), search recursively
 		if field.Anonymous {
 			embeddedType := field.Type
 			if embeddedType.Kind() == reflect.Ptr {
@@ -144,20 +142,15 @@ func setFieldValue(model any, fieldName string, value any) error {
 
 	valueV := reflect.ValueOf(value)
 
-	// Handle type conversion for numeric types
 	if valueV.Type().AssignableTo(fieldValue.Type()) {
 		fieldValue.Set(valueV)
 	} else if valueV.Kind() == reflect.Int64 && fieldValue.Kind() == reflect.Int {
-		// Convert int64 to int
 		fieldValue.SetInt(valueV.Int())
 	} else if valueV.Kind() == reflect.Int && fieldValue.Kind() == reflect.Int64 {
-		// Convert int to int64
 		fieldValue.SetInt(valueV.Int())
 	} else if valueV.Kind() == reflect.Float64 && fieldValue.Kind() == reflect.Float32 {
-		// Convert float64 to float32
 		fieldValue.SetFloat(valueV.Float())
 	} else if valueV.Kind() == reflect.Float32 && fieldValue.Kind() == reflect.Float64 {
-		// Convert float32 to float64
 		fieldValue.SetFloat(valueV.Float())
 	} else {
 		return fmt.Errorf("typedb: cannot assign %v to field %s of type %v", valueV.Type(), fieldName, fieldValue.Type())
@@ -176,19 +169,16 @@ func findFieldByNameRecursive(t reflect.Type, fieldName string) (*reflect.Struct
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 
-		// Direct match
 		if field.Name == fieldName {
 			return &field, true
 		}
 
-		// If field is embedded (anonymous), search recursively
 		if field.Anonymous {
 			embeddedType := field.Type
 			if embeddedType.Kind() == reflect.Ptr {
 				embeddedType = embeddedType.Elem()
 			}
 			if foundField, found := findFieldByNameRecursive(embeddedType, fieldName); found {
-				// Create a new field with adjusted index
 				adjustedField := *foundField
 				adjustedIndex := make([]int, len(field.Index), len(field.Index)+len(foundField.Index))
 				copy(adjustedIndex, field.Index)
@@ -224,13 +214,11 @@ func callMethod(model any, methodName string, args ...any) ([]reflect.Value, err
 		return nil, fmt.Errorf("%w: %s", ErrMethodNotFound, methodName)
 	}
 
-	// Convert args to reflect.Value slice
 	argValues := make([]reflect.Value, len(args))
 	for i, arg := range args {
 		argValues[i] = reflect.ValueOf(arg)
 	}
 
-	// Call the method
 	results := method.Call(argValues)
 	return results, nil
 }
