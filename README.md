@@ -187,6 +187,8 @@ go get github.com/TheBlackHowling/typedb
 
 Get started with typedb in 5 minutes. This example shows connection, query, insert, and update:
 
+**Model requirement:** `typedb.Model` must be embedded as the first field in your struct. The memory layout requires this for deserialization to work correctly.
+
 - [Basic Usage](#basic-usage)
 - [Model Load Methods](#model-load-methods)
 - [Composite Keys](#composite-keys)

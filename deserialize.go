@@ -23,7 +23,6 @@ func deserializeForType[T ModelInterface](row map[string]any) (T, error) {
 		return zero, fmt.Errorf("typedb: DeserializeForType requires a pointer type (e.g., *User)")
 	}
 
-	// Create a new instance of the underlying type
 	elemType := modelType.Elem()
 	modelPtr := reflect.New(elemType)
 	modelInterface, ok := modelPtr.Interface().(ModelInterface)
@@ -63,11 +62,7 @@ func deserialize(row map[string]any, dest ModelInterface) error {
 		return fmt.Errorf("typedb: dest must be a pointer to struct")
 	}
 
-	// Always use buildFieldMapFromPtr to bypass checkptr validation.
-	// Even when CanAddr() returns true, values from reflect.NewAt can trigger
-	// checkptr errors when accessing fields via reflect.Value.Field().
-	// This happens across all Go versions 1.18-1.25, so we always use the unsafe
-	// path which bypasses reflect.Value.Field() entirely.
+	// buildFieldMapFromPtr bypasses checkptr; reflect.NewAt + Field() can trigger errors.
 	fieldMap := buildFieldMapFromPtr(destValue, structValue)
 
 	for key, value := range row {
@@ -204,25 +199,21 @@ func buildFieldMapFromPtr(ptrValue, structValue reflect.Value) map[string]reflec
 			copy(currentIndex, indexPath)
 			currentIndex = append(currentIndex, i)
 
-			// Handle embedded structs
 			if field.Anonymous {
 				embeddedType := field.Type
 				// For embedded structs, we need the value (not pointer) to check IsNil/Set/Elem
 				fieldValue := fieldValuePtr.Elem()
 				if embeddedType.Kind() == reflect.Ptr {
 					if fieldValue.IsNil() {
-						// Initialize pointer embedded struct
 						fieldValue.Set(reflect.New(embeddedType.Elem()))
 						// Recalculate fieldPtr after setting the value
 						fieldPtr = unsafe.Pointer(fieldValue.Pointer()) // #nosec G103 // intentional use of unsafe for reflection
 					} else {
-						// Get the address of what the pointer points to
 						fieldPtr = unsafe.Pointer(fieldValue.Pointer()) // #nosec G103 // intentional use of unsafe for reflection
 					}
 					embeddedType = embeddedType.Elem()
 				}
 				if embeddedType.Kind() == reflect.Struct {
-					// fieldPtr already points to the embedded struct (or its pointer value)
 					processFields(embeddedType, fieldPtr, currentIndex)
 					continue
 				}

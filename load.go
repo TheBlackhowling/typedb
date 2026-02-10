@@ -18,38 +18,32 @@ import (
 //	user := &User{ID: 123}
 //	err := typedb.Load(ctx, db, user)
 func Load[T ModelInterface](ctx context.Context, exec Executor, model T) error {
-	// Find primary key field
 	primaryField, found := findFieldByTag(model, "load", "primary")
 	if !found {
 		return fmt.Errorf("typedb: no field with load:\"primary\" tag found")
 	}
 
-	// Get field value
 	fieldValueReflect, err := getFieldValue(model, primaryField.Name)
 	if err != nil {
 		return fmt.Errorf("typedb: failed to get primary key value: %w", err)
 	}
 
-	// Check if field is zero (not set)
 	if fieldValueReflect.IsZero() {
 		return fmt.Errorf("typedb: primary key field %s is not set", primaryField.Name)
 	}
 
 	fieldValue := fieldValueReflect.Interface()
 
-	// Check if primary key field has nolog tag and add mask index to context
 	if primaryField.Tag.Get("nolog") == "true" {
 		ctx = WithMaskIndices(ctx, []int{0})
 	}
 
-	// Find and call QueryBy{Field}() method
 	methodName := "QueryBy" + primaryField.Name
 	_, methodFound := findMethod(model, methodName)
 	if !methodFound {
 		return fmt.Errorf("typedb: QueryBy%s() method not found", primaryField.Name)
 	}
 
-	// Call method to get query string
 	methodValue := reflect.ValueOf(model).MethodByName(methodName)
 	results := methodValue.Call(nil)
 	if len(results) != 1 {
@@ -57,13 +51,11 @@ func Load[T ModelInterface](ctx context.Context, exec Executor, model T) error {
 	}
 	query := results[0].String()
 
-	// Execute query using QueryOne
 	foundModel, err := QueryOne[T](ctx, exec, query, fieldValue)
 	if err != nil {
 		return err
 	}
 
-	// Update model in-place by copying values
 	return updateModelInPlace(model, foundModel)
 }
 
@@ -76,20 +68,17 @@ func Load[T ModelInterface](ctx context.Context, exec Executor, model T) error {
 //	user := &User{Email: "test@example.com"}
 //	err := typedb.LoadByField(ctx, db, user, "Email")
 func LoadByField[T ModelInterface](ctx context.Context, exec Executor, model T, fieldName string) error {
-	// Get field value
 	fieldValueReflect, err := getFieldValue(model, fieldName)
 	if err != nil {
 		return fmt.Errorf("typedb: failed to get field %s value: %w", fieldName, err)
 	}
 
-	// Check if field is zero (not set)
 	if fieldValueReflect.IsZero() {
 		return fmt.Errorf("typedb: field %s is not set", fieldName)
 	}
 
 	fieldValue := fieldValueReflect.Interface()
 
-	// Get field struct to check for nolog tag
 	modelType := getModelType(model)
 	if modelType.Kind() == reflect.Ptr {
 		modelType = modelType.Elem()
@@ -99,14 +88,12 @@ func LoadByField[T ModelInterface](ctx context.Context, exec Executor, model T, 
 		ctx = WithMaskIndices(ctx, []int{0})
 	}
 
-	// Find and call QueryBy{Field}() method
 	methodName := "QueryBy" + fieldName
 	_, methodFound := findMethod(model, methodName)
 	if !methodFound {
 		return fmt.Errorf("typedb: QueryBy%s() method not found", fieldName)
 	}
 
-	// Call method to get query string
 	methodValue := reflect.ValueOf(model).MethodByName(methodName)
 	results := methodValue.Call(nil)
 	if len(results) != 1 {
@@ -114,13 +101,11 @@ func LoadByField[T ModelInterface](ctx context.Context, exec Executor, model T, 
 	}
 	query := results[0].String()
 
-	// Execute query using QueryOne
 	foundModel, err := QueryOne[T](ctx, exec, query, fieldValue)
 	if err != nil {
 		return err
 	}
 
-	// Update model in-place by copying values
 	return updateModelInPlace(model, foundModel)
 }
 
@@ -168,7 +153,6 @@ func LoadByComposite[T ModelInterface](ctx context.Context, exec Executor, model
 			return fmt.Errorf("typedb: failed to get field %s value: %w", fieldName, err)
 		}
 
-		// Check if field is zero (not set)
 		if valueReflect.IsZero() {
 			return fmt.Errorf("typedb: composite key field %s is not set", fieldName)
 		}
