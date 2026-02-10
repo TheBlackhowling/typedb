@@ -140,10 +140,10 @@ func init() {
 // Pointer types allow nil (omit) vs explicit zero (false, 0) in Update.
 type UpdateModelWithPointerPrimitives struct {
 	Model
-	ID       int64  `db:"id" load:"primary"`
-	Name     string `db:"name"`
 	IsActive *bool  `db:"is_active"`
 	Count    *int   `db:"count"`
+	Name     string `db:"name"`
+	ID       int64  `db:"id" load:"primary"`
 }
 
 func (m *UpdateModelWithPointerPrimitives) TableName() string {
@@ -180,8 +180,8 @@ func TestUpdate_PointerToPrimitive_Included(t *testing.T) {
 	}
 
 	// Expect UPDATE to include is_active=false and count=0 (pointer types, non-nil)
-	mock.ExpectExec(`UPDATE "users" SET "name" = \$1, "is_active" = \$2, "count" = \$3 WHERE "id" = \$4`).
-		WithArgs("John", false, 0, int64(123)).
+	mock.ExpectExec(`UPDATE "users" SET "is_active" = \$1, "count" = \$2, "name" = \$3 WHERE "id" = \$4`).
+		WithArgs(false, 0, "John", int64(123)).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
 	err = Update(ctx, typedbDB, user)

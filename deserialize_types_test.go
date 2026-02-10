@@ -312,17 +312,17 @@ func TestDeserializeToField_PointerType(t *testing.T) {
 func TestDeserialize_PointerToPrimitive(t *testing.T) {
 	type ModelWithPointerPrimitives struct {
 		Model
-		ID        int64   `db:"id"`
-		Name      string  `db:"name"`
-		IsActive  *bool   `db:"is_active"`
-		Count     *int    `db:"count"`
-		Nickname  *string `db:"nickname"`
+		IsActive *bool   `db:"is_active"`
+		Count    *int    `db:"count"`
+		Nickname *string `db:"nickname"`
+		Name     string  `db:"name"`
+		ID       int64   `db:"id"`
 	}
 
 	tests := []struct {
-		name     string
-		row      map[string]any
-		check    func(t *testing.T, m *ModelWithPointerPrimitives)
+		row   map[string]any
+		check func(t *testing.T, m *ModelWithPointerPrimitives)
+		name  string
 	}{
 		{
 			name: "*bool true",
