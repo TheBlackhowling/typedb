@@ -454,7 +454,19 @@ If you need to set columns to NULL or update fields to zero values (e.g., deacti
 1. **Use pointer types** (`*bool`, `*int`, `*string`, etc.)—nil means omit or (with partial update) set to NULL; non-nil explicitly sets the value. For `*string`: `nil` → NULL, `&""` → empty string, `&"x"` → `"x"`. Pointers also simplify code: when you assign `field = &localVar`, changes to `localVar` are reflected through the pointer, and you can pass pointers to functions that modify values in place.
 2. **Enable partial update**—change tracking allows you to set pointer fields to nil (NULL) when they were previously non-nil. For primitive `string`, changing to `""` writes empty string (not NULL).
 
-For full control over complex updates (e.g., incrementing counters, conditional logic), use raw SQL with `db.Exec()` or `db.QueryRowMap()`—typedb stays out of your way when you need it.
+For incrementing counters, conditional logic, or other fine-grained updates:
+
+- **Raw SQL**—use `db.Exec()` or `db.QueryRowMap()` for full control.
+- **Pointer-to-local pattern**—assign the field's current value to a local variable, assign its address back to the field, then modify the local. Anything you do to the local is reflected in the field:
+  ```go
+  count := 0
+  if user.Count != nil {
+      count = *user.Count
+  }
+  user.Count = &count
+  count++
+  typedb.Update(ctx, db, user)
+  ```
 
 **Database Support:**
 - **PostgreSQL/SQLite**: Uses `RETURNING` clause

@@ -434,7 +434,19 @@ err := typedb.Update(ctx, db, user)
 - **Pointer types** (`*bool`, `*int`, `*string`)—nil means omit or (with partial update) set to NULL; non-nil explicitly sets the value. For `*string`: `nil` → NULL, `&""` → empty string. Pointers also simplify code: assign `field = &localVar` and changes to `localVar` flow through; pass pointers to functions that modify values in place.
 - **Partial update**—when enabled, change tracking allows setting pointer fields to nil (NULL). For primitive `string`, changing to `""` writes empty string (not NULL).
 
-**For fine-grained control** (e.g., incrementing counters, conditional logic), use raw SQL with `db.Exec()` or `db.QueryRowMap()`—typedb stays out of your way when you need it.
+**For fine-grained control** (e.g., incrementing counters, conditional logic):
+
+- **Raw SQL**—use `db.Exec()` or `db.QueryRowMap()` for full control. typedb stays out of your way when you need it.
+- **Pointer-to-local pattern**—for pointer fields, assign the current value to a local variable, assign its address back to the field, then modify the local. Anything you do to the local is reflected in the field:
+  ```go
+  count := 0
+  if user.Count != nil {
+      count = *user.Count
+  }
+  user.Count = &count
+  count++
+  typedb.Update(ctx, db, user)
+  ```
 
 ---
 
