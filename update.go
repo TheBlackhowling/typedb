@@ -58,7 +58,6 @@ import (
 //	// Modify only name
 //	user.Name = "New Name"
 //	typedb.Update(ctx, db, user) // Only updates name field, not email
-//
 func validateUpdateModel[T ModelInterface](model T) (tableName string, primaryKeyField *reflect.StructField, primaryKeyColumn string, err error) {
 	tableName, err = getTableName(model)
 	if err != nil {
