@@ -8,6 +8,7 @@ Complete API reference for the typedb package. For usage examples and tutorials,
 - [Load Functions](#load-functions)
 - [Insert Functions](#insert-functions)
 - [Update Functions](#update-functions)
+- [Zero and Nil Value Handling](#zero-and-nil-value-handling)
 - [Connection Management](#connection-management)
 - [Configuration Options](#configuration-options)
 - [Logging](#logging)
@@ -280,7 +281,7 @@ Automatically builds and executes an INSERT query from model struct fields. Sets
 - Excludes primary key field from INSERT
 - Excludes fields with `db:"-"` tag
 - Excludes fields with `dbInsert:"false"` tag
-- Excludes nil/zero value fields
+- Excludes nil/zero value fields (see [Zero and Nil Value Handling](#zero-and-nil-value-handling))
 - Automatically uses `RETURNING`/`OUTPUT` clause or `LastInsertId()` based on database
 
 **Example Model:**
@@ -410,7 +411,7 @@ Automatically builds and executes an UPDATE query from model struct fields.
 - Excludes primary key field from SET clause (used in WHERE clause)
 - Excludes fields with `db:"-"` tag
 - Excludes fields with `dbUpdate:"false"` tag
-- Excludes nil/zero value fields
+- Excludes nil/zero value fields (see [Zero and Nil Value Handling](#zero-and-nil-value-handling))
 - Fields with `dbUpdate:"auto-timestamp"` are automatically populated with database timestamp functions
 
 **Partial Update:**
@@ -422,6 +423,18 @@ user := &User{ID: 123, Name: "John Updated", Email: "john.updated@example.com"}
 err := typedb.Update(ctx, db, user)
 // Generates: UPDATE users SET name = $1, email = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3
 ```
+
+### Zero and Nil Value Handling
+
+`Insert` and `Update` exclude nil/zero values by default—primitive fields with `false`, `0`, `""`, or `0.0` are omitted to avoid accidentally overwriting existing data. This is intentional: with primitive types, there's no way to distinguish "unset" from "explicitly set to zero."
+
+**String semantics:** In SQL, empty string (`''`) and NULL are distinct. typedb preserves this: empty string stores as `''`, nil (for `*string`) stores as NULL. Never conflate them. Go's primitive `string` cannot be nil—a primitive string field can only ever produce `""` or a non-empty string, never NULL. For nullable string columns, use `*string`.
+
+**To set columns to NULL or update to zero values:**
+- **Pointer types** (`*bool`, `*int`, `*string`)—nil means omit or (with partial update) set to NULL; non-nil explicitly sets the value. For `*string`: `nil` → NULL, `&""` → empty string. Pointers also simplify code: assign `field = &localVar` and changes to `localVar` flow through; pass pointers to functions that modify values in place.
+- **Partial update**—when enabled, change tracking allows setting pointer fields to nil (NULL). For primitive `string`, changing to `""` writes empty string (not NULL).
+
+**For fine-grained control** (e.g., incrementing counters, conditional logic), use raw SQL with `db.Exec()` or `db.QueryRowMap()`—typedb stays out of your way when you need it.
 
 ---
 

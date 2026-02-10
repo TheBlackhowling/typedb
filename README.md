@@ -441,6 +441,21 @@ user3 := &User{Name: "Bob"} // Email is empty, will be skipped
 err = typedb.Insert(ctx, db, user3)
 ```
 
+**Zero and Nil Value Handling (Insert & Update):**
+
+By default, `Insert` and `Update` exclude nil/zero values—primitive fields with `false`, `0`, `""`, or `0.0` are omitted to avoid accidentally overwriting existing data. This is intentional: with primitive types, there's no way to distinguish "unset" from "explicitly set to zero."
+
+**String semantics:** In SQL, empty string (`''`) and NULL are distinct—empty string is a valid value, NULL means "no value." typedb preserves this: when you explicitly set a value, empty string stores as `''`, and nil (for `*string`) stores as NULL. Never conflate them.
+
+Go's primitive `string` cannot be nil—there is no way to set a primitive string to NULL. With `string`, the only zero value is `""` (empty string). So a primitive string field can only ever produce an empty string or a non-empty string; it can never produce NULL. If you need a nullable string column (to store NULL), you must use `*string`. With `*string`: `nil` → NULL, `&""` → empty string.
+
+If you need to set columns to NULL or update fields to zero values (e.g., deactivate a user with `is_active = false`, clear a field to empty string, or set a nullable column to NULL), you have two options:
+
+1. **Use pointer types** (`*bool`, `*int`, `*string`, etc.)—nil means omit or (with partial update) set to NULL; non-nil explicitly sets the value. For `*string`: `nil` → NULL, `&""` → empty string, `&"x"` → `"x"`. Pointers also simplify code: when you assign `field = &localVar`, changes to `localVar` are reflected through the pointer, and you can pass pointers to functions that modify values in place.
+2. **Enable partial update**—change tracking allows you to set pointer fields to nil (NULL) when they were previously non-nil. For primitive `string`, changing to `""` writes empty string (not NULL).
+
+For full control over complex updates (e.g., incrementing counters, conditional logic), use raw SQL with `db.Exec()` or `db.QueryRowMap()`—typedb stays out of your way when you need it.
+
 **Database Support:**
 - **PostgreSQL/SQLite**: Uses `RETURNING` clause
 - **SQL Server/MSSQL**: Uses `OUTPUT INSERTED.id` clause
@@ -511,6 +526,8 @@ user2 := &User{ID: 123, Name: "Jane Updated"} // Email is empty, will be skipped
 err = typedb.Update(ctx, db, user2)
 // Generates: UPDATE users SET name = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2
 ```
+
+See [Zero and Nil Value Handling](#zero-and-nil-value-handling-insert--update) for how to update fields to zero or NULL.
 
 **Partial Update (Change Tracking):**
 

@@ -136,6 +136,280 @@ func init() {
 	RegisterModelWithOptions[*UpdateModelWithPartialUpdate](ModelOptions{PartialUpdate: true})
 }
 
+// UpdateModelWithPointerPrimitives has *bool and *int for testing pointer-to-primitive serialization.
+// Pointer types allow nil (omit) vs explicit zero (false, 0) in Update.
+type UpdateModelWithPointerPrimitives struct {
+	Model
+	ID       int64  `db:"id" load:"primary"`
+	Name     string `db:"name"`
+	IsActive *bool  `db:"is_active"`
+	Count    *int   `db:"count"`
+}
+
+func (m *UpdateModelWithPointerPrimitives) TableName() string {
+	return "users"
+}
+
+func (m *UpdateModelWithPointerPrimitives) QueryByID() string {
+	return "SELECT id, name, is_active, count FROM users WHERE id = $1"
+}
+
+func init() {
+	RegisterModel[*UpdateModelWithPointerPrimitives]()
+}
+
+// TestUpdate_PointerToPrimitive_Included tests that *bool and *int with non-nil values
+// (including false and 0) are included in UPDATE. Primitive bool false would be excluded.
+func TestUpdate_PointerToPrimitive_Included(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer closeSQLDB(t, db)
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	falseVal := false
+	zeroVal := 0
+	user := &UpdateModelWithPointerPrimitives{
+		ID:       123,
+		Name:     "John",
+		IsActive: &falseVal, // Explicitly set to false - must be included
+		Count:    &zeroVal,  // Explicitly set to 0 - must be included
+	}
+
+	// Expect UPDATE to include is_active=false and count=0 (pointer types, non-nil)
+	mock.ExpectExec(`UPDATE "users" SET "name" = \$1, "is_active" = \$2, "count" = \$3 WHERE "id" = \$4`).
+		WithArgs("John", false, 0, int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+// TestUpdate_PointerToPrimitive_NilExcluded tests that nil *bool and *int are excluded from UPDATE.
+func TestUpdate_PointerToPrimitive_NilExcluded(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer closeSQLDB(t, db)
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	user := &UpdateModelWithPointerPrimitives{
+		ID:       123,
+		Name:     "John",
+		IsActive: nil, // nil = omit from update
+		Count:    nil, // nil = omit from update
+	}
+
+	// Expect UPDATE to only include name (nil pointers excluded)
+	mock.ExpectExec(`UPDATE "users" SET "name" = \$1 WHERE "id" = \$2`).
+		WithArgs("John", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+// TestUpdate_PartialUpdate_ValueTypeChangedToZero tests that when a value type (bool, int, etc.)
+// changes to zero (false, 0), partial update writes the actual value, not NULL.
+func TestUpdate_PartialUpdate_ValueTypeChangedToZero(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer closeSQLDB(t, db)
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	// Use PartialUpdateModelWithComplexTypes which has IsActive bool
+	user := &PartialUpdateModelWithComplexTypes{
+		ID:       123,
+		Name:     "John",
+		Email:    "john@example.com",
+		IsActive: true,
+	}
+
+	row := map[string]any{
+		"id":        int64(123),
+		"name":      "John",
+		"email":     "john@example.com",
+		"is_active": true,
+	}
+	if deserializeErr := deserialize(row, user); deserializeErr != nil {
+		t.Fatalf("Failed to deserialize: %v", deserializeErr)
+	}
+
+	// Change IsActive from true to false
+	user.IsActive = false
+
+	// Expect UPDATE to include is_active = false (not NULL)
+	mock.ExpectExec(`UPDATE "users" SET "is_active" = \$1 WHERE "id" = \$2`).
+		WithArgs(false, int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+// TestUpdate_PartialUpdate_IntChangedToZero tests that int changed to 0 writes 0, not NULL.
+func TestUpdate_PartialUpdate_IntChangedToZero(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer closeSQLDB(t, db)
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	user := &PartialUpdateModelWithComplexTypes{
+		ID:    123,
+		Name:  "John",
+		Age:   30,
+		Score: 95.5,
+	}
+
+	row := map[string]any{
+		"id":    int64(123),
+		"name":  "John",
+		"age":   30,
+		"score": 95.5,
+	}
+	if deserializeErr := deserialize(row, user); deserializeErr != nil {
+		t.Fatalf("Failed to deserialize: %v", deserializeErr)
+	}
+
+	user.Age = 0 // Change to zero
+
+	// Expect UPDATE to include age = 0 (not NULL)
+	mock.ExpectExec(`UPDATE "users" SET "age" = \$1 WHERE "id" = \$2`).
+		WithArgs(0, int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+// TestUpdate_PartialUpdate_StringChangedToEmpty tests that string changed to "" writes empty string, not NULL.
+func TestUpdate_PartialUpdate_StringChangedToEmpty(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer closeSQLDB(t, db)
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	user := &PartialUpdateModelWithComplexTypes{
+		ID:    123,
+		Name:  "John",
+		Email: "john@example.com",
+	}
+
+	row := map[string]any{
+		"id":    int64(123),
+		"name":  "John",
+		"email": "john@example.com",
+	}
+	if deserializeErr := deserialize(row, user); deserializeErr != nil {
+		t.Fatalf("Failed to deserialize: %v", deserializeErr)
+	}
+
+	user.Email = "" // Change to empty string
+
+	// Expect UPDATE to include email = "" (empty string, NOT NULL)
+	mock.ExpectExec(`UPDATE "users" SET "email" = \$1 WHERE "id" = \$2`).
+		WithArgs("", int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
+// TestUpdate_PartialUpdate_StringPointerChangedToNull tests that *string changed to nil writes NULL.
+// Paired with TestUpdate_PartialUpdate_StringChangedToEmpty: "" → empty string, nil → NULL.
+func TestUpdate_PartialUpdate_StringPointerChangedToNull(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer closeSQLDB(t, db)
+
+	typedbDB := NewDB(db, "postgres", 5*time.Second)
+	ctx := context.Background()
+
+	phone := "555-1234"
+	user := &UpdateModelWithPartialUpdate{
+		ID:    123,
+		Name:  "John",
+		Email: "john@example.com",
+		Phone: &phone,
+	}
+
+	row := map[string]any{
+		"id":    int64(123),
+		"name":  "John",
+		"email": "john@example.com",
+		"phone": "555-1234",
+	}
+	if deserializeErr := deserialize(row, user); deserializeErr != nil {
+		t.Fatalf("Failed to deserialize: %v", deserializeErr)
+	}
+
+	user.Phone = nil // Change to nil (NULL)
+
+	// Expect UPDATE to include phone = NULL (not empty string)
+	mock.ExpectExec(`UPDATE "users" SET "phone" = \$1 WHERE "id" = \$2`).
+		WithArgs(nil, int64(123)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = Update(ctx, typedbDB, user)
+	if err != nil {
+		t.Errorf("Update() error = %v, want nil", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet mock expectations: %v", err)
+	}
+}
+
 // TestUpdate_PartialUpdate_OnlyChangedFields tests that partial update only updates changed fields
 func TestUpdate_PartialUpdate_OnlyChangedFields(t *testing.T) {
 	db, mock, err := sqlmock.New()
